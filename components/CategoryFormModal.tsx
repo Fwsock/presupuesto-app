@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useCreateCategory, useUpdateCategory } from '../features/categories/hooks';
 import type { Category, CategoryType } from '../features/categories/types';
+import { ErrorBanner } from './ErrorBanner';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -16,10 +18,14 @@ interface CategoryFormModalProps {
   visible: boolean;
   initialValue: Category | null;
   onClose: () => void;
-  onSubmit: (values: CategoryForm) => void;
 }
 
-export function CategoryFormModal({ visible, initialValue, onClose, onSubmit }: CategoryFormModalProps) {
+export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFormModalProps) {
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+
+  const [formError, setFormError] = useState<string | null>(null);
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
     defaultValues: { nombre: '', tipo: 'gasto' },
@@ -31,11 +37,34 @@ export function CategoryFormModal({ visible, initialValue, onClose, onSubmit }: 
   // holds whatever was typed last time.
   useEffect(() => {
     if (!visible) return;
+    setFormError(null);
     reset({
       nombre: initialValue?.nombre ?? '',
       tipo: (initialValue?.tipo ?? 'gasto') as CategoryType,
     });
   }, [visible, initialValue, reset]);
+
+  // The mutations live here rather than in the screen so a failed save renders
+  // its error inside the modal. A banner owned by the screen would be painted
+  // underneath this transparent Modal and never seen.
+  const onSubmit = (values: CategoryForm) => {
+    setFormError(null);
+
+    if (initialValue) {
+      updateCategory.mutate(
+        { id: initialValue.id, ...values },
+        {
+          onSuccess: () => onClose(),
+          onError: (err) => setFormError((err as Error).message),
+        }
+      );
+    } else {
+      createCategory.mutate(values, {
+        onSuccess: () => onClose(),
+        onError: (err) => setFormError((err as Error).message),
+      });
+    }
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -44,6 +73,10 @@ export function CategoryFormModal({ visible, initialValue, onClose, onSubmit }: 
           <Text className="text-lg font-bold mb-4">
             {initialValue ? 'Editar categoría' : 'Nueva categoría'}
           </Text>
+
+          {formError && (
+            <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
+          )}
 
           <Controller
             control={control}

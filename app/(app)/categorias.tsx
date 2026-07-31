@@ -1,54 +1,26 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable } from 'react-native';
-import {
-  useCategories,
-  useCreateCategory,
-  useUpdateCategory,
-  useDeleteCategory,
-} from '../../features/categories/hooks';
+import { useCategories, useDeleteCategory } from '../../features/categories/hooks';
 import { CategoryFormModal } from '../../components/CategoryFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import type { Category } from '../../features/categories/types';
 
 export default function CategoriasScreen() {
   const { data: categories, isLoading, isError, refetch } = useCategories();
-  const createCategory = useCreateCategory();
-  const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const openCreate = () => {
     setEditing(null);
-    setFormError(null);
     setModalVisible(true);
   };
 
   const openEdit = (category: Category) => {
     setEditing(category);
-    setFormError(null);
     setModalVisible(true);
-  };
-
-  const handleSubmit = (values: { nombre: string; tipo: 'ingreso' | 'gasto' }) => {
-    setFormError(null);
-    if (editing) {
-      updateCategory.mutate(
-        { id: editing.id, ...values },
-        {
-          onSuccess: () => setModalVisible(false),
-          onError: (err) => setFormError((err as Error).message),
-        }
-      );
-    } else {
-      createCategory.mutate(values, {
-        onSuccess: () => setModalVisible(false),
-        onError: (err) => setFormError((err as Error).message),
-      });
-    }
   };
 
   const handleDelete = (id: string) => {
@@ -63,9 +35,6 @@ export default function CategoriasScreen() {
       {isError && <ErrorBanner message="No se pudieron cargar las categorías." onRetry={refetch} />}
       {deleteError && (
         <ErrorBanner message={deleteError} onRetry={() => setDeleteError(null)} actionLabel="Descartar" />
-      )}
-      {formError && (
-        <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
       )}
 
       {isLoading ? (
@@ -104,7 +73,6 @@ export default function CategoriasScreen() {
         visible={modalVisible}
         initialValue={editing}
         onClose={() => setModalVisible(false)}
-        onSubmit={handleSubmit}
       />
     </View>
   );
