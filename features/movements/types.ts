@@ -15,3 +15,22 @@ export interface Movement {
   created_at: string;
   updated_at: string;
 }
+
+export interface NewMovementInput {
+  categoryId: string;
+  concepto: string;
+  monto: number;
+  notas: string | null;
+  estado: MovementStatus;
+  fecha: string;
+}
+
+export interface UpdateMovementInput {
+  id: string;
+  categoryId: string;
+  concepto: string;
+  monto: number;
+  notas: string | null;
+  estado: MovementStatus;
+  fecha: string;
+}
