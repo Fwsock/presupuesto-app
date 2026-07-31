@@ -120,7 +120,9 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             {mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}
           </Text>
 
-          {formError && <ErrorBanner message={formError} onRetry={() => setFormError(null)} />}
+          {formError && (
+            <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
+          )}
 
           <Controller
             control={control}

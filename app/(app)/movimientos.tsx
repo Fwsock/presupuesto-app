@@ -62,7 +62,9 @@ export default function MovimientosScreen() {
       <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m); }} />
 
       {isError && <ErrorBanner message="No se pudieron cargar los movimientos." onRetry={refetch} />}
-      {actionError && <ErrorBanner message={actionError} onRetry={() => setActionError(null)} />}
+      {actionError && (
+        <ErrorBanner message={actionError} onRetry={() => setActionError(null)} actionLabel="Descartar" />
+      )}
 
       {isLoading ? (
         <Text className="p-4">Cargando...</Text>

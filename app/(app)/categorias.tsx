@@ -61,8 +61,12 @@ export default function CategoriasScreen() {
   return (
     <View className="flex-1 bg-white">
       {isError && <ErrorBanner message="No se pudieron cargar las categorías." onRetry={refetch} />}
-      {deleteError && <ErrorBanner message={deleteError} onRetry={() => setDeleteError(null)} />}
-      {formError && <ErrorBanner message={formError} onRetry={() => setFormError(null)} />}
+      {deleteError && (
+        <ErrorBanner message={deleteError} onRetry={() => setDeleteError(null)} actionLabel="Descartar" />
+      )}
+      {formError && (
+        <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
+      )}
 
       {isLoading ? (
         <Text className="p-4">Cargando...</Text>
