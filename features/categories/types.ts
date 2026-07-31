@@ -7,3 +7,14 @@ export interface Category {
   tipo: CategoryType;
   created_at: string;
 }
+
+export interface NewCategoryInput {
+  nombre: string;
+  tipo: CategoryType;
+}
+
+export interface UpdateCategoryInput {
+  id: string;
+  nombre: string;
+  tipo: CategoryType;
+}
