@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useCategories } from '../features/categories/hooks';
 import { useCreateMovement, useCreateInstallments, useUpdateMovement } from '../features/movements/hooks';
 import { generateInstallments } from '../features/movements/installments';
+import { isValidISODate } from '../features/movements/date';
 import type { Movement, MovementStatus } from '../features/movements/types';
 import { ErrorBanner } from './ErrorBanner';
 
@@ -18,7 +19,7 @@ const movementSchema = z.object({
   fecha: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Usa el formato YYYY-MM-DD')
-    .refine((s) => !Number.isNaN(Date.parse(s)), 'Fecha inválida'),
+    .refine(isValidISODate, 'Fecha inválida'),
   estado: z.enum(['pendiente', 'pagado']),
   esCuota: z.boolean(),
   totalCuotas: z.coerce.number().int().min(1, 'Debe ser al menos 1').optional(),
