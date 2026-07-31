@@ -19,24 +19,36 @@ export default function CategoriasScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const openCreate = () => {
     setEditing(null);
+    setFormError(null);
     setModalVisible(true);
   };
 
   const openEdit = (category: Category) => {
     setEditing(category);
+    setFormError(null);
     setModalVisible(true);
   };
 
   const handleSubmit = (values: { nombre: string; tipo: 'ingreso' | 'gasto' }) => {
+    setFormError(null);
     if (editing) {
-      updateCategory.mutate({ id: editing.id, ...values });
+      updateCategory.mutate(
+        { id: editing.id, ...values },
+        {
+          onSuccess: () => setModalVisible(false),
+          onError: (err) => setFormError((err as Error).message),
+        }
+      );
     } else {
-      createCategory.mutate(values);
+      createCategory.mutate(values, {
+        onSuccess: () => setModalVisible(false),
+        onError: (err) => setFormError((err as Error).message),
+      });
     }
-    setModalVisible(false);
   };
 
   const handleDelete = (id: string) => {
@@ -50,6 +62,7 @@ export default function CategoriasScreen() {
     <View className="flex-1 bg-white">
       {isError && <ErrorBanner message="No se pudieron cargar las categorías." onRetry={refetch} />}
       {deleteError && <ErrorBanner message={deleteError} onRetry={() => setDeleteError(null)} />}
+      {formError && <ErrorBanner message={formError} onRetry={() => setFormError(null)} />}
 
       {isLoading ? (
         <Text className="p-4">Cargando...</Text>
