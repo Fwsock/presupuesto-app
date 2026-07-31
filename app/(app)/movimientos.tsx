@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMovements, useUpdateMovement, useDeleteMovement } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
 import { MovementFormModal } from '../../components/MovementFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { useSelectedMonth } from '../../features/shared/selected-month';
 import type { Movement } from '../../features/movements/types';
 
 export default function MovimientosScreen() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const router = useRouter();
+  const { year, month, setMonth } = useSelectedMonth();
+  // Set when the user taps a category on Resumen (drill-down to that category).
+  const { categoryId } = useLocalSearchParams<{ categoryId?: string }>();
 
   const { data: movements, isLoading, isError, refetch } = useMovements(year, month);
   const { data: categories } = useCategories();
@@ -57,9 +60,30 @@ export default function MovimientosScreen() {
     });
   };
 
+  // Filter only what's rendered -- the query itself stays unfiltered so the
+  // screen behaves normally when there's no categoryId param.
+  const visibleMovements = categoryId
+    ? movements?.filter((m) => m.category_id === categoryId)
+    : movements;
+
+  const filteredCategoryName = categoryId
+    ? categories?.find((c) => c.id === categoryId)?.nombre
+    : undefined;
+
   return (
     <View className="flex-1 bg-white">
-      <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m); }} />
+      <MonthSelector year={year} month={month} onChange={setMonth} />
+
+      {categoryId && (
+        <View className="flex-row items-center justify-between px-4 py-2 bg-blue-50">
+          <Text className="text-blue-800 flex-1 mr-3">
+            Mostrando solo: {filteredCategoryName ?? 'categoría seleccionada'}
+          </Text>
+          <Pressable onPress={() => router.replace('/movimientos')}>
+            <Text className="text-blue-700 font-semibold">Ver todos</Text>
+          </Pressable>
+        </View>
+      )}
 
       {isError && <ErrorBanner message="No se pudieron cargar los movimientos." onRetry={refetch} />}
       {actionError && (
@@ -70,7 +94,7 @@ export default function MovimientosScreen() {
         <Text className="p-4">Cargando...</Text>
       ) : (
         <FlatList
-          data={movements}
+          data={visibleMovements}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <MovementListItem

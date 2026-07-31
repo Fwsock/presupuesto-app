@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Alert, Pressable, Text } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { signOut } from '../../features/auth/hooks';
+import { SelectedMonthProvider } from '../../features/shared/selected-month';
 
 export default function AppLayout() {
   const queryClient = useQueryClient();
@@ -19,19 +20,21 @@ export default function AppLayout() {
   };
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: true,
-        headerRight: () => (
-          <Pressable onPress={handleSignOut} className="px-4 py-2">
-            <Text className="text-blue-600 font-medium">Cerrar sesión</Text>
-          </Pressable>
-        ),
-      }}
-    >
-      <Tabs.Screen name="index" options={{ title: 'Resumen' }} />
-      <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
-      <Tabs.Screen name="categorias" options={{ title: 'Categorías' }} />
-    </Tabs>
+    <SelectedMonthProvider>
+      <Tabs
+        screenOptions={{
+          headerShown: true,
+          headerRight: () => (
+            <Pressable onPress={handleSignOut} className="px-4 py-2">
+              <Text className="text-blue-600 font-medium">Cerrar sesión</Text>
+            </Pressable>
+          ),
+        }}
+      >
+        <Tabs.Screen name="index" options={{ title: 'Resumen' }} />
+        <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
+        <Tabs.Screen name="categorias" options={{ title: 'Categorías' }} />
+      </Tabs>
+    </SelectedMonthProvider>
   );
 }

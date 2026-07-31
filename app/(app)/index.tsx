@@ -1,16 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useMovements } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { calculateMonthSummary } from '../../features/movements/summary';
 import { MonthSelector } from '../../components/MonthSelector';
 import { CategoryTotalsList } from '../../components/CategoryTotalsList';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { useSelectedMonth } from '../../features/shared/selected-month';
 
 export default function ResumenScreen() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const router = useRouter();
+  const { year, month, setMonth } = useSelectedMonth();
 
   const { data: movements, isLoading: loadingMovements, isError: movementsError, refetch: refetchMovements } = useMovements(year, month);
   const { data: categories, isLoading: loadingCategories, isError: categoriesError, refetch: refetchCategories } = useCategories();
@@ -25,7 +26,7 @@ export default function ResumenScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m); }} />
+      <MonthSelector year={year} month={month} onChange={setMonth} />
 
       {isError && (
         <ErrorBanner
@@ -54,7 +55,12 @@ export default function ResumenScreen() {
             </View>
           </View>
 
-          <CategoryTotalsList totals={summary.totalsByCategory} />
+          <CategoryTotalsList
+            totals={summary.totalsByCategory}
+            onPressCategory={(categoryId) =>
+              router.push({ pathname: '/movimientos', params: { categoryId } })
+            }
+          />
         </>
       )}
     </ScrollView>
