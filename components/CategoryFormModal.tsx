@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,10 +20,22 @@ interface CategoryFormModalProps {
 }
 
 export function CategoryFormModal({ visible, initialValue, onClose, onSubmit }: CategoryFormModalProps) {
-  const { control, handleSubmit, formState: { errors } } = useForm<CategoryForm>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
-    values: { nombre: initialValue?.nombre ?? '', tipo: (initialValue?.tipo ?? 'gasto') as CategoryType },
+    defaultValues: { nombre: '', tipo: 'gasto' },
   });
+
+  // Reset explicitly on every open. useForm's `values` prop deep-compares against
+  // the *previous* `values` object, so two consecutive "create" opens
+  // (initialValue === null both times) never trigger a reset and the form still
+  // holds whatever was typed last time.
+  useEffect(() => {
+    if (!visible) return;
+    reset({
+      nombre: initialValue?.nombre ?? '',
+      tipo: (initialValue?.tipo ?? 'gasto') as CategoryType,
+    });
+  }, [visible, initialValue, reset]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>

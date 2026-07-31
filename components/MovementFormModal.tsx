@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, View, Text, TextInput, Pressable, Switch, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +15,10 @@ const movementSchema = z.object({
   monto: z.coerce.number().positive('El monto debe ser mayor a 0'),
   categoryId: z.string().min(1, 'Selecciona una categoría'),
   notas: z.string().optional(),
-  fecha: z.string().min(1, 'La fecha es obligatoria'),
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Usa el formato YYYY-MM-DD')
+    .refine((s) => !Number.isNaN(Date.parse(s)), 'Fecha inválida'),
   estado: z.enum(['pendiente', 'pagado']),
   esCuota: z.boolean(),
   totalCuotas: z.coerce.number().int().min(1, 'Debe ser al menos 1').optional(),
@@ -42,10 +45,30 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<z.input<typeof movementSchema>, any, MovementForm>({
     resolver: zodResolver(movementSchema),
-    values: {
+    defaultValues: {
+      concepto: '',
+      monto: 0,
+      categoryId: '',
+      notas: '',
+      fecha: new Date().toISOString().slice(0, 10),
+      estado: 'pendiente',
+      esCuota: false,
+      totalCuotas: 1,
+    },
+  });
+
+  // Reset explicitly on every open. Relying on useForm's `values` prop is not
+  // enough: it deep-compares against the *previous* `values` object, so two
+  // consecutive "create" opens (movement === null both times) produce an equal
+  // object and no reset fires, leaving the previous entry's input in the form.
+  useEffect(() => {
+    if (!visible) return;
+    setFormError(null);
+    reset({
       concepto: movement?.concepto ?? '',
       monto: movement?.monto ?? 0,
       categoryId: movement?.category_id ?? '',
@@ -54,8 +77,8 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
       esCuota: false,
       totalCuotas: 1,
-    },
-  });
+    });
+  }, [visible, movement, reset]);
 
   const esCuota = watch('esCuota');
 
