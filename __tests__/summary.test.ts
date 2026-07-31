@@ -60,4 +60,17 @@ describe('calculateMonthSummary', () => {
     expect(summary.totalsByCategory).toHaveLength(3);
     expect(summary.totalsByCategory.every((c) => c.total === 0)).toBe(true);
   });
+
+  it('excludes pendiente movements from a category total even when the same category also has pagado movements', () => {
+    const movements = [
+      movement({ category_id: 'fijos', monto: 100000, estado: 'pagado' }),
+      movement({ category_id: 'fijos', monto: 999999, estado: 'pendiente' }),
+    ];
+
+    const summary = calculateMonthSummary(movements, categories);
+    const fijosTotal = summary.totalsByCategory.find((c) => c.categoryId === 'fijos');
+
+    expect(fijosTotal?.total).toBe(100000);
+    expect(summary.totalGastos).toBe(100000);
+  });
 });
