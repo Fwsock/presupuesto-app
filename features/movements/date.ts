@@ -18,3 +18,25 @@ export function isValidISODate(value: string): boolean {
     parsed.getUTCDate() === day
   );
 }
+
+// Local-timezone conversion (not UTC) so the DateTimePicker doesn't shift the
+// day across midnight. Both helpers round-trip via local getters.
+export function parseISODate(value: string): Date | null {
+  if (!isValidISODate(value)) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function formatISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// 'YYYY-MM-DD' -> 'DD-MM-YYYY' for display in the date field.
+export function formatDisplayDate(value: string): string {
+  if (!isValidISODate(value)) return value;
+  const [year, month, day] = value.split('-');
+  return `${day}-${month}-${year}`;
+}

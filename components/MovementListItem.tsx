@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { Switch, View, Text, Pressable } from 'react-native';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
 
@@ -8,12 +8,26 @@ interface MovementListItemProps {
   onToggleEstado: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  /** True while this row's estado is being saved, so the switch disables. */
+  isUpdating?: boolean;
 }
 
-export function MovementListItem({ movement, category, onToggleEstado, onEdit, onDelete }: MovementListItemProps) {
+export function MovementListItem({
+  movement,
+  category,
+  onToggleEstado,
+  onEdit,
+  onDelete,
+  isUpdating = false,
+}: MovementListItemProps) {
+  const isPagado = movement.estado === 'pagado';
+  // While the save is in flight, show the target state so the switch doesn't
+  // snap back to the old value; it settles to the server state when done.
+  const displayPagado = isUpdating ? !isPagado : isPagado;
+
   return (
     <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-      <View className="flex-1">
+      <View className="flex-1 pr-2">
         <Text className="font-medium">
           {movement.concepto}
           {movement.cuota_numero && movement.cuota_total ? ` (${movement.cuota_numero}/${movement.cuota_total})` : ''}
@@ -23,11 +37,16 @@ export function MovementListItem({ movement, category, onToggleEstado, onEdit, o
 
       <Text className="font-semibold mr-3">${movement.monto.toLocaleString('es-CL')}</Text>
 
-      <Pressable onPress={onToggleEstado} className="mr-3">
-        <Text className={movement.estado === 'pagado' ? 'text-green-600' : 'text-yellow-600'}>
-          {movement.estado === 'pagado' ? 'Pagado' : 'Pendiente'}
-        </Text>
-      </Pressable>
+      <View className="mr-3" style={{ opacity: isUpdating ? 0.5 : 1 }}>
+        <Switch
+          value={displayPagado}
+          onValueChange={onToggleEstado}
+          disabled={isUpdating}
+          trackColor={{ false: '#d1d5db', true: '#16a34a' }}
+          thumbColor="#ffffff"
+          ios_backgroundColor="#d1d5db"
+        />
+      </View>
 
       <Pressable onPress={onEdit} className="mr-3">
         <Text>✏️</Text>

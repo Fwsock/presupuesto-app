@@ -22,3 +22,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// Logs the raw error thrown by supabase-js (message, code, details, hint) so
+// the real cause surfaces in the console instead of a generic UI message.
+export function logSupabaseError(context: string, error: unknown) {
+  console.error(`[supabase] ${context}`, error);
+}

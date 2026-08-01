@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useCreateCategory, useUpdateCategory } from '../features/categories/hooks';
 import type { Category, CategoryType } from '../features/categories/types';
 import { ErrorBanner } from './ErrorBanner';
+import { Button } from './Button';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -30,6 +31,8 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
     resolver: zodResolver(categorySchema),
     defaultValues: { nombre: '', tipo: 'gasto' },
   });
+
+  const isSaving = createCategory.isPending || updateCategory.isPending;
 
   // Reset explicitly on every open. useForm's `values` prop deep-compares against
   // the *previous* `values` object, so two consecutive "create" opens
@@ -113,12 +116,8 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
             )}
           />
 
-          <Pressable className="bg-blue-600 rounded-md py-3 mb-2" onPress={handleSubmit(onSubmit)}>
-            <Text className="text-white text-center font-semibold">Guardar</Text>
-          </Pressable>
-          <Pressable className="py-2" onPress={onClose}>
-            <Text className="text-center text-gray-500">Cancelar</Text>
-          </Pressable>
+          <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
+          <Button title="Cancelar" variant="ghost" onPress={onClose} disabled={isSaving} />
         </View>
       </View>
     </Modal>

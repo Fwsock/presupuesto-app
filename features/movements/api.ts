@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { logSupabaseError, supabase } from '../../lib/supabase';
 import type { InstallmentRow } from './installments';
 import type { Movement, NewMovementInput, UpdateMovementInput } from './types';
 
@@ -13,7 +13,10 @@ export async function fetchMovementsForMonth(year: number, month: number): Promi
     .gte('fecha', from)
     .lt('fecha', to)
     .order('fecha', { ascending: true });
-  if (error) throw error;
+  if (error) {
+    logSupabaseError('fetchMovementsForMonth', error);
+    throw error;
+  }
   return data;
 }
 
@@ -35,7 +38,10 @@ export async function createMovement(input: NewMovementInput): Promise<Movement>
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    logSupabaseError('createMovement', error);
+    throw error;
+  }
   return data;
 }
 
@@ -48,7 +54,10 @@ export async function createInstallments(rows: InstallmentRow[]): Promise<Moveme
     .from('movements')
     .insert(rows.map((row) => ({ ...row, user_id: userId })))
     .select();
-  if (error) throw error;
+  if (error) {
+    logSupabaseError('createInstallments', error);
+    throw error;
+  }
   return data;
 }
 
@@ -66,11 +75,25 @@ export async function updateMovement(input: UpdateMovementInput): Promise<Moveme
     .eq('id', input.id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    logSupabaseError('updateMovement', error);
+    throw error;
+  }
   return data;
 }
 
 export async function deleteMovement(id: string): Promise<void> {
   const { error } = await supabase.from('movements').delete().eq('id', id);
-  if (error) throw error;
+  if (error) {
+    logSupabaseError('deleteMovement', error);
+    throw error;
+  }
+}
+
+export async function deleteMovementGroup(groupId: string): Promise<void> {
+  const { error } = await supabase.from('movements').delete().eq('installment_group_id', groupId);
+  if (error) {
+    logSupabaseError('deleteMovementGroup', error);
+    throw error;
+  }
 }

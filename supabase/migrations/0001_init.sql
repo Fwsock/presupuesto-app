@@ -37,3 +37,12 @@ create policy "movements_owner_all" on movements
 
 create index movements_user_fecha_idx on movements (user_id, fecha);
 create index movements_category_idx on movements (category_id);
+
+-- The Supabase client signs in with the anon key but queries run as the
+-- "authenticated" role once the user logs in, so that role needs DML grants.
+-- RLS (above) still restricts rows to the owner; these grants only open the
+-- tables, not the data.
+grant usage on schema public to authenticated;
+
+grant select, insert, update, delete on public.categories to authenticated;
+grant select, insert, update, delete on public.movements to authenticated;

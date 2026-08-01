@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, Pressable, Switch, ScrollView } from 'react-native';
+import { Modal, View, Text, TextInput, Switch, ScrollView, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,20 +10,34 @@ import { generateInstallments } from '../features/movements/installments';
 import { isValidISODate } from '../features/movements/date';
 import type { Movement, MovementStatus } from '../features/movements/types';
 import { ErrorBanner } from './ErrorBanner';
+import { Button } from './Button';
+import { DateField } from './DateField';
 
-const movementSchema = z.object({
-  concepto: z.string().min(1, 'El concepto es obligatorio'),
-  monto: z.coerce.number().positive('El monto debe ser mayor a 0'),
-  categoryId: z.string().min(1, 'Selecciona una categoría'),
-  notas: z.string().optional(),
-  fecha: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Usa el formato YYYY-MM-DD')
-    .refine(isValidISODate, 'Fecha inválida'),
-  estado: z.enum(['pendiente', 'pagado']),
-  esCuota: z.boolean(),
-  totalCuotas: z.coerce.number().int().min(1, 'Debe ser al menos 1').optional(),
-});
+const movementSchema = z
+  .object({
+    concepto: z.string().min(1, 'El concepto es obligatorio'),
+    monto: z
+      .string()
+      .regex(/^\d+$/, 'Ingresa solo números')
+      .refine((v) => Number(v) > 0, 'El monto debe ser mayor a 0'),
+    categoryId: z.string().min(1, 'Selecciona una categoría'),
+    notas: z.string().optional(),
+    fecha: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Usa el formato YYYY-MM-DD')
+      .refine(isValidISODate, 'Fecha inválida'),
+    estado: z.enum(['pendiente', 'pagado']),
+    esCuota: z.boolean(),
+    totalCuotas: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.esCuota) return;
+    if (!data.totalCuotas || data.totalCuotas === '') {
+      ctx.addIssue({ code: 'custom', path: ['totalCuotas'], message: 'Indica el número de cuotas' });
+    } else if (!/^\d+$/.test(data.totalCuotas) || Number(data.totalCuotas) < 2) {
+      ctx.addIssue({ code: 'custom', path: ['totalCuotas'], message: 'Debe ser al menos 2 cuotas' });
+    }
+  });
 
 type MovementForm = z.infer<typeof movementSchema>;
 
@@ -52,13 +66,13 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     resolver: zodResolver(movementSchema),
     defaultValues: {
       concepto: '',
-      monto: 0,
+      monto: '',
       categoryId: '',
       notas: '',
       fecha: new Date().toISOString().slice(0, 10),
       estado: 'pendiente',
       esCuota: false,
-      totalCuotas: 1,
+      totalCuotas: '',
     },
   });
 
@@ -71,17 +85,19 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     setFormError(null);
     reset({
       concepto: movement?.concepto ?? '',
-      monto: movement?.monto ?? 0,
+      monto: String(movement?.monto ?? '').replace(/[^0-9]/g, ''),
       categoryId: movement?.category_id ?? '',
       notas: movement?.notas ?? '',
       fecha: movement?.fecha ?? new Date().toISOString().slice(0, 10),
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
       esCuota: false,
-      totalCuotas: 1,
+      totalCuotas: '',
     });
   }, [visible, movement, reset]);
 
   const esCuota = watch('esCuota');
+
+  const isSaving = createMovement.isPending || createInstallments.isPending || updateMovement.isPending;
 
   const onSubmit = (values: MovementForm) => {
     setFormError(null);
@@ -92,7 +108,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           id: movement.id,
           categoryId: values.categoryId,
           concepto: values.concepto,
-          monto: values.monto,
+          monto: Number(values.monto),
           notas: values.notas || null,
           estado: values.estado,
           fecha: values.fecha,
@@ -102,14 +118,14 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           onError: (err) => setFormError((err as Error).message),
         }
       );
-    } else if (values.esCuota && values.totalCuotas && values.totalCuotas > 1) {
+    } else if (values.esCuota) {
       const rows = generateInstallments(
         {
           categoryId: values.categoryId,
           concepto: values.concepto,
-          montoCuota: values.monto,
+          montoCuota: Number(values.monto),
           notas: values.notas || null,
-          totalCuotas: values.totalCuotas,
+          totalCuotas: Number(values.totalCuotas),
           fechaInicio: values.fecha,
         },
         uuidv4()
@@ -123,7 +139,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
         {
           categoryId: values.categoryId,
           concepto: values.concepto,
-          monto: values.monto,
+          monto: Number(values.monto),
           notas: values.notas || null,
           estado: values.estado,
           fecha: values.fecha,
@@ -169,9 +185,9 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               <TextInput
                 className="border border-gray-300 rounded-md px-3 py-2 mb-1"
                 placeholder="Monto"
-                keyboardType="numeric"
-                value={String(value ?? '')}
-                onChangeText={onChange}
+                keyboardType="number-pad"
+                value={value}
+                onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
               />
             )}
           />
@@ -182,15 +198,18 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             name="categoryId"
             render={({ field: { onChange, value } }) => (
               <View className="flex-row flex-wrap mb-2">
-                {categories?.map((c) => (
-                  <Pressable
-                    key={c.id}
-                    onPress={() => onChange(c.id)}
-                    className={`px-3 py-2 mr-2 mb-2 rounded-full border ${value === c.id ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                  >
-                    <Text className={value === c.id ? 'text-white' : 'text-black'}>{c.nombre}</Text>
-                  </Pressable>
-                ))}
+                {categories?.map((c) => {
+                  const selected = value === c.id;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => onChange(selected ? '' : c.id)}
+                      className={`px-3 py-2 mr-2 mb-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    >
+                      <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           />
@@ -199,14 +218,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           <Controller
             control={control}
             name="fecha"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                placeholder="Fecha (YYYY-MM-DD)"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
+            render={({ field: { onChange, value } }) => <DateField value={value} onChange={onChange} />}
           />
           {errors.fecha && <Text className="text-red-600 mb-2">{errors.fecha.message}</Text>}
 
@@ -265,10 +277,10 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                     render={({ field: { onChange, value } }) => (
                       <TextInput
                         className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                        placeholder="Número de cuotas"
-                        keyboardType="numeric"
-                        value={String(value ?? '')}
-                        onChangeText={onChange}
+                        placeholder="Cuotas"
+                        keyboardType="number-pad"
+                        value={value}
+                        onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
                       />
                     )}
                   />
@@ -278,12 +290,8 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             </>
           )}
 
-          <Pressable className="bg-blue-600 rounded-md py-3 mb-2 mt-2" onPress={handleSubmit(onSubmit)}>
-            <Text className="text-white text-center font-semibold">Guardar</Text>
-          </Pressable>
-          <Pressable className="py-2 mb-4" onPress={onClose}>
-            <Text className="text-center text-gray-500">Cancelar</Text>
-          </Pressable>
+          <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
+          <Button title="Cancelar" variant="ghost" onPress={onClose} disabled={isSaving} />
         </ScrollView>
       </View>
     </Modal>

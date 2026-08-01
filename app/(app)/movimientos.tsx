@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Pressable } from 'react-native';
+import { View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMovements, useUpdateMovement, useDeleteMovement } from '../../features/movements/hooks';
+import { useMovements, useUpdateMovement, useDeleteMovement, useDeleteMovementGroup } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
@@ -20,6 +20,7 @@ export default function MovimientosScreen() {
   const { data: categories } = useCategories();
   const updateMovement = useUpdateMovement();
   const deleteMovement = useDeleteMovement();
+  const deleteMovementGroup = useDeleteMovementGroup();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<Movement | null>(null);
@@ -55,9 +56,47 @@ export default function MovimientosScreen() {
 
   const handleDelete = (id: string) => {
     setActionError(null);
-    deleteMovement.mutate(id, {
-      onError: (err) => setActionError((err as Error).message),
-    });
+    const movement = movements?.find((m) => m.id === id);
+    if (!movement) return;
+
+    const onDeleteError = (err: unknown) => setActionError((err as Error).message);
+    const cuotaLabel =
+      movement.cuota_numero && movement.cuota_total
+        ? ` (cuota ${movement.cuota_numero}/${movement.cuota_total})`
+        : '';
+
+    if (movement.installment_group_id) {
+      Alert.alert(
+        'Eliminar compra en cuotas',
+        `"${movement.concepto}"${cuotaLabel}. ¿Qué deseas eliminar?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar solo esta cuota',
+            style: 'destructive',
+            onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }),
+          },
+          {
+            text: 'Eliminar toda la compra',
+            style: 'destructive',
+            onPress: () => deleteMovementGroup.mutate(movement.installment_group_id!, { onError: onDeleteError }),
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Eliminar movimiento',
+        `¿Estás seguro que deseas eliminar "${movement.concepto}"?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar',
+            style: 'destructive',
+            onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }),
+          },
+        ]
+      );
+    }
   };
 
   // Filter only what's rendered -- the query itself stays unfiltered so the
@@ -103,6 +142,7 @@ export default function MovimientosScreen() {
               onToggleEstado={() => toggleEstado(item)}
               onEdit={() => openEdit(item)}
               onDelete={() => handleDelete(item.id)}
+              isUpdating={updateMovement.isPending && updateMovement.variables?.id === item.id}
             />
           )}
         />

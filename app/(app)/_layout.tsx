@@ -24,6 +24,8 @@ export default function AppLayout() {
       <Tabs
         screenOptions={{
           headerShown: true,
+          tabBarStyle: { height: 64, paddingTop: 4 },
+          tabBarLabelStyle: { fontSize: 12, paddingBottom: 8 },
           headerRight: () => (
             <Pressable onPress={handleSignOut} className="px-4 py-2">
               <Text className="text-blue-600 font-medium">Cerrar sesión</Text>
