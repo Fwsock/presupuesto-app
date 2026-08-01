@@ -101,13 +101,14 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
 
   const onSubmit = (values: MovementForm) => {
     setFormError(null);
+    const concepto = values.concepto.trim();
 
     if (mode === 'edit' && movement) {
       updateMovement.mutate(
         {
           id: movement.id,
           categoryId: values.categoryId,
-          concepto: values.concepto,
+          concepto,
           monto: Number(values.monto),
           notas: values.notas || null,
           estado: values.estado,
@@ -122,7 +123,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       const rows = generateInstallments(
         {
           categoryId: values.categoryId,
-          concepto: values.concepto,
+          concepto,
           montoCuota: Number(values.monto),
           notas: values.notas || null,
           totalCuotas: Number(values.totalCuotas),
@@ -138,7 +139,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       createMovement.mutate(
         {
           categoryId: values.categoryId,
-          concepto: values.concepto,
+          concepto,
           monto: Number(values.monto),
           notas: values.notas || null,
           estado: values.estado,

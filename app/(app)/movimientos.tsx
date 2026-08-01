@@ -60,6 +60,7 @@ export default function MovimientosScreen() {
     if (!movement) return;
 
     const onDeleteError = (err: unknown) => setActionError((err as Error).message);
+    const conceptoTrimmed = movement.concepto.trim();
     const cuotaLabel =
       movement.cuota_numero && movement.cuota_total
         ? ` (cuota ${movement.cuota_numero}/${movement.cuota_total})`
@@ -68,7 +69,7 @@ export default function MovimientosScreen() {
     if (movement.installment_group_id) {
       Alert.alert(
         'Eliminar compra en cuotas',
-        `"${movement.concepto}"${cuotaLabel}. ¿Qué deseas eliminar?`,
+        `"${conceptoTrimmed}"${cuotaLabel}. ¿Qué deseas eliminar?`,
         [
           { text: 'Cancelar', style: 'cancel' },
           {
@@ -86,7 +87,7 @@ export default function MovimientosScreen() {
     } else {
       Alert.alert(
         'Eliminar movimiento',
-        `¿Estás seguro que deseas eliminar "${movement.concepto}"?`,
+        `¿Estás seguro que deseas eliminar "${conceptoTrimmed}"?`,
         [
           { text: 'Cancelar', style: 'cancel' },
           {
