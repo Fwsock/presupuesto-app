@@ -25,14 +25,24 @@ export default function MovimientosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<Movement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Forces MovementFormModal to fully remount on every open (see its `key`
+  // prop below) so each session starts with fresh internal state — e.g.
+  // whether the user has manually overridden the suggested icon. Without
+  // this, opening for a second new movement right after manually picking an
+  // icon for the first one could carry that "icon touched" flag over, since
+  // `editing` stays `null` for both (no prop actually changes) and the
+  // component itself is never unmounted between opens.
+  const [formSessionId, setFormSessionId] = useState(0);
 
   const openCreate = () => {
     setEditing(null);
+    setFormSessionId((id) => id + 1);
     setModalVisible(true);
   };
 
   const openEdit = (movement: Movement) => {
     setEditing(movement);
+    setFormSessionId((id) => id + 1);
     setModalVisible(true);
   };
 
@@ -158,6 +168,7 @@ export default function MovimientosScreen() {
       </Pressable>
 
       <MovementFormModal
+        key={formSessionId}
         visible={modalVisible}
         mode={editing ? 'edit' : 'create'}
         movement={editing}

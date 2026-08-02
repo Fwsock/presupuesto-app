@@ -1,4 +1,4 @@
-import { FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Dimensions, FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AVAILABLE_MOVEMENT_ICONS } from '../features/movements/iconSuggestion';
 
@@ -10,6 +10,13 @@ interface IconPickerModalProps {
 }
 
 const NUM_COLUMNS = 5;
+const GRID_PADDING = 16;
+const CELL_MARGIN = 4;
+// Fixed pixel size instead of flex-1: inside a FlatList numColumns grid,
+// flex-1 stretches an incomplete last row's lone item to fill the whole row
+// width (there's nothing beside it to share the flex space with) - that's
+// what made the last icon render giant.
+const CELL_SIZE = (Dimensions.get('window').width - GRID_PADDING * 2) / NUM_COLUMNS - CELL_MARGIN * 2;
 
 /** Full-screen grid to manually override the auto-suggested movement icon. */
 export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: IconPickerModalProps) {
@@ -27,7 +34,7 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
           data={AVAILABLE_MOVEMENT_ICONS}
           keyExtractor={(icon) => icon}
           numColumns={NUM_COLUMNS}
-          contentContainerClassName="p-4"
+          contentContainerStyle={{ padding: GRID_PADDING }}
           renderItem={({ item: icon }) => {
             const isSelected = icon === selectedIcon;
             return (
@@ -36,7 +43,8 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
                   onSelect(icon);
                   onClose();
                 }}
-                className={`flex-1 aspect-square m-1 items-center justify-center rounded-lg border ${
+                style={{ width: CELL_SIZE, height: CELL_SIZE, margin: CELL_MARGIN }}
+                className={`items-center justify-center rounded-lg border ${
                   isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-200'
                 }`}
                 accessibilityRole="button"

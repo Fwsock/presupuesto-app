@@ -63,7 +63,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   // Once the user picks an icon manually (or we're editing an existing
   // movement, which already has an intentional icon), stop overwriting it
   // as they keep typing the concepto.
-  const [iconTouched, setIconTouched] = useState(false);
+  // The parent remounts this component fresh (via a `key` that changes on
+  // every open) for each create/edit session, so this initializer alone is
+  // enough to scope "has the user manually picked an icon" to that one
+  // session — no leftover state to carry into the next movement.
+  const [iconTouched, setIconTouched] = useState(mode === 'edit');
 
   const {
     control,
