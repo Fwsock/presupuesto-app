@@ -20,6 +20,35 @@ export async function fetchMovementsForMonth(year: number, month: number): Promi
   return data;
 }
 
+/**
+ * Fetches every movement in a window of consecutive months centered on
+ * (centerYear, centerMonth) — one range query instead of N per-month ones.
+ * Used by the Resumen chart, which needs several months of data at once.
+ */
+export async function fetchMovementsForMonthRange(
+  centerYear: number,
+  centerMonth: number,
+  monthsBefore: number,
+  monthsAfter: number
+): Promise<Movement[]> {
+  const startDate = new Date(centerYear, centerMonth - 1 - monthsBefore, 1);
+  const endDate = new Date(centerYear, centerMonth + monthsAfter, 1);
+  const from = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-01`;
+  const to = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-01`;
+
+  const { data, error } = await supabase
+    .from('movements')
+    .select('*')
+    .gte('fecha', from)
+    .lt('fecha', to)
+    .order('fecha', { ascending: true });
+  if (error) {
+    logSupabaseError('fetchMovementsForMonthRange', error);
+    throw error;
+  }
+  return data;
+}
+
 export async function createMovement(input: NewMovementInput): Promise<Movement> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;

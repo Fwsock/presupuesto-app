@@ -5,6 +5,7 @@ import {
   deleteMovement,
   deleteMovementGroup,
   fetchMovementsForMonth,
+  fetchMovementsForMonthRange,
   updateMovement,
 } from './api';
 import type { InstallmentRow } from './installments';
@@ -14,6 +15,21 @@ export function useMovements(year: number, month: number) {
   return useQuery({
     queryKey: ['movements', year, month],
     queryFn: () => fetchMovementsForMonth(year, month),
+  });
+}
+
+// Key starts with 'movements' (like the per-month query above) so the
+// existing invalidateQueries({queryKey: ['movements']}) prefix-matches this
+// too — a create/edit/delete anywhere refreshes the chart, not just the list.
+export function useMovementsForMonthRange(
+  centerYear: number,
+  centerMonth: number,
+  monthsBefore: number,
+  monthsAfter: number
+) {
+  return useQuery({
+    queryKey: ['movements', 'range', centerYear, centerMonth, monthsBefore, monthsAfter],
+    queryFn: () => fetchMovementsForMonthRange(centerYear, centerMonth, monthsBefore, monthsAfter),
   });
 }
 

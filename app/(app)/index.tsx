@@ -1,13 +1,18 @@
 import { useMemo } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useMovements } from '../../features/movements/hooks';
+import { useMovements, useMovementsForMonthRange } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { calculateMonthSummary } from '../../features/movements/summary';
+import { buildMonthlySaldoSeries, monthOffset } from '../../features/movements/monthlySeries';
 import { MonthSelector } from '../../components/MonthSelector';
+import { MonthSaldoChart } from '../../components/MonthSaldoChart';
 import { CategoryTotalsList } from '../../components/CategoryTotalsList';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { useSelectedMonth } from '../../features/shared/selected-month';
+
+const MONTHS_BEFORE = 2;
+const MONTHS_AFTER = 2;
 
 export default function ResumenScreen() {
   const router = useRouter();
@@ -15,17 +20,40 @@ export default function ResumenScreen() {
 
   const { data: movements, isLoading: loadingMovements, isError: movementsError, refetch: refetchMovements } = useMovements(year, month);
   const { data: categories, isLoading: loadingCategories, isError: categoriesError, refetch: refetchCategories } = useCategories();
+  const { data: rangeMovements } = useMovementsForMonthRange(year, month, MONTHS_BEFORE, MONTHS_AFTER);
 
   const summary = useMemo(() => {
     if (!movements || !categories) return null;
     return calculateMonthSummary(movements, categories);
   }, [movements, categories]);
 
+  const chartPoints = useMemo(() => {
+    if (!rangeMovements || !categories) return [];
+    const candidateMonths = [];
+    for (let offset = -MONTHS_BEFORE; offset <= MONTHS_AFTER; offset++) {
+      candidateMonths.push(monthOffset(year, month, offset));
+    }
+    const series = buildMonthlySaldoSeries(rangeMovements, categories, candidateMonths);
+    // Past months (offset <= 0) always show, even with $0/no data, so the
+    // chart keeps a consistent shape. Future months only show once a cuota
+    // or other movement has actually been created for them.
+    return series.filter((point, index) => index <= MONTHS_BEFORE || point.hasMovements);
+  }, [rangeMovements, categories, year, month]);
+
   const isLoading = loadingMovements || loadingCategories;
   const isError = movementsError || categoriesError;
 
   return (
     <ScrollView className="flex-1 bg-white">
+      {chartPoints.length > 0 && (
+        <MonthSaldoChart
+          points={chartPoints}
+          selectedYear={year}
+          selectedMonth={month}
+          onSelectMonth={setMonth}
+        />
+      )}
+
       <MonthSelector year={year} month={month} onChange={setMonth} />
 
       {isError && (
