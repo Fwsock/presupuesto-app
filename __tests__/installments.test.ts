@@ -6,7 +6,7 @@ describe('generateInstallments', () => {
       {
         categoryId: 'cat-1',
         concepto: 'Notebook',
-        montoCuota: 21248,
+        montoTotal: 21248,
         notas: null,
         totalCuotas: 6,
         fechaInicio: '2026-07-31',
@@ -26,7 +26,7 @@ describe('generateInstallments', () => {
       {
         categoryId: 'cat-1',
         concepto: 'Curso',
-        montoCuota: 10000,
+        montoTotal: 10000,
         notas: null,
         totalCuotas: 3,
         fechaInicio: '2026-01-31',
@@ -43,7 +43,7 @@ describe('generateInstallments', () => {
       {
         categoryId: 'cat-1',
         concepto: 'TV',
-        montoCuota: 5000,
+        montoTotal: 5000,
         notas: 'Compra Falabella',
         totalCuotas: 2,
         fechaInicio: '2026-03-15',
@@ -54,7 +54,7 @@ describe('generateInstallments', () => {
     expect(rows[0]).toMatchObject({
       category_id: 'cat-1',
       concepto: 'TV',
-      monto: 5000,
+      monto: 2500,
       cuota_numero: 1,
       cuota_total: 2,
       estado: 'pendiente',
@@ -64,7 +64,7 @@ describe('generateInstallments', () => {
     expect(rows[1]).toMatchObject({
       category_id: 'cat-1',
       concepto: 'TV',
-      monto: 5000,
+      monto: 2500,
       cuota_numero: 2,
       cuota_total: 2,
       estado: 'pendiente',
@@ -77,7 +77,7 @@ describe('generateInstallments', () => {
       {
         categoryId: 'cat-2',
         concepto: 'Seguro Anual',
-        montoCuota: 15000,
+        montoTotal: 15000,
         notas: null,
         totalCuotas: 3,
         fechaInicio: '2026-11-30',
@@ -89,5 +89,42 @@ describe('generateInstallments', () => {
     expect(rows[0].fecha).toBe('2026-11-30');
     expect(rows[1].fecha).toBe('2026-12-30');
     expect(rows[2].fecha).toBe('2027-01-30'); // Year rolls over correctly
+  });
+
+  it('divides the total evenly across cuotas when it divides exactly', () => {
+    // The bug report's own example: $21.000 in 6 cuotas -> $3.500 each, not
+    // $21.000 each (that was the bug: montoTotal was being stored per row).
+    const rows = generateInstallments(
+      {
+        categoryId: 'cat-1',
+        concepto: 'Compra',
+        montoTotal: 21000,
+        notas: null,
+        totalCuotas: 6,
+        fechaInicio: '2026-01-15',
+      },
+      'group-5'
+    );
+
+    expect(rows.map((r) => r.monto)).toEqual([3500, 3500, 3500, 3500, 3500, 3500]);
+    expect(rows.reduce((sum, r) => sum + r.monto, 0)).toBe(21000);
+  });
+
+  it('puts the rounding remainder on the last cuota so the total matches exactly', () => {
+    // 100000 / 3 = 33333.33... -> 33333, 33333, 33334
+    const rows = generateInstallments(
+      {
+        categoryId: 'cat-1',
+        concepto: 'Compra',
+        montoTotal: 100000,
+        notas: null,
+        totalCuotas: 3,
+        fechaInicio: '2026-01-15',
+      },
+      'group-6'
+    );
+
+    expect(rows.map((r) => r.monto)).toEqual([33333, 33333, 33334]);
+    expect(rows.reduce((sum, r) => sum + r.monto, 0)).toBe(100000);
   });
 });

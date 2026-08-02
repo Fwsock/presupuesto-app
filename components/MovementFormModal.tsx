@@ -124,7 +124,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
         {
           categoryId: values.categoryId,
           concepto,
-          montoCuota: Number(values.monto),
+          montoTotal: Number(values.monto),
           notas: values.notas || null,
           totalCuotas: Number(values.totalCuotas),
           fechaInicio: values.fecha,
@@ -185,13 +185,16 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             render={({ field: { onChange, value } }) => (
               <TextInput
                 className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                placeholder="Monto"
+                placeholder={esCuota ? 'Monto total de la compra' : 'Monto'}
                 keyboardType="number-pad"
                 value={value}
                 onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
               />
             )}
           />
+          {esCuota && (
+            <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
+          )}
           {errors.monto && <Text className="text-red-600 mb-2">{errors.monto.message}</Text>}
 
           <Controller

@@ -1,7 +1,8 @@
 export interface NewInstallmentInput {
   categoryId: string;
   concepto: string;
-  montoCuota: number;
+  /** Total price of the purchase — split evenly across totalCuotas, not the per-cuota amount. */
+  montoTotal: number;
   notas: string | null;
   totalCuotas: number;
   fechaInicio: string; // 'YYYY-MM-DD', date of the first installment
@@ -32,12 +33,19 @@ function addMonths(dateStr: string, months: number): string {
 }
 
 export function generateInstallments(input: NewInstallmentInput, groupId: string): InstallmentRow[] {
+  // Split montoTotal evenly; when it doesn't divide exactly, every cuota
+  // except the last gets the floored base amount and the last absorbs the
+  // rounding remainder, so the cuotas always sum back to montoTotal exactly.
+  const baseAmount = Math.floor(input.montoTotal / input.totalCuotas);
+  const remainder = input.montoTotal - baseAmount * input.totalCuotas;
+
   const rows: InstallmentRow[] = [];
   for (let i = 0; i < input.totalCuotas; i++) {
+    const isLastCuota = i === input.totalCuotas - 1;
     rows.push({
       category_id: input.categoryId,
       concepto: input.concepto,
-      monto: input.montoCuota,
+      monto: isLastCuota ? baseAmount + remainder : baseAmount,
       notas: input.notas,
       estado: 'pendiente',
       fecha: addMonths(input.fechaInicio, i),
