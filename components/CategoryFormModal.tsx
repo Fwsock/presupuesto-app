@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Ionicons } from '@expo/vector-icons';
 import { useCreateCategory, useUpdateCategory } from '../features/categories/hooks';
 import type { Category, CategoryType } from '../features/categories/types';
 import { ErrorBanner } from './ErrorBanner';
@@ -70,13 +71,24 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="bg-white rounded-t-2xl p-6">
-          <Text className="text-lg font-bold mb-4">
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 bg-white">
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+          <Pressable
+            onPress={onClose}
+            disabled={isSaving}
+            className="pr-3 py-1"
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar"
+          >
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+          <Text className="text-lg font-semibold">
             {initialValue ? 'Editar categoría' : 'Nueva categoría'}
           </Text>
+        </View>
 
+        <View className="flex-1 px-4 pt-4">
           {formError && (
             <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
           )}
@@ -117,7 +129,6 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
           />
 
           <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
-          <Button title="Cancelar" variant="ghost" onPress={onClose} disabled={isSaving} />
         </View>
       </View>
     </Modal>

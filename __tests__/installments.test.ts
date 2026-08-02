@@ -10,6 +10,7 @@ describe('generateInstallments', () => {
         notas: null,
         totalCuotas: 6,
         fechaInicio: '2026-07-31',
+        icono: 'cart-outline',
       },
       'group-1'
     );
@@ -30,6 +31,7 @@ describe('generateInstallments', () => {
         notas: null,
         totalCuotas: 3,
         fechaInicio: '2026-01-31',
+        icono: 'school-outline',
       },
       'group-2'
     );
@@ -38,7 +40,7 @@ describe('generateInstallments', () => {
     expect(rows[2].fecha).toBe('2026-03-31');
   });
 
-  it('sets cuota_numero, cuota_total, estado and shared group id on every row', () => {
+  it('sets cuota_numero, cuota_total, estado, icono and shared group id on every row', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
@@ -47,6 +49,7 @@ describe('generateInstallments', () => {
         notas: 'Compra Falabella',
         totalCuotas: 2,
         fechaInicio: '2026-03-15',
+        icono: 'card-outline',
       },
       'group-3'
     );
@@ -60,6 +63,7 @@ describe('generateInstallments', () => {
       estado: 'pendiente',
       installment_group_id: 'group-3',
       notas: 'Compra Falabella',
+      icono: 'card-outline',
     });
     expect(rows[1]).toMatchObject({
       category_id: 'cat-1',
@@ -69,6 +73,7 @@ describe('generateInstallments', () => {
       cuota_total: 2,
       estado: 'pendiente',
       installment_group_id: 'group-3',
+      icono: 'card-outline',
     });
   });
 
@@ -81,6 +86,7 @@ describe('generateInstallments', () => {
         notas: null,
         totalCuotas: 3,
         fechaInicio: '2026-11-30',
+        icono: 'receipt-outline',
       },
       'group-4'
     );
@@ -102,6 +108,7 @@ describe('generateInstallments', () => {
         notas: null,
         totalCuotas: 6,
         fechaInicio: '2026-01-15',
+        icono: 'receipt-outline',
       },
       'group-5'
     );
@@ -120,6 +127,7 @@ describe('generateInstallments', () => {
         notas: null,
         totalCuotas: 3,
         fechaInicio: '2026-01-15',
+        icono: 'receipt-outline',
       },
       'group-6'
     );

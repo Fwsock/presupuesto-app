@@ -21,6 +21,7 @@ function movement(overrides: Partial<Movement>): Movement {
     installment_group_id: null,
     cuota_numero: null,
     cuota_total: null,
+    icono: 'receipt-outline',
     created_at: '',
     updated_at: '',
     ...overrides,

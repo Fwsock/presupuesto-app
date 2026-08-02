@@ -46,6 +46,7 @@ export default function MovimientosScreen() {
         monto: movement.monto,
         notas: movement.notas,
         fecha: movement.fecha,
+        icono: movement.icono,
         estado: movement.estado === 'pagado' ? 'pendiente' : 'pagado',
       },
       {

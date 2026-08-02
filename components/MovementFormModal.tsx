@@ -4,14 +4,17 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../features/categories/hooks';
 import { useCreateMovement, useCreateInstallments, useUpdateMovement } from '../features/movements/hooks';
 import { generateInstallments } from '../features/movements/installments';
 import { isValidISODate } from '../features/movements/date';
+import { suggestMovementIcon, DEFAULT_MOVEMENT_ICON } from '../features/movements/iconSuggestion';
 import type { Movement, MovementStatus } from '../features/movements/types';
 import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { DateField } from './DateField';
+import { IconPickerModal } from './IconPickerModal';
 
 const movementSchema = z
   .object({
@@ -29,6 +32,7 @@ const movementSchema = z
     estado: z.enum(['pendiente', 'pagado']),
     esCuota: z.boolean(),
     totalCuotas: z.string().optional(),
+    icono: z.string().min(1),
   })
   .superRefine((data, ctx) => {
     if (!data.esCuota) return;
@@ -55,12 +59,18 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   const updateMovement = useUpdateMovement();
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
+  // Once the user picks an icon manually (or we're editing an existing
+  // movement, which already has an intentional icon), stop overwriting it
+  // as they keep typing the concepto.
+  const [iconTouched, setIconTouched] = useState(false);
 
   const {
     control,
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<z.input<typeof movementSchema>, any, MovementForm>({
     resolver: zodResolver(movementSchema),
@@ -73,6 +83,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       estado: 'pendiente',
       esCuota: false,
       totalCuotas: '',
+      icono: DEFAULT_MOVEMENT_ICON,
     },
   });
 
@@ -83,6 +94,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   useEffect(() => {
     if (!visible) return;
     setFormError(null);
+    setIconTouched(mode === 'edit');
     reset({
       concepto: movement?.concepto ?? '',
       monto: String(movement?.monto ?? '').replace(/[^0-9]/g, ''),
@@ -92,10 +104,19 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
       esCuota: false,
       totalCuotas: '',
+      icono: movement?.icono ?? DEFAULT_MOVEMENT_ICON,
     });
-  }, [visible, movement, reset]);
+  }, [visible, movement, mode, reset]);
 
   const esCuota = watch('esCuota');
+  const concepto = watch('concepto');
+  const icono = watch('icono');
+
+  // Auto-suggest as the user types, until they override it manually.
+  useEffect(() => {
+    if (iconTouched) return;
+    setValue('icono', suggestMovementIcon(concepto));
+  }, [concepto, iconTouched, setValue]);
 
   const isSaving = createMovement.isPending || createInstallments.isPending || updateMovement.isPending;
 
@@ -113,6 +134,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           notas: values.notas || null,
           estado: values.estado,
           fecha: values.fecha,
+          icono: values.icono,
         },
         {
           onSuccess: () => onClose(),
@@ -128,6 +150,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           notas: values.notas || null,
           totalCuotas: Number(values.totalCuotas),
           fechaInicio: values.fecha,
+          icono: values.icono,
         },
         uuidv4()
       );
@@ -144,6 +167,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           notas: values.notas || null,
           estado: values.estado,
           fecha: values.fecha,
+          icono: values.icono,
         },
         {
           onSuccess: () => onClose(),
@@ -154,30 +178,53 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <ScrollView className="bg-white rounded-t-2xl p-6 max-h-[85%]">
-          <Text className="text-lg font-bold mb-4">
-            {mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}
-          </Text>
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 bg-white">
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+          <Pressable
+            onPress={onClose}
+            disabled={isSaving}
+            className="pr-3 py-1"
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar"
+          >
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+          <Text className="text-lg font-semibold">{mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}</Text>
+        </View>
 
+        <ScrollView className="flex-1 px-4 pt-4" contentContainerClassName="pb-8">
           {formError && (
             <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
           )}
 
-          <Controller
-            control={control}
-            name="concepto"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                placeholder="Concepto"
-                value={value}
-                onChangeText={onChange}
+          <View className="flex-row items-start mb-1">
+            <Pressable
+              onPress={() => setIconPickerVisible(true)}
+              className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3"
+              accessibilityRole="button"
+              accessibilityLabel="Elegir ícono"
+            >
+              <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={22} color="#374151" />
+            </Pressable>
+
+            <View className="flex-1">
+              <Controller
+                control={control}
+                name="concepto"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    className="border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="Concepto"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
-            )}
-          />
-          {errors.concepto && <Text className="text-red-600 mb-2">{errors.concepto.message}</Text>}
+              {errors.concepto && <Text className="text-red-600 mt-1">{errors.concepto.message}</Text>}
+            </View>
+          </View>
+          <Text className="text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
 
           <Controller
             control={control}
@@ -295,8 +342,17 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           )}
 
           <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
-          <Button title="Cancelar" variant="ghost" onPress={onClose} disabled={isSaving} />
         </ScrollView>
+
+        <IconPickerModal
+          visible={iconPickerVisible}
+          selectedIcon={icono}
+          onSelect={(selected) => {
+            setValue('icono', selected);
+            setIconTouched(true);
+          }}
+          onClose={() => setIconPickerVisible(false)}
+        />
       </View>
     </Modal>
   );

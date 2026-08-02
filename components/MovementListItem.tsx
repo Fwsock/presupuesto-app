@@ -1,4 +1,5 @@
 import { Switch, View, Text, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
 
@@ -27,6 +28,10 @@ export function MovementListItem({
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+      <View className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center mr-3">
+        <Ionicons name={movement.icono as keyof typeof Ionicons.glyphMap} size={18} color="#374151" />
+      </View>
+
       <View className="flex-1 pr-2">
         <Text className="font-medium">
           {movement.concepto}

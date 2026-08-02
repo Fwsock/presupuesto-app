@@ -12,6 +12,8 @@ export interface Movement {
   installment_group_id: string | null;
   cuota_numero: number | null;
   cuota_total: number | null;
+  /** Ionicons name, decorative only — see features/movements/iconSuggestion.ts. */
+  icono: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface NewMovementInput {
   notas: string | null;
   estado: MovementStatus;
   fecha: string;
+  icono: string;
 }
 
 export interface UpdateMovementInput {
@@ -33,4 +36,5 @@ export interface UpdateMovementInput {
   notas: string | null;
   estado: MovementStatus;
   fecha: string;
+  icono: string;
 }

@@ -6,6 +6,7 @@ export interface NewInstallmentInput {
   notas: string | null;
   totalCuotas: number;
   fechaInicio: string; // 'YYYY-MM-DD', date of the first installment
+  icono: string;
 }
 
 export interface InstallmentRow {
@@ -18,6 +19,7 @@ export interface InstallmentRow {
   installment_group_id: string;
   cuota_numero: number;
   cuota_total: number;
+  icono: string;
 }
 
 function addMonths(dateStr: string, months: number): string {
@@ -52,6 +54,7 @@ export function generateInstallments(input: NewInstallmentInput, groupId: string
       installment_group_id: groupId,
       cuota_numero: i + 1,
       cuota_total: input.totalCuotas,
+      icono: input.icono,
     });
   }
   return rows;

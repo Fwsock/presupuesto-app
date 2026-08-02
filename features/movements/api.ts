@@ -64,6 +64,7 @@ export async function createMovement(input: NewMovementInput): Promise<Movement>
       notas: input.notas,
       estado: input.estado,
       fecha: input.fecha,
+      icono: input.icono,
     })
     .select()
     .single();
@@ -100,6 +101,7 @@ export async function updateMovement(input: UpdateMovementInput): Promise<Moveme
       notas: input.notas,
       estado: input.estado,
       fecha: input.fecha,
+      icono: input.icono,
     })
     .eq('id', input.id)
     .select()
