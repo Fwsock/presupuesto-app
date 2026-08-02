@@ -8,7 +8,9 @@ import { MovementListItem } from '../../components/MovementListItem';
 import { MovementFormModal } from '../../components/MovementFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { CategoryFilterChips } from '../../components/CategoryFilterChips';
+import { VariableIncomePromptModal } from '../../components/VariableIncomePromptModal';
 import { useSelectedMonth } from '../../features/shared/selected-month';
+import { useVariableIncomePromptState } from '../../features/income/hooks';
 import type { Movement } from '../../features/movements/types';
 
 export default function MovimientosScreen() {
@@ -118,6 +120,8 @@ export default function MovimientosScreen() {
     ? movements?.filter((m) => m.category_id === categoryId)
     : movements;
 
+  const variableIncomePrompt = useVariableIncomePromptState(year, month);
+
   return (
     <View className="flex-1 bg-white">
       <MonthSelector year={year} month={month} onChange={setMonth} />
@@ -169,6 +173,18 @@ export default function MovimientosScreen() {
         mode={editing ? 'edit' : 'create'}
         movement={editing}
         onClose={() => setModalVisible(false)}
+      />
+
+      <VariableIncomePromptModal
+        visible={variableIncomePrompt.visible}
+        concepto={variableIncomePrompt.concepto}
+        year={year}
+        month={month}
+        loading={variableIncomePrompt.loading}
+        error={variableIncomePrompt.error}
+        onSubmit={variableIncomePrompt.submit}
+        onSkip={variableIncomePrompt.skip}
+        onDismissError={variableIncomePrompt.dismissError}
       />
     </View>
   );

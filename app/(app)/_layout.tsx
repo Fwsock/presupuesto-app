@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { signOut } from '../../features/auth/hooks';
+import { useProfile } from '../../features/profile/hooks';
 import { SelectedMonthProvider } from '../../features/shared/selected-month';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -24,6 +25,7 @@ export default function AppLayout() {
   // space ourselves, the label gets squeezed against that inset instead of
   // sitting above it.
   const insets = useSafeAreaInsets();
+  const { data: profile } = useProfile();
 
   const handleSignOut = async () => {
     try {
@@ -69,6 +71,13 @@ export default function AppLayout() {
         <Tabs.Screen
           name="categorias"
           options={{ title: 'Categorías', tabBarIcon: TabIcon('pricetags-outline', 'pricetags') }}
+        />
+        <Tabs.Screen
+          name="cuenta"
+          options={{
+            title: profile?.nombre?.trim() || 'Cuenta',
+            tabBarIcon: TabIcon('person-outline', 'person'),
+          }}
         />
       </Tabs>
     </SelectedMonthProvider>

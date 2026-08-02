@@ -9,7 +9,9 @@ import { MonthSelector } from '../../components/MonthSelector';
 import { MonthSaldoChart } from '../../components/MonthSaldoChart';
 import { CategoryTotalsList } from '../../components/CategoryTotalsList';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { VariableIncomePromptModal } from '../../components/VariableIncomePromptModal';
 import { useSelectedMonth } from '../../features/shared/selected-month';
+import { useVariableIncomePromptState } from '../../features/income/hooks';
 
 const MONTHS_BEFORE = 2;
 const MONTHS_AFTER = 2;
@@ -42,6 +44,8 @@ export default function ResumenScreen() {
 
   const isLoading = loadingMovements || loadingCategories;
   const isError = movementsError || categoriesError;
+
+  const variableIncomePrompt = useVariableIncomePromptState(year, month);
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -91,6 +95,18 @@ export default function ResumenScreen() {
           />
         </>
       )}
+
+      <VariableIncomePromptModal
+        visible={variableIncomePrompt.visible}
+        concepto={variableIncomePrompt.concepto}
+        year={year}
+        month={month}
+        loading={variableIncomePrompt.loading}
+        error={variableIncomePrompt.error}
+        onSubmit={variableIncomePrompt.submit}
+        onSkip={variableIncomePrompt.skip}
+        onDismissError={variableIncomePrompt.dismissError}
+      />
     </ScrollView>
   );
 }
