@@ -128,3 +128,28 @@ export async function deleteMovementGroup(groupId: string): Promise<void> {
     throw error;
   }
 }
+
+/** Marks every pendiente movement of one category, in one month, as pagado. */
+export async function payAllPendingForCategory(
+  categoryId: string,
+  year: number,
+  month: number
+): Promise<Movement[]> {
+  const from = `${year}-${String(month).padStart(2, '0')}-01`;
+  const nextMonthDate = new Date(year, month, 1);
+  const to = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
+
+  const { data, error } = await supabase
+    .from('movements')
+    .update({ estado: 'pagado' })
+    .eq('category_id', categoryId)
+    .eq('estado', 'pendiente')
+    .gte('fecha', from)
+    .lt('fecha', to)
+    .select();
+  if (error) {
+    logSupabaseError('payAllPendingForCategory', error);
+    throw error;
+  }
+  return data;
+}

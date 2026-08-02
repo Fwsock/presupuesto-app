@@ -6,6 +6,7 @@ import {
   deleteMovementGroup,
   fetchMovementsForMonth,
   fetchMovementsForMonthRange,
+  payAllPendingForCategory,
   updateMovement,
 } from './api';
 import type { InstallmentRow } from './installments';
@@ -139,6 +140,19 @@ export function useDeleteMovementGroup() {
     mutationFn: (groupId: string) => deleteMovementGroup(groupId),
     onSuccess: (_data, groupId) => {
       removeMovementGroup(groupId);
+      invalidate();
+    },
+  });
+}
+
+export function usePayAllPendingForCategory() {
+  const invalidate = useInvalidateMovements();
+  const { upsertMovement } = useUpdateMovementsCache();
+  return useMutation({
+    mutationFn: ({ categoryId, year, month }: { categoryId: string; year: number; month: number }) =>
+      payAllPendingForCategory(categoryId, year, month),
+    onSuccess: (data) => {
+      data.forEach(upsertMovement);
       invalidate();
     },
   });

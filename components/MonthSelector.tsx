@@ -1,10 +1,6 @@
 import { View, Text } from 'react-native';
 import { PressableScale } from './PressableScale';
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import { MONTH_NAMES } from '../features/shared/monthNames';
 
 interface MonthSelectorProps {
   year: number;
