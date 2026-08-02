@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
+import { PressableScale } from './PressableScale';
 
 interface ErrorBannerProps {
   message: string;
@@ -11,9 +12,9 @@ export function ErrorBanner({ message, onRetry, actionLabel = 'Reintentar' }: Er
   return (
     <View className="bg-red-50 border border-red-200 rounded-md px-4 py-3 mx-4 my-2 flex-row items-center justify-between">
       <Text className="text-red-700 flex-1 mr-3">{message}</Text>
-      <Pressable onPress={onRetry}>
+      <PressableScale onPress={onRetry} hitSlop={8}>
         <Text className="text-red-700 font-semibold">{actionLabel}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

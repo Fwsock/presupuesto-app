@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { PressableScale } from './PressableScale';
 import type { MonthlySaldoPoint } from '../features/movements/monthlySeries';
 
 const MONTH_SHORT_NAMES = [
@@ -37,35 +38,39 @@ export function MonthSaldoChart({ points, selectedYear, selectedMonth, onSelectM
         const amountLabel = `${point.saldoDisponible < 0 ? '-' : ''}$${Math.abs(point.saldoDisponible).toLocaleString('es-CL')}`;
 
         return (
-          <Pressable
-            key={`${point.year}-${point.month}`}
-            onPress={() => onSelectMonth(point.year, point.month)}
-            className="flex-1 items-center"
-            accessibilityRole="button"
-            accessibilityLabel={`${MONTH_SHORT_NAMES[point.month - 1]}, saldo ${amountLabel}`}
-          >
-            <View style={{ height: 20 }} className="items-center justify-end mb-1">
-              {isSelected && (
-                <Text
-                  className={`text-xs font-bold ${point.saldoDisponible < 0 ? 'text-red-600' : 'text-gray-900'}`}
-                  numberOfLines={1}
-                >
-                  {amountLabel}
-                </Text>
-              )}
-            </View>
-
-            <View
-              className={`w-7 rounded-t-md ${isSelected ? 'bg-blue-600' : 'bg-gray-300'}`}
-              style={{ height: barHeight }}
-            />
-
-            <Text
-              className={`text-xs mt-2 ${isSelected ? 'font-bold text-gray-900' : 'text-gray-400'}`}
+          // The equal-width-per-bar distribution needs flex-1 on the actual
+          // flex child of this row; that's this plain View, not the
+          // PressableScale inside it — PressableScale's own style/className
+          // size and center *its own* touchable surface, they don't
+          // determine how it participates in a parent's flex layout.
+          <View key={`${point.year}-${point.month}`} className="flex-1">
+            <PressableScale
+              onPress={() => onSelectMonth(point.year, point.month)}
+              className="items-center"
+              accessibilityRole="button"
+              accessibilityLabel={`${MONTH_SHORT_NAMES[point.month - 1]}, saldo ${amountLabel}`}
             >
-              {MONTH_SHORT_NAMES[point.month - 1]}
-            </Text>
-          </Pressable>
+              <View style={{ height: 20 }} className="items-center justify-end mb-1">
+                {isSelected && (
+                  <Text
+                    className={`text-xs font-bold ${point.saldoDisponible < 0 ? 'text-red-600' : 'text-gray-900'}`}
+                    numberOfLines={1}
+                  >
+                    {amountLabel}
+                  </Text>
+                )}
+              </View>
+
+              <View
+                className={`w-7 rounded-t-md ${isSelected ? 'bg-blue-600' : 'bg-gray-300'}`}
+                style={{ height: barHeight }}
+              />
+
+              <Text className={`text-xs mt-2 ${isSelected ? 'font-bold text-gray-900' : 'text-gray-400'}`}>
+                {MONTH_SHORT_NAMES[point.month - 1]}
+              </Text>
+            </PressableScale>
+          </View>
         );
       })}
     </View>

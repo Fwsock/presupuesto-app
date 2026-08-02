@@ -1,6 +1,7 @@
-import { Dimensions, FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Dimensions, FlatList, Modal, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AVAILABLE_MOVEMENT_ICONS } from '../features/movements/iconSuggestion';
+import { PressableScale } from './PressableScale';
 
 interface IconPickerModalProps {
   visible: boolean;
@@ -24,9 +25,9 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-white">
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-          <Pressable onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
+          <PressableScale onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
             <Ionicons name="arrow-back" size={24} color="#111827" />
-          </Pressable>
+          </PressableScale>
           <Text className="text-lg font-semibold">Elegir ícono</Text>
         </View>
 
@@ -38,7 +39,7 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
           renderItem={({ item: icon }) => {
             const isSelected = icon === selectedIcon;
             return (
-              <Pressable
+              <PressableScale
                 onPress={() => {
                   onSelect(icon);
                   onClose();
@@ -51,7 +52,7 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
                 accessibilityLabel={icon}
               >
                 <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={26} color={isSelected ? '#fff' : '#374151'} />
-              </Pressable>
+              </PressableScale>
             );
           }}
         />

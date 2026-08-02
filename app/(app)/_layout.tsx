@@ -1,11 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Alert, Pressable, Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { signOut } from '../../features/auth/hooks';
 import { useProfile } from '../../features/profile/hooks';
 import { SelectedMonthProvider } from '../../features/shared/selected-month';
+import { PressableScale } from '../../components/PressableScale';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -54,9 +55,9 @@ export default function AppLayout() {
           tabBarLabelStyle: { fontSize: 11 },
           tabBarIconStyle: { marginBottom: 2 },
           headerRight: () => (
-            <Pressable onPress={handleSignOut} className="px-4 py-2">
+            <PressableScale onPress={handleSignOut} className="px-4 py-2">
               <Text className="text-blue-600 font-medium">Cerrar sesión</Text>
-            </Pressable>
+            </PressableScale>
           ),
         }}
       >

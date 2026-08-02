@@ -95,38 +95,54 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
       />
       {errors.concepto && <Text className="text-red-600 mb-2">{errors.concepto.message}</Text>}
 
-      <View className="flex-row items-center mb-1">
-        <Text className="mr-2 text-gray-700">Ingreso:</Text>
-        <Controller
-          control={control}
-          name="tipo"
-          render={({ field: { onChange, value } }) => (
-            <View className="flex-row flex-1">
-              <PressableScale
-                onPress={() => onChange('fijo')}
-                className={`flex-1 py-2 rounded-l-md border items-center ${value === 'fijo' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-              >
-                <Text className={value === 'fijo' ? 'text-white' : 'text-black'}>Fijo</Text>
-              </PressableScale>
-              <PressableScale
-                onPress={() => onChange('variable')}
-                className={`flex-1 py-2 rounded-r-md border items-center ${value === 'variable' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-              >
-                <Text className={value === 'variable' ? 'text-white' : 'text-black'}>Variable</Text>
-              </PressableScale>
-            </View>
-          )}
-        />
-        <PressableScale
-          onPress={() => Alert.alert('Fijo vs Variable', INFO_MESSAGE)}
-          hitSlop={10}
-          style={{ minWidth: 44, minHeight: 44 }}
-          className="items-center justify-center"
-          accessibilityRole="button"
-          accessibilityLabel="Información"
-        >
-          <Ionicons name="information-circle-outline" size={22} color="#6b7280" />
-        </PressableScale>
+      <View className="mb-1">
+        <Text className="text-gray-700 mb-2">Ingreso:</Text>
+        {/* flex: 1 set via inline style, not className, so the segmented
+            control reliably fills the row regardless of NativeWind's JIT
+            picking it up — this is exactly the row that was rendering
+            collapsed to its text width, pushing the (i) button far to the
+            right with a large empty gap in between. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Controller
+            control={control}
+            name="tipo"
+            render={({ field: { onChange, value } }) => (
+              <View style={{ flexDirection: 'row', flex: 1, marginRight: 12 }}>
+                {/* flex: 1 on the plain View, not on PressableScale itself -
+                    see PressableScale's own comment for why: its style/
+                    className size and center its own touchable surface, but
+                    don't determine how it participates in a parent's flex
+                    row (that's this wrapper's job). */}
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    onPress={() => onChange('fijo')}
+                    className={`py-2.5 rounded-l-md border items-center ${value === 'fijo' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                  >
+                    <Text className={value === 'fijo' ? 'text-white' : 'text-black'}>Fijo</Text>
+                  </PressableScale>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    onPress={() => onChange('variable')}
+                    className={`py-2.5 rounded-r-md border items-center ${value === 'variable' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                  >
+                    <Text className={value === 'variable' ? 'text-white' : 'text-black'}>Variable</Text>
+                  </PressableScale>
+                </View>
+              </View>
+            )}
+          />
+          <PressableScale
+            onPress={() => Alert.alert('Fijo vs Variable', INFO_MESSAGE)}
+            hitSlop={10}
+            style={{ minWidth: 44, minHeight: 44 }}
+            className="items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Información"
+          >
+            <Ionicons name="information-circle-outline" size={24} color="#6b7280" />
+          </PressableScale>
+        </View>
       </View>
 
       {tipo === 'fijo' && (

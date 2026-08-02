@@ -14,6 +14,7 @@ export function CategoryFilterChips({ categories, selectedCategoryId, onSelect }
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      className="flex-none grow-0"
       contentContainerClassName="px-4 py-2"
     >
       <PressableScale

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
 import { signIn } from '../features/auth/hooks';
+import { PressableScale } from '../components/PressableScale';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -68,7 +69,7 @@ export default function LoginScreen() {
 
       {serverError && <Text className="text-red-600 mb-2">{serverError}</Text>}
 
-      <Pressable
+      <PressableScale
         className="bg-blue-600 rounded-md py-3 mt-4"
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
@@ -76,7 +77,7 @@ export default function LoginScreen() {
         <Text className="text-white text-center font-semibold">
           {isSubmitting ? 'Ingresando...' : 'Ingresar'}
         </Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

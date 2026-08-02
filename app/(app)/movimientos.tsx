@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Pressable, Alert } from 'react-native';
+import { View, Text, FlatList, Alert } from 'react-native';
+import { PressableScale } from '../../components/PressableScale';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMovements, useUpdateMovement, useDeleteMovement, useDeleteMovementGroup } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
@@ -145,6 +146,7 @@ export default function MovimientosScreen() {
         <Text className="p-4">Cargando...</Text>
       ) : (
         <FlatList
+          className="flex-1"
           data={visibleMovements}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -160,12 +162,12 @@ export default function MovimientosScreen() {
         />
       )}
 
-      <Pressable
+      <PressableScale
         className="absolute bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
         onPress={openCreate}
       >
         <Text className="text-white text-2xl">+</Text>
-      </Pressable>
+      </PressableScale>
 
       <MovementFormModal
         key={formSessionId}

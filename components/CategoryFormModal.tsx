@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, Pressable } from 'react-native';
+import { Modal, View, Text, TextInput } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { useCreateCategory, useUpdateCategory } from '../features/categories/hoo
 import type { Category, CategoryType } from '../features/categories/types';
 import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
+import { PressableScale } from './PressableScale';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -74,7 +75,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-white">
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-          <Pressable
+          <PressableScale
             onPress={onClose}
             disabled={isSaving}
             className="pr-3 py-1"
@@ -82,7 +83,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
             accessibilityLabel="Cerrar"
           >
             <Ionicons name="arrow-back" size={24} color="#111827" />
-          </Pressable>
+          </PressableScale>
           <Text className="text-lg font-semibold">
             {initialValue ? 'Editar categoría' : 'Nueva categoría'}
           </Text>
@@ -112,18 +113,26 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
             name="tipo"
             render={({ field: { onChange, value } }) => (
               <View className="flex-row mb-4">
-                <Pressable
-                  className={`flex-1 py-2 rounded-l-md border ${value === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                  onPress={() => onChange('ingreso')}
-                >
-                  <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
-                </Pressable>
-                <Pressable
-                  className={`flex-1 py-2 rounded-r-md border ${value === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                  onPress={() => onChange('gasto')}
-                >
-                  <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
-                </Pressable>
+                {/* flex: 1 on the plain View, not on PressableScale - see
+                    PressableScale's own comment: its style/className size
+                    and center its own touchable surface, not how it
+                    participates in a parent's flex row. */}
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    className={`py-2 rounded-l-md border ${value === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    onPress={() => onChange('ingreso')}
+                  >
+                    <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
+                  </PressableScale>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    className={`py-2 rounded-r-md border ${value === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    onPress={() => onChange('gasto')}
+                  >
+                    <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
+                  </PressableScale>
+                </View>
               </View>
             )}
           />

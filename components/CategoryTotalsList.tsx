@@ -1,4 +1,6 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { PressableScale } from './PressableScale';
 import type { CategoryTotal } from '../features/movements/summary';
 
 interface CategoryTotalsListProps {
@@ -10,17 +12,17 @@ export function CategoryTotalsList({ totals, onPressCategory }: CategoryTotalsLi
   return (
     <View className="px-4">
       {totals.map((t) => (
-        <Pressable
+        <PressableScale
           key={t.categoryId}
           onPress={() => onPressCategory?.(t.categoryId)}
-          className="flex-row justify-between py-2 border-b border-gray-100"
+          className="flex-row items-center justify-between py-2 border-b border-gray-100"
         >
           <Text className="flex-1">{t.nombre}</Text>
           <Text className={t.tipo === 'ingreso' ? 'text-green-600' : 'text-gray-800'}>
             ${t.total.toLocaleString('es-CL')}
           </Text>
-          <Text className="text-gray-400 ml-2">↗</Text>
-        </Pressable>
+          <Ionicons name="chevron-forward" size={18} color="#9ca3af" style={{ marginLeft: 6 }} />
+        </PressableScale>
       ))}
     </View>
   );

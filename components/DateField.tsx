@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { formatDisplayDate, formatISODate, parseISODate } from '../features/movements/date';
+import { PressableScale } from './PressableScale';
 
 interface DateFieldProps {
   /** Stored value, always 'YYYY-MM-DD'. */
@@ -37,11 +38,11 @@ export function DateField({ value, onChange }: DateFieldProps) {
 
   return (
     <>
-      <Pressable onPress={openPicker} className="border border-gray-300 rounded-md px-3 py-3 mb-1">
+      <PressableScale onPress={openPicker} className="border border-gray-300 rounded-md px-3 py-3 mb-1">
         <Text className={value ? 'text-black' : 'text-gray-400'}>
           {value ? formatDisplayDate(value) : 'Selecciona la fecha'}
         </Text>
-      </Pressable>
+      </PressableScale>
 
       {showPicker && Platform.OS === 'android' && (
         <DateTimePicker
@@ -60,9 +61,9 @@ export function DateField({ value, onChange }: DateFieldProps) {
             display="spinner"
             onChange={handleChange}
           />
-          <Pressable onPress={() => setShowPicker(false)} className="py-2 items-end">
+          <PressableScale onPress={() => setShowPicker(false)} className="py-2 items-end">
             <Text className="text-blue-600 font-semibold">Listo</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       )}
     </>

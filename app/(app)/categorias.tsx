@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Pressable, Switch, Alert } from 'react-native';
+import { View, Text, FlatList, Switch, Alert } from 'react-native';
 import { useCategories, useDeleteCategory } from '../../features/categories/hooks';
 import { useMovements, usePayAllPendingForCategory } from '../../features/movements/hooks';
 import { useSelectedMonth } from '../../features/shared/selected-month';
@@ -136,12 +136,12 @@ export default function CategoriasScreen() {
         />
       )}
 
-      <Pressable
+      <PressableScale
         className="absolute bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
         onPress={openCreate}
       >
         <Text className="text-white text-2xl">+</Text>
-      </Pressable>
+      </PressableScale>
 
       <CategoryFormModal
         visible={modalVisible}

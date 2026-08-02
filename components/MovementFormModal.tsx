@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, Switch, ScrollView, Pressable } from 'react-native';
+import { Modal, View, Text, TextInput, Switch, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { DateField } from './DateField';
 import { IconPickerModal } from './IconPickerModal';
+import { PressableScale } from './PressableScale';
 
 const movementSchema = z
   .object({
@@ -185,7 +186,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-white">
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-          <Pressable
+          <PressableScale
             onPress={onClose}
             disabled={isSaving}
             className="pr-3 py-1"
@@ -193,7 +194,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             accessibilityLabel="Cerrar"
           >
             <Ionicons name="arrow-back" size={24} color="#111827" />
-          </Pressable>
+          </PressableScale>
           <Text className="text-lg font-semibold">{mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}</Text>
         </View>
 
@@ -203,14 +204,14 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           )}
 
           <View className="flex-row items-start mb-1">
-            <Pressable
+            <PressableScale
               onPress={() => setIconPickerVisible(true)}
               className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3"
               accessibilityRole="button"
               accessibilityLabel="Elegir ícono"
             >
               <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={22} color="#374151" />
-            </Pressable>
+            </PressableScale>
 
             <View className="flex-1">
               <Controller
@@ -256,13 +257,13 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                 {categories?.map((c) => {
                   const selected = value === c.id;
                   return (
-                    <Pressable
+                    <PressableScale
                       key={c.id}
                       onPress={() => onChange(selected ? '' : c.id)}
                       className={`px-3 py-2 mr-2 mb-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
                     >
                       <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
-                    </Pressable>
+                    </PressableScale>
                   );
                 })}
               </View>
@@ -295,18 +296,24 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             name="estado"
             render={({ field: { onChange, value } }) => (
               <View className="flex-row mb-4">
-                <Pressable
-                  className={`flex-1 py-2 rounded-l-md border ${value === 'pendiente' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                  onPress={() => onChange('pendiente')}
-                >
-                  <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
-                </Pressable>
-                <Pressable
-                  className={`flex-1 py-2 rounded-r-md border ${value === 'pagado' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                  onPress={() => onChange('pagado')}
-                >
-                  <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
-                </Pressable>
+                {/* flex: 1 on the plain View, not on PressableScale - see
+                    PressableScale's own comment for why. */}
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    className={`py-2 rounded-l-md border ${value === 'pendiente' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    onPress={() => onChange('pendiente')}
+                  >
+                    <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
+                  </PressableScale>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <PressableScale
+                    className={`py-2 rounded-r-md border ${value === 'pagado' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    onPress={() => onChange('pagado')}
+                  >
+                    <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
+                  </PressableScale>
+                </View>
               </View>
             )}
           />
