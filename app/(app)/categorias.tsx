@@ -3,6 +3,7 @@ import { View, Text, FlatList, Pressable } from 'react-native';
 import { useCategories, useDeleteCategory } from '../../features/categories/hooks';
 import { CategoryFormModal } from '../../components/CategoryFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { PressableScale } from '../../components/PressableScale';
 import type { Category } from '../../features/categories/types';
 
 export default function CategoriasScreen() {
@@ -50,12 +51,26 @@ export default function CategoriasScreen() {
                 <Text className="text-gray-500 text-xs">{item.tipo}</Text>
               </View>
               <View className="flex-row">
-                <Pressable onPress={() => openEdit(item)} className="mr-4">
+                <PressableScale
+                  onPress={() => openEdit(item)}
+                  hitSlop={10}
+                  style={{ minWidth: 44, minHeight: 44 }}
+                  className="items-center justify-center mr-1"
+                  accessibilityRole="button"
+                  accessibilityLabel="Editar"
+                >
                   <Text>✏️</Text>
-                </Pressable>
-                <Pressable onPress={() => handleDelete(item.id)}>
+                </PressableScale>
+                <PressableScale
+                  onPress={() => handleDelete(item.id)}
+                  hitSlop={10}
+                  style={{ minWidth: 44, minHeight: 44 }}
+                  className="items-center justify-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="Eliminar"
+                >
                   <Text>🗑️</Text>
-                </Pressable>
+                </PressableScale>
               </View>
             </View>
           )}

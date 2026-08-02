@@ -15,10 +15,11 @@ export function CategoryTotalsList({ totals, onPressCategory }: CategoryTotalsLi
           onPress={() => onPressCategory?.(t.categoryId)}
           className="flex-row justify-between py-2 border-b border-gray-100"
         >
-          <Text>{t.nombre}</Text>
+          <Text className="flex-1">{t.nombre}</Text>
           <Text className={t.tipo === 'ingreso' ? 'text-green-600' : 'text-gray-800'}>
             ${t.total.toLocaleString('es-CL')}
           </Text>
+          <Text className="text-gray-400 ml-2">↗</Text>
         </Pressable>
       ))}
     </View>

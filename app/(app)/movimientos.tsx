@@ -7,6 +7,7 @@ import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
 import { MovementFormModal } from '../../components/MovementFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { CategoryFilterChips } from '../../components/CategoryFilterChips';
 import { useSelectedMonth } from '../../features/shared/selected-month';
 import type { Movement } from '../../features/movements/types';
 
@@ -117,23 +118,18 @@ export default function MovimientosScreen() {
     ? movements?.filter((m) => m.category_id === categoryId)
     : movements;
 
-  const filteredCategoryName = categoryId
-    ? categories?.find((c) => c.id === categoryId)?.nombre
-    : undefined;
-
   return (
     <View className="flex-1 bg-white">
       <MonthSelector year={year} month={month} onChange={setMonth} />
 
-      {categoryId && (
-        <View className="flex-row items-center justify-between px-4 py-2 bg-blue-50">
-          <Text className="text-blue-800 flex-1 mr-3">
-            Mostrando solo: {filteredCategoryName ?? 'categoría seleccionada'}
-          </Text>
-          <Pressable onPress={() => router.replace('/movimientos')}>
-            <Text className="text-blue-700 font-semibold">Ver todos</Text>
-          </Pressable>
-        </View>
+      {categories && (
+        <CategoryFilterChips
+          categories={categories}
+          selectedCategoryId={categoryId}
+          onSelect={(id) =>
+            id ? router.replace({ pathname: '/movimientos', params: { categoryId: id } }) : router.replace('/movimientos')
+          }
+        />
       )}
 
       {isError && <ErrorBanner message="No se pudieron cargar los movimientos." onRetry={refetch} />}

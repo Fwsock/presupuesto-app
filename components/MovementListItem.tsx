@@ -1,5 +1,6 @@
-import { Switch, View, Text, Pressable } from 'react-native';
+import { Switch, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PressableScale } from './PressableScale';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
 
@@ -53,12 +54,26 @@ export function MovementListItem({
         />
       </View>
 
-      <Pressable onPress={onEdit} className="mr-3">
+      <PressableScale
+        onPress={onEdit}
+        hitSlop={10}
+        style={{ minWidth: 44, minHeight: 44 }}
+        className="items-center justify-center mr-1"
+        accessibilityRole="button"
+        accessibilityLabel="Editar"
+      >
         <Text>✏️</Text>
-      </Pressable>
-      <Pressable onPress={onDelete}>
+      </PressableScale>
+      <PressableScale
+        onPress={onDelete}
+        hitSlop={10}
+        style={{ minWidth: 44, minHeight: 44 }}
+        className="items-center justify-center"
+        accessibilityRole="button"
+        accessibilityLabel="Eliminar"
+      >
         <Text>🗑️</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
