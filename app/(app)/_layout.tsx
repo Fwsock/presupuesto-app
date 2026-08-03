@@ -158,15 +158,15 @@ export default function AppLayout() {
             }}
           />
         </Tabs>
-      </SelectedMonthProvider>
 
-      <MovementFormModal
-        key={formSessionId}
-        visible={modalVisible}
-        mode={editingMovement ? 'edit' : 'create'}
-        movement={editingMovement}
-        onClose={() => setModalVisible(false)}
-      />
+        <MovementFormModal
+          key={formSessionId}
+          visible={modalVisible}
+          mode={editingMovement ? 'edit' : 'create'}
+          movement={editingMovement}
+          onClose={() => setModalVisible(false)}
+        />
+      </SelectedMonthProvider>
     </MovementModalContext.Provider>
   );
 }
