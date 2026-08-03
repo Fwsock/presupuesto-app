@@ -24,9 +24,12 @@ function TabIcon(outline: IconName, filled: IconName) {
 }
 
 // Renders in place of the normal icon+label tab button for the "crear" tab
-// slot. It never reflects focus state on purpose — this isn't a real screen,
-// tabPress is always intercepted below (see the crear Tabs.Screen's
-// `listeners`), so "selected" would never make sense for it.
+// slot, via the crear Tabs.Screen's `tabBarButton` option below. That option
+// fully replaces react-navigation's default tab button — nothing here goes
+// through react-navigation's own `tabPress` event, so there's no press to
+// intercept; `onPress={openCreate}` on PressableScale is the only thing that
+// ever fires. It never reflects focus state on purpose — this isn't a real
+// screen, so "selected" would never make sense for it.
 function CreateTabButton({ onPress }: { onPress: () => void }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
@@ -132,13 +135,15 @@ export default function AppLayout() {
             name="crear"
             options={{
               title: '',
+              // Custom tabBarButton fully replaces react-navigation's default
+              // button, including its onPress — so this never emits a
+              // tabPress navigation event to intercept. There must be no
+              // `listeners={{ tabPress }}` here: adding one back without also
+              // forwarding the real onPress from tabBarButton's props would
+              // just be dead code again, and forwarding that real onPress
+              // *and* keeping a tabPress listener would double-fire
+              // openCreate() on a single tap.
               tabBarButton: () => <CreateTabButton onPress={openCreate} />,
-            }}
-            listeners={{
-              tabPress: (e) => {
-                e.preventDefault();
-                openCreate();
-              },
             }}
           />
           <Tabs.Screen
