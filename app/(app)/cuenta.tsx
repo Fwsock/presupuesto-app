@@ -1,18 +1,33 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, TextInput, View, Alert } from 'react-native';
+import { Text, TextInput, View, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSession, updateEmail, updatePassword } from '../../features/auth/hooks';
 import { useProfile, useUpsertProfile } from '../../features/profile/hooks';
 import { useRecurringIncome, useDeleteRecurringIncome } from '../../features/income/hooks';
+import { getInitials } from '../../features/profile/initials';
 import { RecurringIncomeForm } from '../../components/RecurringIncomeForm';
+import { FullScreenFormModal } from '../../components/FullScreenFormModal';
 import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
+import { PressableScale } from '../../components/PressableScale';
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+type AccountSection = 'personal' | 'seguridad' | 'ingreso' | null;
+
+function AccountRow({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
   return (
-    <View className="mb-6">
-      <Text className="text-base font-semibold mb-2">{title}</Text>
-      {children}
-    </View>
+    <PressableScale onPress={onPress} className="flex-row items-center px-4 py-4 border-b border-gray-100">
+      <Ionicons name={icon} size={20} color="#374151" style={{ marginRight: 12 }} />
+      <Text className="flex-1 text-base">{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+    </PressableScale>
   );
 }
 
@@ -22,6 +37,8 @@ export default function CuentaScreen() {
   const upsertProfile = useUpsertProfile();
   const { data: recurringIncome } = useRecurringIncome();
   const deleteRecurringIncome = useDeleteRecurringIncome();
+
+  const [openSection, setOpenSection] = useState<AccountSection>(null);
 
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -102,9 +119,31 @@ export default function CuentaScreen() {
     );
   };
 
+  const displayName = profile?.nombre?.trim() || session?.user.email || 'Usuario';
+
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerClassName="p-4">
-      <Section title="Perfil">
+    <View className="flex-1 bg-white">
+      <View className="items-center py-8 border-b border-gray-100">
+        <View className="w-20 h-20 rounded-full bg-blue-600 items-center justify-center mb-3">
+          <Text className="text-white text-2xl font-semibold">
+            {getInitials(profile?.nombre, session?.user.email ?? null)}
+          </Text>
+        </View>
+        <Text className="text-lg font-semibold">{displayName}</Text>
+        {session?.user.email && <Text className="text-gray-500 mt-0.5">{session.user.email}</Text>}
+      </View>
+
+      <View className="mt-4">
+        <AccountRow icon="card-outline" label="Información personal" onPress={() => setOpenSection('personal')} />
+        <AccountRow icon="lock-closed-outline" label="Seguridad" onPress={() => setOpenSection('seguridad')} />
+        <AccountRow icon="repeat-outline" label="Ingreso mensual recurrente" onPress={() => setOpenSection('ingreso')} />
+      </View>
+
+      <FullScreenFormModal
+        visible={openSection === 'personal'}
+        title="Información personal"
+        onClose={() => setOpenSection(null)}
+      >
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-2"
           placeholder="Nombre"
@@ -123,9 +162,10 @@ export default function CuentaScreen() {
         )}
         {profileSaved && <Text className="text-green-600 mb-2">Guardado.</Text>}
         <Button title="Guardar" onPress={saveProfile} loading={upsertProfile.isPending} disabled={upsertProfile.isPending} />
-      </Section>
+      </FullScreenFormModal>
 
-      <Section title="Correo electrónico">
+      <FullScreenFormModal visible={openSection === 'seguridad'} title="Seguridad" onClose={() => setOpenSection(null)}>
+        <Text className="text-base font-semibold mb-2">Correo electrónico</Text>
         <Text className="text-gray-500 mb-2">Actual: {session?.user.email}</Text>
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-2"
@@ -138,9 +178,8 @@ export default function CuentaScreen() {
         {emailError && <ErrorBanner message={emailError} onRetry={() => setEmailError(null)} actionLabel="Descartar" />}
         {emailMessage && <Text className="text-green-600 mb-2">{emailMessage}</Text>}
         <Button title="Cambiar correo" onPress={changeEmail} loading={emailPending} disabled={emailPending || !newEmail} />
-      </Section>
 
-      <Section title="Contraseña">
+        <Text className="text-base font-semibold mb-2 mt-6">Contraseña</Text>
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-2"
           placeholder="Nueva contraseña"
@@ -158,9 +197,13 @@ export default function CuentaScreen() {
           loading={passwordPending}
           disabled={passwordPending || !newPassword}
         />
-      </Section>
+      </FullScreenFormModal>
 
-      <Section title="Ingreso mensual recurrente">
+      <FullScreenFormModal
+        visible={openSection === 'ingreso'}
+        title="Ingreso mensual recurrente"
+        onClose={() => setOpenSection(null)}
+      >
         <RecurringIncomeForm initialValue={recurringIncome ?? null} />
         {recurringIncome && (
           <Button
@@ -170,7 +213,7 @@ export default function CuentaScreen() {
             disabled={deleteRecurringIncome.isPending}
           />
         )}
-      </Section>
-    </ScrollView>
+      </FullScreenFormModal>
+    </View>
   );
 }
