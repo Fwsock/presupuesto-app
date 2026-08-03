@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Alert } from 'react-native';
-import { PressableScale } from '../../components/PressableScale';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMovements, useUpdateMovement, useDeleteMovement, useDeleteMovementGroup } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
-import { MovementFormModal } from '../../components/MovementFormModal';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { CategoryFilterChips } from '../../components/CategoryFilterChips';
 import { VariableIncomePromptModal } from '../../components/VariableIncomePromptModal';
 import { useSelectedMonth } from '../../features/shared/selected-month';
 import { useVariableIncomePromptState } from '../../features/income/hooks';
+import { useMovementModal } from '../../features/shared/movement-modal-context';
 import { MONTH_NAMES } from '../../features/shared/monthNames';
 import type { Movement } from '../../features/movements/types';
 
@@ -26,30 +25,9 @@ export default function MovimientosScreen() {
   const updateMovement = useUpdateMovement();
   const deleteMovement = useDeleteMovement();
   const deleteMovementGroup = useDeleteMovementGroup();
+  const { openEdit } = useMovementModal();
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editing, setEditing] = useState<Movement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  // Forces MovementFormModal to fully remount on every open (see its `key`
-  // prop below) so each session starts with fresh internal state — e.g.
-  // whether the user has manually overridden the suggested icon. Without
-  // this, opening for a second new movement right after manually picking an
-  // icon for the first one could carry that "icon touched" flag over, since
-  // `editing` stays `null` for both (no prop actually changes) and the
-  // component itself is never unmounted between opens.
-  const [formSessionId, setFormSessionId] = useState(0);
-
-  const openCreate = () => {
-    setEditing(null);
-    setFormSessionId((id) => id + 1);
-    setModalVisible(true);
-  };
-
-  const openEdit = (movement: Movement) => {
-    setEditing(movement);
-    setFormSessionId((id) => id + 1);
-    setModalVisible(true);
-  };
 
   const toggleEstado = (movement: Movement) => {
     setActionError(null);
@@ -177,21 +155,6 @@ export default function MovimientosScreen() {
           )}
         />
       )}
-
-      <PressableScale
-        className="absolute bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
-        onPress={openCreate}
-      >
-        <Text className="text-white text-2xl">+</Text>
-      </PressableScale>
-
-      <MovementFormModal
-        key={formSessionId}
-        visible={modalVisible}
-        mode={editing ? 'edit' : 'create'}
-        movement={editing}
-        onClose={() => setModalVisible(false)}
-      />
 
       <VariableIncomePromptModal
         visible={variableIncomePrompt.visible}
