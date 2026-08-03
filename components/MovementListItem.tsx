@@ -1,6 +1,7 @@
 import { Switch, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { isRecurringGeneratedMovement } from '../features/movements/recurringLock';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
 
@@ -26,6 +27,7 @@ export function MovementListItem({
   // While the save is in flight, show the target state so the switch doesn't
   // snap back to the old value; it settles to the server state when done.
   const displayPagado = isUpdating ? !isPagado : isPagado;
+  const isLocked = isRecurringGeneratedMovement(movement);
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -43,27 +45,29 @@ export function MovementListItem({
 
       <Text className="font-semibold mr-3">${movement.monto.toLocaleString('es-CL')}</Text>
 
-      <View className="mr-3" style={{ opacity: isUpdating ? 0.5 : 1 }}>
+      <View className="mr-3" style={{ opacity: isUpdating || isLocked ? 0.5 : 1 }}>
         <Switch
           value={displayPagado}
           onValueChange={onToggleEstado}
-          disabled={isUpdating}
+          disabled={isUpdating || isLocked}
           trackColor={{ false: '#d1d5db', true: '#16a34a' }}
           thumbColor="#ffffff"
           ios_backgroundColor="#d1d5db"
         />
       </View>
 
-      <PressableScale
-        onPress={onEdit}
-        hitSlop={10}
-        style={{ minWidth: 44, minHeight: 44 }}
-        className="items-center justify-center mr-1"
-        accessibilityRole="button"
-        accessibilityLabel="Editar"
-      >
-        <Text>✏️</Text>
-      </PressableScale>
+      {!isLocked && (
+        <PressableScale
+          onPress={onEdit}
+          hitSlop={10}
+          style={{ minWidth: 44, minHeight: 44 }}
+          className="items-center justify-center mr-1"
+          accessibilityRole="button"
+          accessibilityLabel="Editar"
+        >
+          <Ionicons name="pencil-outline" size={20} color="#374151" />
+        </PressableScale>
+      )}
       <PressableScale
         onPress={onDelete}
         hitSlop={10}
@@ -72,7 +76,7 @@ export function MovementListItem({
         accessibilityRole="button"
         accessibilityLabel="Eliminar"
       >
-        <Text>🗑️</Text>
+        <Ionicons name="trash-outline" size={20} color="#374151" />
       </PressableScale>
     </View>
   );
