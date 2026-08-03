@@ -12,6 +12,7 @@ import { CategoryFilterChips } from '../../components/CategoryFilterChips';
 import { VariableIncomePromptModal } from '../../components/VariableIncomePromptModal';
 import { useSelectedMonth } from '../../features/shared/selected-month';
 import { useVariableIncomePromptState } from '../../features/income/hooks';
+import { MONTH_NAMES } from '../../features/shared/monthNames';
 import type { Movement } from '../../features/movements/types';
 
 export default function MovimientosScreen() {
@@ -81,7 +82,18 @@ export default function MovimientosScreen() {
         ? ` (cuota ${movement.cuota_numero}/${movement.cuota_total})`
         : '';
 
-    if (movement.installment_group_id) {
+    if (movement.recurring_income_id) {
+      const monthIndex = Number(movement.fecha.slice(5, 7)) - 1;
+      const mesLabel = `${MONTH_NAMES[monthIndex]} ${movement.fecha.slice(0, 4)}`;
+      Alert.alert(
+        '⚠️ Advertencia',
+        `Estás a punto de eliminar tu ingreso mensual. ¿Estás completamente seguro que deseas eliminar el monto de $${movement.monto.toLocaleString('es-CL')} correspondiente a ${mesLabel}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Eliminar', style: 'destructive', onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }) },
+        ]
+      );
+    } else if (movement.installment_group_id) {
       Alert.alert(
         'Eliminar compra en cuotas',
         `"${conceptoTrimmed}"${cuotaLabel}. ¿Qué deseas eliminar?`,
@@ -144,6 +156,10 @@ export default function MovimientosScreen() {
 
       {isLoading ? (
         <Text className="p-4">Cargando...</Text>
+      ) : visibleMovements && visibleMovements.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-gray-400 text-center px-8">No hay movimientos registrados para este mes.</Text>
+        </View>
       ) : (
         <FlatList
           className="flex-1"
