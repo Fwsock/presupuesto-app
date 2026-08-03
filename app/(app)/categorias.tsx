@@ -136,12 +136,14 @@ export default function CategoriasScreen() {
         />
       )}
 
-      <PressableScale
-        className="absolute bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
-        onPress={openCreate}
-      >
-        <Text className="text-white text-2xl">+</Text>
-      </PressableScale>
+      <View className="absolute bottom-6 right-6">
+        <PressableScale
+          className="bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
+          onPress={openCreate}
+        >
+          <Text className="text-white text-2xl">+</Text>
+        </PressableScale>
+      </View>
 
       <CategoryFormModal
         visible={modalVisible}
