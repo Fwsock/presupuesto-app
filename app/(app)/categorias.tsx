@@ -127,6 +127,8 @@ export default function CategoriasScreen() {
                       onPress={() => handlePayAll(item)}
                       disabled={isPaying}
                       className={`px-3 py-1.5 rounded-full bg-blue-600 ${isPaying ? 'opacity-60' : ''}`}
+                      accessibilityRole="button"
+                      accessibilityLabel="Pagar todo"
                     >
                       <Text className="text-white text-xs font-medium">
                         {isPaying ? 'Pagando...' : `Pagar todo ($${total.toLocaleString('es-CL')})`}

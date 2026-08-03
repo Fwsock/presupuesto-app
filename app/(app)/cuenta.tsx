@@ -23,7 +23,12 @@ function AccountRow({
   onPress: () => void;
 }) {
   return (
-    <PressableScale onPress={onPress} className="flex-row items-center px-4 py-4 border-b border-gray-100">
+    <PressableScale
+      onPress={onPress}
+      className="flex-row items-center px-4 py-4 border-b border-gray-100"
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <Ionicons name={icon} size={20} color="#374151" style={{ marginRight: 12 }} />
       <Text className="flex-1 text-base">{label}</Text>
       <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
@@ -49,6 +54,23 @@ export default function CuentaScreen() {
     setNombre(profile?.nombre ?? '');
     setTelefono(profile?.telefono ?? '');
   }, [profile]);
+
+  // Each time a section is opened, clear out whatever success/error feedback
+  // was left over from a previous session with that (or another) section, and
+  // re-sync the profile fields from the last saved value — otherwise a closed
+  // and reopened section still shows the previous "Guardado."/error message,
+  // or unsaved/abandoned edits to nombre/telefono.
+  useEffect(() => {
+    if (openSection === null) return;
+    setProfileError(null);
+    setProfileSaved(false);
+    setEmailError(null);
+    setEmailMessage(null);
+    setPasswordError(null);
+    setPasswordMessage(null);
+    setNombre(profile?.nombre ?? '');
+    setTelefono(profile?.telefono ?? '');
+  }, [openSection]);
 
   const saveProfile = () => {
     setProfileError(null);
