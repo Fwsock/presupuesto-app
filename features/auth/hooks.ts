@@ -84,3 +84,15 @@ export async function updatePassword(password: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;
 }
+
+/** Envía el correo con el código de recuperación de 6 dígitos. Responde éxito aunque el correo no exista, para no revelar qué cuentas están registradas -- el llamador siempre debe mostrar el mismo mensaje de éxito. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) throw error;
+}
+
+/** Verifica el código de recuperación de 6 dígitos. Éxito crea una sesión y dispara el evento 'PASSWORD_RECOVERY' que useSession() captura como isPasswordRecovery -- RootNavigator toma el control desde ahí, sin navegación manual acá. */
+export async function verifyPasswordRecoveryOtp(email: string, token: string): Promise<void> {
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
+  if (error) throw error;
+}
