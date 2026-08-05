@@ -1,4 +1,5 @@
 import { logSupabaseError, supabase } from '../../lib/supabase';
+import { sanitizeText, sanitizeNullableText } from '../shared/sanitize';
 import type { Profile, UpsertProfileInput } from './types';
 
 export async function fetchProfile(): Promise<Profile | null> {
@@ -23,7 +24,7 @@ export async function upsertProfile(input: UpsertProfileInput): Promise<Profile>
 
   const merged = {
     id: userId,
-    nombre: input.nombre !== undefined ? input.nombre : (existing?.nombre ?? null),
+    nombre: input.nombre !== undefined ? sanitizeNullableText(input.nombre, 80) : (existing?.nombre ?? null),
     telefono: input.telefono !== undefined ? input.telefono : (existing?.telefono ?? null),
     onboarding_completed:
       input.onboarding_completed !== undefined ? input.onboarding_completed : (existing?.onboarding_completed ?? false),
