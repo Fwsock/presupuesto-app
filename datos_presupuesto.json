@@ -1,0 +1,47 @@
+{
+  "usuario_email": "basti.guzman29@gmail.com",
+  "ingreso_mensual_recurrente": {
+    "concepto": "Sueldo",
+    "tipo": "fijo",
+    "monto": 946833
+  },
+  "ingresos": [
+    {"descripcion": "Ingreso adicional", "monto": 40403, "fecha": "2026-08-01", "estado": "pagado", "es_fijo": false, "notas": "Quedaba antes de la transferencia del sueldo"},
+    {"descripcion": "Ingreso adicional", "monto": 15000, "fecha": "2026-08-02", "estado": "pagado", "es_fijo": false, "notas": "Transferencia de suegrita por desbloquear celular motorola"},
+    {"descripcion": "Ingreso adicional", "monto": 16000, "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "Transferencia de Alvarito por entradas cine"},
+    {"descripcion": "Ingreso adicional", "monto": 16000, "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "Transferencia de Luchito por entradas cine"}
+  ],
+  "gastos_fijos": [
+    {"descripcion": "Luz (electricidad)", "monto": 55484, "categoria": "Gastos Fijos", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": true, "notas": "Promedio mensual"},
+    {"descripcion": "Agua", "monto": 15810, "categoria": "Gastos Fijos", "fecha": "2026-08-01", "estado": "pagado", "es_fijo": true, "notas": "Estimado, no pasa de $16.000"},
+    {"descripcion": "Plan móvil WOM", "monto": 1000, "categoria": "Gastos Fijos", "fecha": "2026-08-01", "estado": "pendiente", "es_fijo": true, "notas": "WOM Xiaomi 17"},
+    {"descripcion": "Plan móvil ENTEL", "monto": 23324, "categoria": "Gastos Fijos", "fecha": "2026-08-01", "estado": "pendiente", "es_fijo": true, "notas": "ENTEL Xiaomi 17"},
+    {"descripcion": "IPTV", "monto": 7500, "categoria": "Gastos Fijos", "fecha": "2026-08-04", "estado": "pendiente", "es_fijo": true, "notas": "Mensual fijo"},
+    {"descripcion": "Polla", "monto": 30000, "categoria": "Gastos Fijos", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": true, "notas": "Mensual fijo"},
+    {"descripcion": "Claude", "monto": 23000, "categoria": "Gastos Fijos", "fecha": "2026-07-29", "estado": "pendiente", "es_fijo": true, "notas": "Mensual fijo (lo pagué de la Santander este mes)"},
+    {"descripcion": "Bupa Seguro (IntegraMedica)", "monto": 12622, "categoria": "Gastos Fijos", "fecha": "2026-08-03", "estado": "pagado", "es_fijo": true, "notas": "Mensual fijo"}
+  ],
+  "cmr_falabella": [
+    {"descripcion": "Gimnasio", "monto": 27113, "categoria": "CMR Falabella", "fecha": "2026-08-05", "estado": "pendiente", "es_fijo": true, "notas": "Mensualidad"},
+    {"descripcion": "Zapatillas", "monto": 21248, "categoria": "CMR Falabella", "fecha": "2026-08-05", "estado": "pendiente", "es_fijo": false, "cuota_actual": 5, "cuotas_totales": 6, "notas": "6 cuotas de $21.248 - pago desde el 5 de cada mes"},
+    {"descripcion": "Falabella", "monto": 1089, "categoria": "CMR Falabella", "fecha": "2026-08-05", "estado": "pendiente", "es_fijo": true, "notas": "Cobro de nuevo impuesto de Falabella"},
+    {"descripcion": "Servicio Administración", "monto": 5222, "categoria": "CMR Falabella", "fecha": "2026-08-05", "estado": "pendiente", "es_fijo": true, "notas": "Cobro por uso de tarjeta CMR"}
+  ],
+  "cuotas_credito": [
+    {"descripcion": "Crédito auto", "monto": 257000, "categoria": "Cuotas/Crédito", "fecha": "2026-08-01", "estado": "pendiente", "es_fijo": false, "cuota_actual": 4, "cuotas_totales": 36, "notas": "Cuota 4/36"}
+  ],
+  "gastos_extras": [
+    {"descripcion": "Transferencia a mamá", "monto": 200000, "categoria": "Gastos Extras", "fecha": "2026-08-01", "estado": "pagado", "es_fijo": false, "notas": "Feria"},
+    {"descripcion": "Entradas Cinepolis", "monto": 49800, "categoria": "Gastos Extras", "fecha": "2026-08-03", "estado": "pagado", "es_fijo": false, "notas": "Spiderman Brand New Day 4D (Alvarito + Luchito + yo)"},
+    {"descripcion": "Transferencia bb", "monto": 30000, "categoria": "Gastos Extras", "fecha": "2026-08-01", "estado": "pagado", "es_fijo": false, "notas": "Debía cine anterior + 15 de los capítulos de anime"},
+    {"descripcion": "Supermercado", "monto": 18990, "categoria": "Gastos Extras", "fecha": "2026-08-01", "estado": "pagado", "es_fijo": false, "notas": "Lider Express (Yogurth + Cereal + 4 energéticas + Powerade)"},
+    {"descripcion": "Doc Popcorn", "monto": 4400, "categoria": "Gastos Extras", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "Cabritas medianas"},
+    {"descripcion": "Tottus", "monto": 18716, "categoria": "Gastos Extras", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "5 bebidas lata + 2 rolls + 2 twistos jamón + 2 kryspos + dulce + tictac + maní"},
+    {"descripcion": "Transferencia bb", "monto": 20000, "categoria": "Gastos Extras", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "BurguerKing"},
+    {"descripcion": "Estacionamiento", "monto": 7300, "categoria": "Gastos Extras", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": false, "notas": "Mall Plaza Egaña, película Spiderman 4D"}
+  ],
+  "ahorro": [
+    {"descripcion": "Transferencia a cuenta Santander", "monto": 200000, "categoria": "Ahorro", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": true, "notas": "Ahorro mensual del sueldo base"},
+    {"descripcion": "Transferencia a Ahorro Santander", "monto": 100000, "categoria": "Ahorro", "fecha": "2026-08-04", "estado": "pagado", "es_fijo": true, "notas": "100 para la cuenta de ahorro"}
+  ]
+}
