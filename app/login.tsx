@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { signIn, translateAuthError } from '../features/auth/hooks';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { Button } from '../components/Button';
@@ -16,10 +16,12 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
+  const { passwordReset } = useLocalSearchParams<{ passwordReset?: string }>();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -36,14 +38,14 @@ export default function LoginScreen() {
     try {
       // No manual navigation here on purpose: RootNavigator's Stack.Protected
       // guards (app/_layout.tsx) react to useSession()'s state automatically
-      // once this resolves, and mount "(app)" declaratively. An imperative
-      // router.replace('/') here used to race that navigator's own mount and
-      // threw "action REPLACE ... was not handled by any navigator".
+      // once this resolves.
       await signIn(values.email, values.password);
     } catch (err) {
       setServerError(translateAuthError(err));
     }
   };
+
+  const email = watch('email');
 
   // Only one message on screen at a time, in priority order: email format,
   // then missing password, then a failed login attempt against the API.
@@ -62,6 +64,12 @@ export default function LoginScreen() {
       >
         <Text className="text-2xl font-bold mb-1 text-center">Presupuesto</Text>
         <Text className="text-gray-500 mb-6 text-center">Inicia sesión para continuar</Text>
+
+        {!!passwordReset && (
+          <Text className="text-green-600 mb-4 text-center">
+            Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.
+          </Text>
+        )}
 
         <Controller
           control={control}
@@ -95,6 +103,10 @@ export default function LoginScreen() {
         {formError && <Text className="text-red-600 mb-2">{formError}</Text>}
 
         <Button title="Ingresar" loadingLabel="Ingresando..." onPress={handleSubmit(onSubmit)} loading={isSubmitting} disabled={isSubmitting} />
+
+        <Link href={{ pathname: '/forgot-password', params: email ? { email } : undefined }} className="mt-3">
+          <Text className="text-blue-600 text-center">¿Olvidaste tu contraseña?</Text>
+        </Link>
 
         <Link href="/register" className="mt-3">
           <Text className="text-blue-600 text-center">¿No tienes cuenta? Regístrate</Text>
