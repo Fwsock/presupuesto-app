@@ -7,6 +7,7 @@ export { translateAuthError } from './errors';
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -14,14 +15,21 @@ export function useSession() {
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    // 'PASSWORD_RECOVERY' se emite cuando la sesión se creó verificando un
+    // código de recuperación (verifyPasswordRecoveryOtp), no un login normal
+    // -- RootNavigator usa este flag para mandar a update-password.tsx en
+    // vez de a la app. Se limpia solo al cerrar sesión, que es lo que hace
+    // update-password.tsx apenas termina de actualizar la contraseña.
+    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
+      if (event === 'SIGNED_OUT') setIsPasswordRecovery(false);
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  return { session, loading };
+  return { session, loading, isPasswordRecovery };
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
