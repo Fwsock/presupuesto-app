@@ -145,7 +145,13 @@ export default function MovimientosScreen() {
   const searched = categoryFiltered ? filterMovementsByQuery(categoryFiltered, searchQuery) : categoryFiltered;
   const visibleMovements = searched ? sortMovements(searched, sortField, sortDirection) : searched;
   const groupedByDate = sortField === 'fecha';
-  const sections = !visibleMovements
+  // A SectionList counts +2 per section for its header/footer slots even
+  // when visibleMovements is empty and even when renderSectionHeader isn't
+  // provided -- an "empty" single flat section would still report a
+  // non-zero item count, which suppresses ListEmptyComponent. Guarding on
+  // .length here (not just truthiness) keeps the empty state working the
+  // same way regardless of which sortField is active.
+  const sections = !visibleMovements || visibleMovements.length === 0
     ? []
     : groupedByDate
       ? sortDirection === 'asc'
