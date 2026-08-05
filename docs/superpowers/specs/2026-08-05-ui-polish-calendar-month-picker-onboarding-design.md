@@ -52,7 +52,7 @@ a:
 ## 3. Auditoría de Registro/Onboarding
 
 - **Transiciones:** `app/_layout.tsx`'s `<Stack screenOptions={{headerShown:false}}>` gana `animation: 'slide_from_right'` explícito, para que las 3 plataformas (iOS/Android) se comporten igual en vez del default implícito de la librería.
-- **Flecha atrás:** nuevo componente pequeño `components/BackButton.tsx` (ícono `arrow-back`, safe-area-aware con `useSafeAreaInsets`, posicionado arriba-izquierda). Se agrega:
+- **Flecha atrás:** nuevo componente pequeño `components/BackButton.tsx` (ícono `arrow-back`, posicionado arriba-izquierda con un offset fijo, mismo patrón de constantes fijas que ya usa `onboarding.tsx` para su `pt-16` — este proyecto no tiene `react-native-safe-area-context` inicializado con un `SafeAreaProvider` en la raíz, así que no se introduce esa dependencia nueva solo para este botón). Se agrega:
   - `verify-otp.tsx`: `onPress={() => router.back()}`.
   - `onboarding.tsx`, paso `'ingreso'`: `onPress={() => setStep('perfil')}` (sin navegación, cambio de estado local).
   - `onboarding.tsx`, paso `'perfil'`: sin flecha (primer paso alcanzable de esa rama).
