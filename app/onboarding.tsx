@@ -89,7 +89,7 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1 }} className="bg-white">
       <BackButton onPress={() => setStep('perfil')} />
-      <ScrollView contentContainerClassName="p-6 pt-16">
+      <ScrollView contentContainerClassName="p-6 pt-24">
         <Text className="text-2xl font-bold mb-2">¿Cuál es tu ingreso mensual?</Text>
         <Text className="text-gray-500 mb-6">
           Configura tu sueldo u otro ingreso recurrente para que se registre automáticamente cada mes. Puedes
