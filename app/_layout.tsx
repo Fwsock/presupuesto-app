@@ -30,7 +30,7 @@ function RootNavigator() {
   const needsOnboarding = !!session && !profile?.onboarding_completed;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Protected guard={!!session && !needsOnboarding}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
@@ -39,6 +39,8 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="verify-otp" />
       </Stack.Protected>
     </Stack>
   );
