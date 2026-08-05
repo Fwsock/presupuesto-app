@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# git worktrees (each is its own working tree with its own node_modules)
+.claude/worktrees/
