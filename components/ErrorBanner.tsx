@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { Text } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { PressableScale } from './PressableScale';
 
 interface ErrorBannerProps {
@@ -10,11 +11,15 @@ interface ErrorBannerProps {
 
 export function ErrorBanner({ message, onRetry, actionLabel = 'Reintentar' }: ErrorBannerProps) {
   return (
-    <View className="bg-red-50 border border-red-200 rounded-md px-4 py-3 mx-4 my-2 flex-row items-center justify-between">
+    <Animated.View
+      entering={FadeInDown.duration(300)}
+      exiting={FadeOutUp.duration(250)}
+      className="bg-red-50 border border-red-200 rounded-md px-4 py-3 mx-4 my-2 flex-row items-center justify-between"
+    >
       <Text className="text-red-700 flex-1 mr-3">{message}</Text>
       <PressableScale onPress={onRetry} hitSlop={8}>
         <Text className="text-red-700 font-semibold">{actionLabel}</Text>
       </PressableScale>
-    </View>
+    </Animated.View>
   );
 }
