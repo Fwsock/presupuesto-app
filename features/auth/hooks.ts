@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../lib/supabase';
 
 export { translateAuthError } from './errors';
+
+const RECOVERY_FLAG_KEY = 'auth_password_recovery_pending';
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -10,10 +13,19 @@ export function useSession() {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+    Promise.all([supabase.auth.getSession(), AsyncStorage.getItem(RECOVERY_FLAG_KEY)]).then(
+      ([{ data }, recoveryFlag]) => {
+        setSession(data.session);
+        // Restores isPasswordRecovery across a JS reload (Fast Refresh, a
+        // crash, backgrounding) that happens while the user is mid-recovery
+        // -- Supabase persists the session to AsyncStorage before the
+        // PASSWORD_RECOVERY event even fires, so without this a reload at
+        // that moment would otherwise drop the user into the app fully
+        // signed in with their old password still active.
+        setIsPasswordRecovery(recoveryFlag === '1');
+        setLoading(false);
+      }
+    );
 
     // 'PASSWORD_RECOVERY' se emite cuando la sesión se creó verificando un
     // código de recuperación (verifyPasswordRecoveryOtp), no un login normal
@@ -22,8 +34,14 @@ export function useSession() {
     // update-password.tsx apenas termina de actualizar la contraseña.
     const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
-      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
-      if (event === 'SIGNED_OUT') setIsPasswordRecovery(false);
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+        AsyncStorage.setItem(RECOVERY_FLAG_KEY, '1');
+      }
+      if (event === 'SIGNED_OUT') {
+        setIsPasswordRecovery(false);
+        AsyncStorage.removeItem(RECOVERY_FLAG_KEY);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -83,6 +101,20 @@ export async function updateEmail(email: string): Promise<void> {
 export async function updatePassword(password: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;
+}
+
+let passwordJustReset = false;
+
+/** Marks that a password was just reset via the recovery flow, so login.tsx can show a one-time success banner. Call this before signOut() in update-password.tsx -- it must be set before the sign-out, not after, since it has to be true by the time RootNavigator's guard swaps back to the login screen. */
+export function markPasswordJustReset(): void {
+  passwordJustReset = true;
+}
+
+/** Reads and clears the one-shot flag set by markPasswordJustReset(). Call once when login.tsx mounts. */
+export function consumePasswordJustReset(): boolean {
+  const value = passwordJustReset;
+  passwordJustReset = false;
+  return value;
 }
 
 /** Envía el correo con el código de recuperación de 6 dígitos. Responde éxito aunque el correo no exista, para no revelar qué cuentas están registradas -- el llamador siempre debe mostrar el mismo mensaje de éxito. */

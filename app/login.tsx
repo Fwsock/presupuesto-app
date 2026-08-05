@@ -3,8 +3,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useLocalSearchParams } from 'expo-router';
-import { signIn, translateAuthError } from '../features/auth/hooks';
+import { Link } from 'expo-router';
+import { signIn, translateAuthError, consumePasswordJustReset } from '../features/auth/hooks';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { Button } from '../components/Button';
 
@@ -16,7 +16,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
-  const { passwordReset } = useLocalSearchParams<{ passwordReset?: string }>();
+  const [showPasswordResetBanner] = useState(consumePasswordJustReset);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     control,
@@ -65,7 +65,7 @@ export default function LoginScreen() {
         <Text className="text-2xl font-bold mb-1 text-center">Presupuesto</Text>
         <Text className="text-gray-500 mb-6 text-center">Inicia sesión para continuar</Text>
 
-        {!!passwordReset && (
+        {showPasswordResetBanner && (
           <Text className="text-green-600 mb-4 text-center">
             Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.
           </Text>

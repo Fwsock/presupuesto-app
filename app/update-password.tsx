@@ -3,8 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'expo-router';
-import { updatePassword, signOut, translateAuthError } from '../features/auth/hooks';
+import { updatePassword, signOut, translateAuthError, markPasswordJustReset } from '../features/auth/hooks';
 import { getPasswordStrength } from '../features/auth/passwordStrength';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
@@ -28,7 +27,6 @@ const updatePasswordSchema = z
 type UpdatePasswordForm = z.infer<typeof updatePasswordSchema>;
 
 export default function UpdatePasswordScreen() {
-  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     control,
@@ -44,11 +42,18 @@ export default function UpdatePasswordScreen() {
     setServerError(null);
     try {
       await updatePassword(values.password);
+      // Set before signOut(), not after: RootNavigator's guard swaps back to
+      // login as soon as the session clears, and this flag must already be true
+      // by then. No router.replace() here on purpose -- see cuenta.tsx's own
+      // signOut() for the same convention: the auth gate in app/_layout.tsx
+      // handles the navigation on its own once React state settles, avoiding
+      // the "action was not handled by any navigator" race that an imperative
+      // call right after signOut() can hit.
+      markPasswordJustReset();
       // signOut() limpia la sesión de recuperación (y el flag
       // isPasswordRecovery vía el evento SIGNED_OUT) -- sin esto el usuario
       // quedaría "adentro" de la app en vez de volver a login como se pidió.
       await signOut();
-      router.replace({ pathname: '/login', params: { passwordReset: '1' } });
     } catch (err) {
       setServerError(translateAuthError(err));
     }
