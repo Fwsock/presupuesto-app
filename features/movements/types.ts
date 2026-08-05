@@ -14,6 +14,8 @@ export interface Movement {
   cuota_total: number | null;
   /** Ionicons name, decorative only — see features/movements/iconSuggestion.ts. */
   icono: string;
+  /** Set when this movement was auto-generated from a recurring income (fijo or variable) — see features/movements/recurringLock.ts for the lock this implies in Movimientos. */
+  recurring_income_id: string | null;
   created_at: string;
   updated_at: string;
 }

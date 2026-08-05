@@ -1,3 +1,5 @@
+import { MONTH_NAMES } from '../shared/monthNames';
+
 /**
  * True when `value` is a real calendar date in YYYY-MM-DD form.
  *
@@ -39,4 +41,30 @@ export function formatDisplayDate(value: string): string {
   if (!isValidISODate(value)) return value;
   const [year, month, day] = value.split('-');
   return `${day}-${month}-${year}`;
+}
+
+// 'YYYY-MM-DD' -> '12 de Agosto', for the movement card in Movimientos —
+// the month itself is already implied by MonthSelector, so no year here.
+export function formatLongDate(value: string): string {
+  if (!isValidISODate(value)) return value;
+  const [, month, day] = value.split('-').map(Number);
+  return `${day} de ${MONTH_NAMES[month - 1]}`;
+}
+
+// 'YYYY-MM-DD' -> '12 de Agosto de 2026', for the movement detail sheet —
+// unlike the card, that view has no surrounding MonthSelector to imply the
+// year, so it's spelled out in full there.
+export function formatFullDate(value: string): string {
+  if (!isValidISODate(value)) return value;
+  const [year, month, day] = value.split('-').map(Number);
+  return `${day} de ${MONTH_NAMES[month - 1]} de ${year}`;
+}
+
+// 'YYYY-MM-DD' + today's 'YYYY-MM-DD' -> 'HOY · 04 de Agosto' or '03 de Agosto',
+// for the Movimientos date-section headers (bank/Mercado Pago style).
+export function formatSectionHeaderDate(value: string, todayISO: string): string {
+  if (!isValidISODate(value)) return value;
+  const [, month, day] = value.split('-').map(Number);
+  const label = `${String(day).padStart(2, '0')} de ${MONTH_NAMES[month - 1]}`;
+  return value === todayISO ? `HOY · ${label}` : label;
 }

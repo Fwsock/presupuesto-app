@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Switch, Alert } from 'react-native';
+import { View, Text, FlatList, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useCategories, useDeleteCategory } from '../../features/categories/hooks';
 import { useMovements, usePayAllPendingForCategory } from '../../features/movements/hooks';
 import { useSelectedMonth } from '../../features/shared/selected-month';
@@ -102,7 +103,7 @@ export default function CategoriasScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Editar"
                     >
-                      <Text>✏️</Text>
+                      <Ionicons name="pencil-outline" size={20} color="#374151" />
                     </PressableScale>
                     <PressableScale
                       onPress={() => handleDelete(item.id)}
@@ -112,23 +113,33 @@ export default function CategoriasScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Eliminar"
                     >
-                      <Text>🗑️</Text>
+                      <Ionicons name="trash-outline" size={20} color="#374151" />
                     </PressableScale>
                   </View>
                 </View>
 
                 <View className="flex-row items-center justify-between mt-2">
                   <Text className="text-gray-500 text-xs">
-                    {count > 0 ? `Pagar todo (${count} pendiente${count > 1 ? 's' : ''}, $${total.toLocaleString('es-CL')})` : 'Pagar todo'}
+                    {count > 0 ? `${count} pendiente${count > 1 ? 's' : ''}` : 'Sin pendientes'}
                   </Text>
-                  <Switch
-                    value={count === 0}
-                    disabled={count === 0 || isPaying}
-                    onValueChange={() => handlePayAll(item)}
-                    trackColor={{ false: '#d1d5db', true: '#16a34a' }}
-                    thumbColor="#ffffff"
-                    ios_backgroundColor="#d1d5db"
-                  />
+                  {count > 0 ? (
+                    <PressableScale
+                      onPress={() => handlePayAll(item)}
+                      disabled={isPaying}
+                      className={`px-3 py-1.5 rounded-full bg-blue-600 ${isPaying ? 'opacity-60' : ''}`}
+                      accessibilityRole="button"
+                      accessibilityLabel="Pagar todo"
+                    >
+                      <Text className="text-white text-xs font-medium">
+                        {isPaying ? 'Pagando...' : `Pagar todo ($${total.toLocaleString('es-CL')})`}
+                      </Text>
+                    </PressableScale>
+                  ) : (
+                    <View className="flex-row items-center px-3 py-1.5 rounded-full bg-gray-100">
+                      <Ionicons name="checkmark-circle" size={14} color="#16a34a" style={{ marginRight: 4 }} />
+                      <Text className="text-gray-500 text-xs font-medium">Todo pagado</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             );
@@ -136,12 +147,14 @@ export default function CategoriasScreen() {
         />
       )}
 
-      <PressableScale
-        className="absolute bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
-        onPress={openCreate}
-      >
-        <Text className="text-white text-2xl">+</Text>
-      </PressableScale>
+      <View className="absolute bottom-6 right-6">
+        <PressableScale
+          className="bg-blue-600 w-14 h-14 rounded-full items-center justify-center"
+          onPress={openCreate}
+        >
+          <Text className="text-white text-2xl">+</Text>
+        </PressableScale>
+      </View>
 
       <CategoryFormModal
         visible={modalVisible}
