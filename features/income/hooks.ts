@@ -47,7 +47,13 @@ export function useEnsureRecurringIncomeForMonth(year: number, month: number) {
     queryKey: ['recurring-income-check', year, month],
     queryFn: async () => {
       const result = await ensureRecurringIncomeForMonth(year, month);
-      queryClient.invalidateQueries({ queryKey: ['movements'] });
+      // Awaited on purpose: callers (e.g. Resumen's loading gate) rely on
+      // this query's own `isLoading` only flipping false once the movements
+      // list has actually caught up with whatever got auto-generated here --
+      // otherwise the screen could render its real content for a moment
+      // with the pre-generation (still empty) movements list before the
+      // invalidated refetch resolves, flashing $0 before the real total.
+      await queryClient.invalidateQueries({ queryKey: ['movements'] });
       return result;
     },
   });
@@ -55,10 +61,12 @@ export function useEnsureRecurringIncomeForMonth(year: number, month: number) {
 
 /**
  * Wraps the check + submit flow into what VariableIncomePromptModal needs.
- * Each screen that renders the modal (Resumen, Movimientos) calls this
- * independently, so "Ahora no" only dismisses it for that screen/session -
- * navigating to the other tab (or back to this one later) asks again,
- * which matches "cada vez que el usuario navega... se le debe preguntar."
+ * Called exactly once, by VariableIncomePromptHost (mounted at the (app)
+ * layout level, alongside the tab navigator, never by an individual
+ * screen) — so `skippedKey` lives in a component instance that survives
+ * switching tabs. "Ahora no" (skip()) therefore stays dismissed for the
+ * rest of the session regardless of navigation, and only re-arms itself
+ * when `monthKey` actually changes (the user moves to a different month).
  */
 export function useVariableIncomePromptState(year: number, month: number) {
   const ensureCheck = useEnsureRecurringIncomeForMonth(year, month);
@@ -72,6 +80,7 @@ export function useVariableIncomePromptState(year: number, month: number) {
   return {
     visible,
     concepto: recurringIncome?.concepto ?? '',
+    previousAmount: ensureCheck.data?.previousAmount ?? null,
     loading: submitVariableIncome.isPending,
     error: submitVariableIncome.isError ? (submitVariableIncome.error as Error).message : null,
     submit: (monto: number) => {

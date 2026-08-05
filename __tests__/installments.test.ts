@@ -5,6 +5,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
+        tipo: 'gasto',
         concepto: 'Notebook',
         montoTotal: 21248,
         notas: null,
@@ -26,6 +27,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
+        tipo: 'gasto',
         concepto: 'Curso',
         montoTotal: 10000,
         notas: null,
@@ -44,6 +46,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
+        tipo: 'gasto',
         concepto: 'TV',
         montoTotal: 5000,
         notas: 'Compra Falabella',
@@ -81,6 +84,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-2',
+        tipo: 'gasto',
         concepto: 'Seguro Anual',
         montoTotal: 15000,
         notas: null,
@@ -103,6 +107,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
+        tipo: 'gasto',
         concepto: 'Compra',
         montoTotal: 21000,
         notas: null,
@@ -122,6 +127,7 @@ describe('generateInstallments', () => {
     const rows = generateInstallments(
       {
         categoryId: 'cat-1',
+        tipo: 'gasto',
         concepto: 'Compra',
         montoTotal: 100000,
         notas: null,

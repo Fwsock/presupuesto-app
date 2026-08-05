@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import type { RecurringIncome } from '../features/income/types';
 import { Button } from './Button';
 import { PressableScale } from './PressableScale';
 import { ErrorBanner } from './ErrorBanner';
+import { useConfirmDialog } from './ConfirmDialog';
 
 const schema = z
   .object({
@@ -38,6 +39,7 @@ const INFO_MESSAGE =
 export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFormProps) {
   const upsertRecurringIncome = useUpsertRecurringIncome();
   const [formError, setFormError] = useState<string | null>(null);
+  const { confirm, element: infoDialog } = useConfirmDialog();
 
   const {
     control,
@@ -133,7 +135,15 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
             )}
           />
           <PressableScale
-            onPress={() => Alert.alert('Fijo vs Variable', INFO_MESSAGE)}
+            onPress={() =>
+              confirm({
+                title: 'Fijo vs Variable',
+                message: INFO_MESSAGE,
+                icon: 'information-circle-outline',
+                iconColor: '#2563eb',
+                actions: [{ label: 'Entendido', variant: 'default' }],
+              })
+            }
             hitSlop={10}
             style={{ minWidth: 44, minHeight: 44 }}
             className="items-center justify-center"
@@ -165,6 +175,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
       )}
 
       <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
+      {infoDialog}
     </View>
   );
 }

@@ -1,5 +1,8 @@
+import type { MovementType } from './types';
+
 export interface NewInstallmentInput {
   categoryId: string;
+  tipo: MovementType;
   concepto: string;
   /** Total price of the purchase — split evenly across totalCuotas, not the per-cuota amount. */
   montoTotal: number;
@@ -11,6 +14,7 @@ export interface NewInstallmentInput {
 
 export interface InstallmentRow {
   category_id: string;
+  tipo: MovementType;
   concepto: string;
   monto: number;
   notas: string | null;
@@ -46,6 +50,7 @@ export function generateInstallments(input: NewInstallmentInput, groupId: string
     const isLastCuota = i === input.totalCuotas - 1;
     rows.push({
       category_id: input.categoryId,
+      tipo: input.tipo,
       concepto: input.concepto,
       monto: isLastCuota ? baseAmount + remainder : baseAmount,
       notas: input.notas,

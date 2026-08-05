@@ -67,10 +67,10 @@ export async function deleteRecurringIncome(id: string): Promise<void> {
 /** Finds the user's "Ingresos" category, creating it if this is the first recurring income ever configured. */
 async function resolveIngresosCategoryId(): Promise<string> {
   const categories = await fetchCategories();
-  const existing = categories.find((c) => c.tipo === 'ingreso' && c.nombre.trim().toLowerCase() === 'ingresos');
+  const existing = categories.find((c) => c.nombre.trim().toLowerCase() === 'ingresos');
   if (existing) return existing.id;
 
-  const created = await createCategory({ nombre: 'Ingresos', tipo: 'ingreso' });
+  const created = await createCategory({ nombre: 'Ingresos', esFija: false });
   return created.id;
 }
 
@@ -82,6 +82,8 @@ interface EnsureRecurringIncomeResult {
   /** True when a 'variable' income has no movement for this month yet and the user should be asked for the amount. */
   needsVariablePrompt: boolean;
   recurringIncome: RecurringIncome | null;
+  /** Amount submitted for this recurring income the most recent prior month, if any — used to pre-fill the variable-income prompt. */
+  previousAmount: number | null;
 }
 
 /**
@@ -98,7 +100,7 @@ export async function ensureRecurringIncomeForMonth(
 ): Promise<EnsureRecurringIncomeResult> {
   const recurringIncome = await fetchRecurringIncome();
   if (!recurringIncome || !recurringIncome.activo) {
-    return { needsVariablePrompt: false, recurringIncome: null };
+    return { needsVariablePrompt: false, recurringIncome: null, previousAmount: null };
   }
 
   const fecha = firstDayOfMonth(year, month);
@@ -113,16 +115,28 @@ export async function ensureRecurringIncomeForMonth(
     throw error;
   }
   if (existingMovement) {
-    return { needsVariablePrompt: false, recurringIncome };
+    return { needsVariablePrompt: false, recurringIncome, previousAmount: null };
   }
 
   if (recurringIncome.tipo === 'variable') {
-    return { needsVariablePrompt: true, recurringIncome };
+    const { data: previousMovement, error: previousError } = await supabase
+      .from('movements')
+      .select('monto')
+      .eq('recurring_income_id', recurringIncome.id)
+      .lt('fecha', fecha)
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (previousError) {
+      logSupabaseError('ensureRecurringIncomeForMonth (previous amount)', previousError);
+      throw previousError;
+    }
+    return { needsVariablePrompt: true, recurringIncome, previousAmount: previousMovement?.monto ?? null };
   }
 
   // tipo === 'fijo': generate silently.
   await submitIncomeForMonth(recurringIncome, year, month, recurringIncome.monto ?? 0);
-  return { needsVariablePrompt: false, recurringIncome };
+  return { needsVariablePrompt: false, recurringIncome, previousAmount: null };
 }
 
 /** Creates the movement for one month of a recurring income — used both for 'fijo' auto-generation and 'variable' after the user answers the prompt. */
@@ -143,6 +157,7 @@ export async function submitIncomeForMonth(
     .insert({
       user_id: userId,
       category_id: categoryId,
+      tipo: 'ingreso',
       concepto: recurringIncome.concepto,
       monto,
       notas: null,

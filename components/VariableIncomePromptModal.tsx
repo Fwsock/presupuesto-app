@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Text, TextInput, View } from 'react-native';
 import { MONTH_NAMES } from '../features/shared/monthNames';
 import { Button } from './Button';
@@ -9,6 +9,8 @@ interface VariableIncomePromptModalProps {
   concepto: string;
   year: number;
   month: number;
+  /** Amount submitted last month for this income, pre-filled as the starting value since it usually doesn't change much month to month. */
+  previousAmount: number | null;
   loading: boolean;
   error: string | null;
   onSubmit: (monto: number) => void;
@@ -22,6 +24,7 @@ export function VariableIncomePromptModal({
   concepto,
   year,
   month,
+  previousAmount,
   loading,
   error,
   onSubmit,
@@ -29,6 +32,32 @@ export function VariableIncomePromptModal({
   onDismissError,
 }: VariableIncomePromptModalProps) {
   const [monto, setMonto] = useState('');
+  // Locks the button the instant Guardar is pressed, independent of
+  // `loading`. `loading` (the mutation's own isPending) flips back to false
+  // as soon as the save resolves, but the modal only actually closes once
+  // the follow-up "does this month still need the prompt" query has
+  // re-fetched and come back false — a real gap where the button would
+  // otherwise flash back to its normal, re-pressable blue state for a few
+  // frames before the modal disappears.
+  const [justSubmitted, setJustSubmitted] = useState(false);
+
+  // Pre-fill with last month's amount every time the prompt opens for a new
+  // month — this component stays mounted with `visible` toggling, so a plain
+  // useState initializer only runs once and would miss later openings.
+  useEffect(() => {
+    if (visible) {
+      setMonto(previousAmount ? String(previousAmount) : '');
+      setJustSubmitted(false);
+    }
+  }, [visible, previousAmount]);
+
+  const isLocked = loading || justSubmitted;
+
+  const handleSubmit = () => {
+    if (!monto) return;
+    setJustSubmitted(true);
+    onSubmit(Number(monto));
+  };
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onSkip}>
@@ -52,11 +81,11 @@ export function VariableIncomePromptModal({
 
           <Button
             title="Guardar"
-            onPress={() => monto && onSubmit(Number(monto))}
-            loading={loading}
-            disabled={loading || !monto}
+            onPress={handleSubmit}
+            loading={isLocked}
+            disabled={isLocked || !monto}
           />
-          <Button title="Ahora no" variant="ghost" onPress={onSkip} disabled={loading} />
+          <Button title="Ahora no" variant="ghost" onPress={onSkip} disabled={isLocked} />
         </View>
       </View>
     </Modal>

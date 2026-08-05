@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, Switch, ScrollView } from 'react-native';
+import { Modal, Pressable, View, Text, TextInput, Switch, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ import { useCreateMovement, useCreateInstallments, useUpdateMovement } from '../
 import { generateInstallments } from '../features/movements/installments';
 import { isValidISODate } from '../features/movements/date';
 import { suggestMovementIcon, DEFAULT_MOVEMENT_ICON } from '../features/movements/iconSuggestion';
-import type { Movement, MovementStatus } from '../features/movements/types';
+import type { Movement, MovementStatus, MovementType } from '../features/movements/types';
 import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { DateField } from './DateField';
@@ -25,6 +25,7 @@ const movementSchema = z
       .regex(/^\d+$/, 'Ingresa solo números')
       .refine((v) => Number(v) > 0, 'El monto debe ser mayor a 0'),
     categoryId: z.string().min(1, 'Selecciona una categoría'),
+    tipo: z.enum(['ingreso', 'gasto']),
     notas: z.string().optional(),
     fecha: z
       .string()
@@ -83,6 +84,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       concepto: '',
       monto: '',
       categoryId: '',
+      tipo: 'gasto',
       notas: '',
       fecha: new Date().toISOString().slice(0, 10),
       estado: 'pendiente',
@@ -104,6 +106,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       concepto: movement?.concepto ?? '',
       monto: String(movement?.monto ?? '').replace(/[^0-9]/g, ''),
       categoryId: movement?.category_id ?? '',
+      tipo: (movement?.tipo ?? 'gasto') as MovementType,
       notas: movement?.notas ?? '',
       fecha: movement?.fecha ?? new Date().toISOString().slice(0, 10),
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
@@ -134,6 +137,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
         {
           id: movement.id,
           categoryId: values.categoryId,
+          tipo: values.tipo,
           concepto,
           monto: Number(values.monto),
           notas: values.notas || null,
@@ -150,6 +154,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       const rows = generateInstallments(
         {
           categoryId: values.categoryId,
+          tipo: values.tipo,
           concepto,
           montoTotal: Number(values.monto),
           notas: values.notas || null,
@@ -164,15 +169,24 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
         onError: (err) => setFormError((err as Error).message),
       });
     } else {
+      // A fresh series id, only assigned when the chosen category is "fija"
+      // -- this is what lets ensureFixedCategoryMovementsForMonth find and
+      // replicate this specific line item into future months. Cuotas skip
+      // this entirely: they already repeat via installment_group_id.
+      const selectedCategory = categories?.find((c) => c.id === values.categoryId);
+      const fixedSeriesId = selectedCategory?.es_fija ? uuidv4() : null;
+
       createMovement.mutate(
         {
           categoryId: values.categoryId,
+          tipo: values.tipo,
           concepto,
           monto: Number(values.monto),
           notas: values.notas || null,
           estado: values.estado,
           fecha: values.fecha,
           icono: values.icono,
+          fixedSeriesId,
         },
         {
           onSuccess: () => onClose(),
@@ -183,8 +197,15 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-white">
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View className="flex-1 justify-end bg-black/40">
+        <Pressable
+          onPress={isSaving ? undefined : onClose}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar"
+        />
+        <View className="bg-white rounded-t-2xl" style={{ maxHeight: '90%' }}>
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
           <PressableScale
             onPress={onClose}
@@ -198,133 +219,180 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           <Text className="text-lg font-semibold">{mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}</Text>
         </View>
 
-        <ScrollView className="flex-1 px-4 pt-4" contentContainerClassName="pb-8">
+        <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">
           {formError && (
             <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
           )}
 
-          <View className="flex-row items-start mb-1">
-            <PressableScale
-              onPress={() => setIconPickerVisible(true)}
-              className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3"
-              accessibilityRole="button"
-              accessibilityLabel="Elegir ícono"
-            >
-              <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={22} color="#374151" />
-            </PressableScale>
+          {/* Section 1: Concepto y Monto */}
+          <View className="mb-5">
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Concepto y monto</Text>
 
-            <View className="flex-1">
-              <Controller
-                control={control}
-                name="concepto"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="border border-gray-300 rounded-md px-3 py-2"
-                    placeholder="Concepto"
-                    value={value}
-                    onChangeText={onChange}
-                  />
-                )}
-              />
-              {errors.concepto && <Text className="text-red-600 mt-1">{errors.concepto.message}</Text>}
+            <View className="flex-row items-start mb-1">
+              <PressableScale
+                onPress={() => setIconPickerVisible(true)}
+                className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3"
+                accessibilityRole="button"
+                accessibilityLabel="Elegir ícono"
+              >
+                <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={22} color="#374151" />
+              </PressableScale>
+
+              <View className="flex-1">
+                <Controller
+                  control={control}
+                  name="concepto"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      className="border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Concepto"
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
+                />
+                {errors.concepto && <Text className="text-red-600 mt-1">{errors.concepto.message}</Text>}
+              </View>
             </View>
+            <Text className="text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
+
+            <Controller
+              control={control}
+              name="monto"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+                  placeholder={esCuota ? 'Monto total de la compra' : 'Monto'}
+                  keyboardType="number-pad"
+                  value={value}
+                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
+                />
+              )}
+            />
+            {esCuota && (
+              <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
+            )}
+            {errors.monto && <Text className="text-red-600">{errors.monto.message}</Text>}
           </View>
-          <Text className="text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
 
-          <Controller
-            control={control}
-            name="monto"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                placeholder={esCuota ? 'Monto total de la compra' : 'Monto'}
-                keyboardType="number-pad"
-                value={value}
-                onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
-              />
-            )}
-          />
-          {esCuota && (
-            <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
-          )}
-          {errors.monto && <Text className="text-red-600 mb-2">{errors.monto.message}</Text>}
+          {/* Section 2: Tipo y Categoría */}
+          <View className="mb-5 pt-5 border-t border-gray-100">
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Tipo y categoría</Text>
 
-          <Controller
-            control={control}
-            name="categoryId"
-            render={({ field: { onChange, value } }) => (
-              <View className="flex-row flex-wrap mb-2">
-                {categories?.map((c) => {
-                  const selected = value === c.id;
-                  return (
+            <Controller
+              control={control}
+              name="tipo"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row mb-3">
+                  {/* flex: 1 on the plain View, not on PressableScale - see
+                      PressableScale's own comment for why. */}
+                  <View style={{ flex: 1 }}>
                     <PressableScale
-                      key={c.id}
-                      onPress={() => onChange(selected ? '' : c.id)}
-                      className={`px-3 py-2 mr-2 mb-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      className={`py-2 rounded-l-md border ${value === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      onPress={() => onChange('ingreso')}
                     >
-                      <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+                      <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
                     </PressableScale>
-                  );
-                })}
-              </View>
-            )}
-          />
-          {errors.categoryId && <Text className="text-red-600 mb-2">{errors.categoryId.message}</Text>}
-
-          <Controller
-            control={control}
-            name="fecha"
-            render={({ field: { onChange, value } }) => <DateField value={value} onChange={onChange} />}
-          />
-          {errors.fecha && <Text className="text-red-600 mb-2">{errors.fecha.message}</Text>}
-
-          <Controller
-            control={control}
-            name="notas"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-3"
-                placeholder="Notas (opcional)"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="estado"
-            render={({ field: { onChange, value } }) => (
-              <View className="flex-row mb-4">
-                {/* flex: 1 on the plain View, not on PressableScale - see
-                    PressableScale's own comment for why. */}
-                <View style={{ flex: 1 }}>
-                  <PressableScale
-                    className={`py-2 rounded-l-md border ${value === 'pendiente' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                    onPress={() => onChange('pendiente')}
-                  >
-                    <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
-                  </PressableScale>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <PressableScale
+                      className={`py-2 rounded-r-md border ${value === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      onPress={() => onChange('gasto')}
+                    >
+                      <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
+                    </PressableScale>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <PressableScale
-                    className={`py-2 rounded-r-md border ${value === 'pagado' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                    onPress={() => onChange('pagado')}
-                  >
-                    <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
-                  </PressableScale>
-                </View>
-              </View>
-            )}
-          />
+              )}
+            />
 
+            <Controller
+              control={control}
+              name="categoryId"
+              render={({ field: { onChange, value } }) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 8 }}>
+                  <View className="flex-row" style={{ gap: 8 }}>
+                    {categories?.map((c) => {
+                      const selected = value === c.id;
+                      return (
+                        <PressableScale
+                          key={c.id}
+                          onPress={() => onChange(selected ? '' : c.id)}
+                          className={`px-3 py-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                        >
+                          <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+                        </PressableScale>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              )}
+            />
+            {errors.categoryId && <Text className="text-red-600 mt-2">{errors.categoryId.message}</Text>}
+          </View>
+
+          {/* Section 3: Detalles */}
+          <View className="mb-5 pt-5 border-t border-gray-100">
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Detalles</Text>
+
+            <Controller
+              control={control}
+              name="fecha"
+              render={({ field: { onChange, value } }) => <DateField value={value} onChange={onChange} />}
+            />
+            {errors.fecha && <Text className="text-red-600 mb-2">{errors.fecha.message}</Text>}
+
+            <Controller
+              control={control}
+              name="estado"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row mb-3">
+                  {/* flex: 1 on the plain View, not on PressableScale - see
+                      PressableScale's own comment for why. */}
+                  <View style={{ flex: 1 }}>
+                    <PressableScale
+                      className={`py-2 rounded-l-md border ${value === 'pendiente' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      onPress={() => onChange('pendiente')}
+                    >
+                      <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
+                    </PressableScale>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <PressableScale
+                      className={`py-2 rounded-r-md border ${value === 'pagado' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      onPress={() => onChange('pagado')}
+                    >
+                      <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
+                    </PressableScale>
+                  </View>
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="notas"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                  placeholder="Notas (opcional)"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
+            />
+          </View>
+
+          {/* Section 4: Opciones avanzadas */}
           {mode === 'create' && (
-            <>
+            <View className="mb-5 pt-5 border-t border-gray-100">
+              <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Opciones avanzadas</Text>
+
               <Controller
                 control={control}
                 name="esCuota"
                 render={({ field: { onChange, value } }) => (
-                  <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center justify-between">
                     <Text>¿Es en cuotas?</Text>
                     <Switch value={value} onValueChange={onChange} />
                   </View>
@@ -338,7 +406,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                     name="totalCuotas"
                     render={({ field: { onChange, value } }) => (
                       <TextInput
-                        className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+                        className="border border-gray-300 rounded-md px-3 py-2 mt-3 mb-1"
                         placeholder="Cuotas"
                         keyboardType="number-pad"
                         value={value}
@@ -346,14 +414,15 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       />
                     )}
                   />
-                  {errors.totalCuotas && <Text className="text-red-600 mb-2">{errors.totalCuotas.message}</Text>}
+                  {errors.totalCuotas && <Text className="text-red-600">{errors.totalCuotas.message}</Text>}
                 </>
               )}
-            </>
+            </View>
           )}
 
           <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
         </ScrollView>
+        </View>
 
         <IconPickerModal
           visible={iconPickerVisible}

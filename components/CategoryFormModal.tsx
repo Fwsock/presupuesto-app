@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Ionicons } from '@expo/vector-icons';
 import { useCreateCategory, useUpdateCategory } from '../features/categories/hooks';
-import type { Category, CategoryType } from '../features/categories/types';
+import type { Category } from '../features/categories/types';
 import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
+import { FullScreenFormModal } from './FullScreenFormModal';
 import { PressableScale } from './PressableScale';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
-  tipo: z.enum(['ingreso', 'gasto']),
+  esFija: z.boolean(),
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
@@ -31,7 +31,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
-    defaultValues: { nombre: '', tipo: 'gasto' },
+    defaultValues: { nombre: '', esFija: false },
   });
 
   const isSaving = createCategory.isPending || updateCategory.isPending;
@@ -43,10 +43,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
   useEffect(() => {
     if (!visible) return;
     setFormError(null);
-    reset({
-      nombre: initialValue?.nombre ?? '',
-      tipo: (initialValue?.tipo ?? 'gasto') as CategoryType,
-    });
+    reset({ nombre: initialValue?.nombre ?? '', esFija: initialValue?.es_fija ?? false });
   }, [visible, initialValue, reset]);
 
   // The mutations live here rather than in the screen so a failed save renders
@@ -72,74 +69,62 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-          <PressableScale
-            onPress={onClose}
-            disabled={isSaving}
-            className="pr-3 py-1"
-            accessibilityRole="button"
-            accessibilityLabel="Cerrar"
-          >
-            <Ionicons name="arrow-back" size={24} color="#111827" />
-          </PressableScale>
-          <Text className="text-lg font-semibold">
-            {initialValue ? 'Editar categoría' : 'Nueva categoría'}
-          </Text>
-        </View>
+    <FullScreenFormModal
+      visible={visible}
+      title={initialValue ? 'Editar categoría' : 'Nueva categoría'}
+      onClose={onClose}
+    >
+      {formError && (
+        <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
+      )}
 
-        <View className="flex-1 px-4 pt-4">
-          {formError && (
-            <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />
-          )}
-
-          <Controller
-            control={control}
-            name="nombre"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                placeholder="Nombre"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
+      <Controller
+        control={control}
+        name="nombre"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+            placeholder="Nombre"
+            value={value}
+            onChangeText={onChange}
+            autoFocus
           />
-          {errors.nombre && <Text className="text-red-600 mb-2">{errors.nombre.message}</Text>}
+        )}
+      />
+      {errors.nombre && <Text className="text-red-600 mb-2">{errors.nombre.message}</Text>}
 
-          <Controller
-            control={control}
-            name="tipo"
-            render={({ field: { onChange, value } }) => (
-              <View className="flex-row mb-4">
-                {/* flex: 1 on the plain View, not on PressableScale - see
-                    PressableScale's own comment: its style/className size
-                    and center its own touchable surface, not how it
-                    participates in a parent's flex row. */}
-                <View style={{ flex: 1 }}>
-                  <PressableScale
-                    className={`py-2 rounded-l-md border ${value === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                    onPress={() => onChange('ingreso')}
-                  >
-                    <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
-                  </PressableScale>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <PressableScale
-                    className={`py-2 rounded-r-md border ${value === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
-                    onPress={() => onChange('gasto')}
-                  >
-                    <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
-                  </PressableScale>
-                </View>
-              </View>
-            )}
-          />
+      <Text className="text-gray-500 text-xs mb-2">Tipo de categoría</Text>
+      <Controller
+        control={control}
+        name="esFija"
+        render={({ field: { onChange, value } }) => (
+          <View className="flex-row mb-1">
+            {/* flex: 1 on the plain View, not on PressableScale - see
+                PressableScale's own comment for why. */}
+            <View style={{ flex: 1 }}>
+              <PressableScale
+                className={`py-2 rounded-l-md border ${!value ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                onPress={() => onChange(false)}
+              >
+                <Text className={`text-center ${!value ? 'text-white' : 'text-black'}`}>Variable</Text>
+              </PressableScale>
+            </View>
+            <View style={{ flex: 1 }}>
+              <PressableScale
+                className={`py-2 rounded-r-md border ${value ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                onPress={() => onChange(true)}
+              >
+                <Text className={`text-center ${value ? 'text-white' : 'text-black'}`}>Fija / Recurrente</Text>
+              </PressableScale>
+            </View>
+          </View>
+        )}
+      />
+      <Text className="text-gray-400 text-xs mb-4">
+        Las categorías fijas (Insumos básicos, Vivienda, Suscripciones...) replican sus movimientos automáticamente cada mes.
+      </Text>
 
-          <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
-        </View>
-      </View>
-    </Modal>
+      <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
+    </FullScreenFormModal>
   );
 }

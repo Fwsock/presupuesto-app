@@ -9,6 +9,7 @@ import {
   payAllPendingForCategory,
   updateMovement,
 } from './api';
+import { ensureFixedCategoryMovementsForMonth } from './fixedCategories';
 import type { InstallmentRow } from './installments';
 import type { NewMovementInput, UpdateMovementInput, Movement } from './types';
 
@@ -31,6 +32,27 @@ export function useMovementsForMonthRange(
   return useQuery({
     queryKey: ['movements', 'range', centerYear, centerMonth, monthsBefore, monthsAfter],
     queryFn: () => fetchMovementsForMonthRange(centerYear, centerMonth, monthsBefore, monthsAfter),
+  });
+}
+
+/**
+ * Runs on the active month, same contract as
+ * useEnsureRecurringIncomeForMonth (features/income/hooks.ts): silently
+ * replicates every "fija" category's missing recurring movement into the
+ * currently viewed month. Mounted once, at the (app) layout level -- see
+ * components/FixedCategoriesSync.tsx.
+ */
+export function useEnsureFixedCategoryMovementsForMonth(year: number, month: number) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['fixed-categories-check', year, month],
+    queryFn: async () => {
+      await ensureFixedCategoryMovementsForMonth(year, month);
+      // Awaited on purpose -- see the identical comment in
+      // useEnsureRecurringIncomeForMonth (features/income/hooks.ts).
+      await queryClient.invalidateQueries({ queryKey: ['movements'] });
+      return true;
+    },
   });
 }
 
@@ -69,11 +91,22 @@ function useUpdateMovementsCache() {
     upsertMovement: (movement: Movement) => {
       const y = Number(movement.fecha.slice(0, 4));
       const m = Number(movement.fecha.slice(5, 7));
-      // Drop the previous version from every month (fecha may have changed).
-      mutateMonthCaches((rows) => rows.filter((r) => r.id !== movement.id));
       mutateMonthCaches((rows, year, month) => {
-        if (year !== y || month !== m) return rows;
-        return [...rows, movement].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        const existingIndex = rows.findIndex((r) => r.id === movement.id);
+        if (year !== y || month !== m) {
+          // Not this movement's (new) month -- drop it if it used to live here.
+          return existingIndex === -1 ? rows : rows.filter((r) => r.id !== movement.id);
+        }
+        if (existingIndex === -1) {
+          // New to this month (fecha changed into it) -- append then resort.
+          return [...rows, movement].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        }
+        // Same month as before (the common case, e.g. toggling estado):
+        // replace in place instead of remove+append+resort, so same-date
+        // rows keep their exact relative order and the row doesn't jump.
+        const next = [...rows];
+        next[existingIndex] = movement;
+        return next;
       });
     },
     removeMovement: (id: string) => {

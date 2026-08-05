@@ -3,8 +3,8 @@ import type { Category } from '../features/categories/types';
 import type { Movement } from '../features/movements/types';
 
 const categories: Category[] = [
-  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', tipo: 'ingreso', created_at: '' },
-  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', tipo: 'gasto', created_at: '' },
+  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', es_fija: false, created_at: '' },
+  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', es_fija: false, created_at: '' },
 ];
 
 function movement(overrides: Partial<Movement>): Movement {
@@ -12,6 +12,7 @@ function movement(overrides: Partial<Movement>): Movement {
     id: 'm',
     user_id: 'u1',
     category_id: 'fijos',
+    tipo: 'gasto',
     concepto: 'x',
     monto: 0,
     notas: null,
@@ -22,6 +23,7 @@ function movement(overrides: Partial<Movement>): Movement {
     cuota_total: null,
     icono: 'receipt-outline',
     recurring_income_id: null,
+    fixed_series_id: null,
     created_at: '',
     updated_at: '',
     ...overrides,
@@ -53,10 +55,10 @@ describe('monthOffset', () => {
 describe('buildMonthlySaldoSeries', () => {
   it('computes saldoDisponible per month using only that month\'s movements', () => {
     const movements = [
-      movement({ fecha: '2026-06-15', category_id: 'ing', monto: 500000, estado: 'pagado' }),
-      movement({ fecha: '2026-06-20', category_id: 'fijos', monto: 100000, estado: 'pagado' }),
-      movement({ fecha: '2026-07-05', category_id: 'ing', monto: 300000, estado: 'pagado' }),
-      movement({ fecha: '2026-07-10', category_id: 'fijos', monto: 250000, estado: 'pagado' }),
+      movement({ fecha: '2026-06-15', category_id: 'ing', tipo: 'ingreso', monto: 500000, estado: 'pagado' }),
+      movement({ fecha: '2026-06-20', category_id: 'fijos', tipo: 'gasto', monto: 100000, estado: 'pagado' }),
+      movement({ fecha: '2026-07-05', category_id: 'ing', tipo: 'ingreso', monto: 300000, estado: 'pagado' }),
+      movement({ fecha: '2026-07-10', category_id: 'fijos', tipo: 'gasto', monto: 250000, estado: 'pagado' }),
     ];
 
     const series = buildMonthlySaldoSeries(movements, categories, [
@@ -86,8 +88,8 @@ describe('buildMonthlySaldoSeries', () => {
 
   it('can produce a negative saldoDisponible', () => {
     const movements = [
-      movement({ fecha: '2026-05-01', category_id: 'ing', monto: 100000, estado: 'pagado' }),
-      movement({ fecha: '2026-05-02', category_id: 'fijos', monto: 150000, estado: 'pagado' }),
+      movement({ fecha: '2026-05-01', category_id: 'ing', tipo: 'ingreso', monto: 100000, estado: 'pagado' }),
+      movement({ fecha: '2026-05-02', category_id: 'fijos', tipo: 'gasto', monto: 150000, estado: 'pagado' }),
     ];
 
     const series = buildMonthlySaldoSeries(movements, categories, [{ year: 2026, month: 5 }]);

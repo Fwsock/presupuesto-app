@@ -3,9 +3,9 @@ import type { Category } from '../features/categories/types';
 import type { Movement } from '../features/movements/types';
 
 const categories: Category[] = [
-  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', tipo: 'ingreso', created_at: '' },
-  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', tipo: 'gasto', created_at: '' },
-  { id: 'ahorro', user_id: 'u1', nombre: 'Ahorro', tipo: 'gasto', created_at: '' },
+  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', es_fija: false, created_at: '' },
+  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', es_fija: false, created_at: '' },
+  { id: 'ahorro', user_id: 'u1', nombre: 'Ahorro', es_fija: false, created_at: '' },
 ];
 
 function movement(overrides: Partial<Movement>): Movement {
@@ -13,6 +13,7 @@ function movement(overrides: Partial<Movement>): Movement {
     id: 'm',
     user_id: 'u1',
     category_id: 'fijos',
+    tipo: 'gasto',
     concepto: 'x',
     monto: 0,
     notas: null,
@@ -23,6 +24,7 @@ function movement(overrides: Partial<Movement>): Movement {
     cuota_total: null,
     icono: 'receipt-outline',
     recurring_income_id: null,
+    fixed_series_id: null,
     created_at: '',
     updated_at: '',
     ...overrides,
@@ -32,9 +34,9 @@ function movement(overrides: Partial<Movement>): Movement {
 describe('calculateMonthSummary', () => {
   it('sums ingresos and subtracts gastos for the saldo disponible', () => {
     const movements = [
-      movement({ category_id: 'ing', monto: 500000, estado: 'pagado' }),
-      movement({ category_id: 'fijos', monto: 100000, estado: 'pagado' }),
-      movement({ category_id: 'ahorro', monto: 50000, estado: 'pagado' }),
+      movement({ category_id: 'ing', tipo: 'ingreso', monto: 500000, estado: 'pagado' }),
+      movement({ category_id: 'fijos', tipo: 'gasto', monto: 100000, estado: 'pagado' }),
+      movement({ category_id: 'ahorro', tipo: 'gasto', monto: 50000, estado: 'pagado' }),
     ];
 
     const summary = calculateMonthSummary(movements, categories);
@@ -46,8 +48,8 @@ describe('calculateMonthSummary', () => {
 
   it('ignores movements that are still pendiente', () => {
     const movements = [
-      movement({ category_id: 'ing', monto: 500000, estado: 'pagado' }),
-      movement({ category_id: 'fijos', monto: 999999, estado: 'pendiente' }),
+      movement({ category_id: 'ing', tipo: 'ingreso', monto: 500000, estado: 'pagado' }),
+      movement({ category_id: 'fijos', tipo: 'gasto', monto: 999999, estado: 'pendiente' }),
     ];
 
     const summary = calculateMonthSummary(movements, categories);
@@ -65,8 +67,8 @@ describe('calculateMonthSummary', () => {
 
   it('excludes pendiente movements from a category total even when the same category also has pagado movements', () => {
     const movements = [
-      movement({ category_id: 'fijos', monto: 100000, estado: 'pagado' }),
-      movement({ category_id: 'fijos', monto: 999999, estado: 'pendiente' }),
+      movement({ category_id: 'fijos', tipo: 'gasto', monto: 100000, estado: 'pagado' }),
+      movement({ category_id: 'fijos', tipo: 'gasto', monto: 999999, estado: 'pendiente' }),
     ];
 
     const summary = calculateMonthSummary(movements, categories);
@@ -74,5 +76,22 @@ describe('calculateMonthSummary', () => {
 
     expect(fijosTotal?.total).toBe(100000);
     expect(summary.totalGastos).toBe(100000);
+  });
+
+  it('splits totalIngresos/totalGastos by movement.tipo even when a category holds both kinds', () => {
+    const movements = [
+      movement({ category_id: 'fijos', tipo: 'ingreso', monto: 20000, estado: 'pagado' }),
+      movement({ category_id: 'fijos', tipo: 'gasto', monto: 5000, estado: 'pagado' }),
+    ];
+
+    const summary = calculateMonthSummary(movements, categories);
+    const fijosTotal = summary.totalsByCategory.find((c) => c.categoryId === 'fijos');
+
+    expect(summary.totalIngresos).toBe(20000);
+    expect(summary.totalGastos).toBe(5000);
+    // Category total is the combined sum regardless of type...
+    expect(fijosTotal?.total).toBe(25000);
+    // ...and its display tipo follows whichever side has the larger amount.
+    expect(fijosTotal?.tipo).toBe('ingreso');
   });
 });
