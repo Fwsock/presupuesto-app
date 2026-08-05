@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanim
 import { useMovements, useUpdateMovement, useDeleteMovement, useDeleteMovementGroup } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { groupMovementsByDate } from '../../features/movements/dateGrouping';
+import { formatISODate } from '../../features/movements/date';
 import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
 import { MovementDateSectionHeader } from '../../components/MovementDateSectionHeader';
@@ -27,6 +28,7 @@ export default function MovimientosScreen() {
   const navigation = useNavigation();
   const listRef = useRef<SectionList<Movement>>(null);
   const { year, month, setMonth } = useSelectedMonth();
+  const todayISO = formatISODate(new Date());
   // Set when the user taps a category on Resumen (drill-down to that category).
   const { categoryId } = useLocalSearchParams<{ categoryId?: string }>();
 
@@ -142,7 +144,14 @@ export default function MovimientosScreen() {
   const categoryFiltered = categoryId ? movements?.filter((m) => m.category_id === categoryId) : movements;
   const searched = categoryFiltered ? filterMovementsByQuery(categoryFiltered, searchQuery) : categoryFiltered;
   const visibleMovements = searched ? sortMovements(searched, sortField, sortDirection) : searched;
-  const sections = visibleMovements ? groupMovementsByDate(visibleMovements) : [];
+  const groupedByDate = sortField === 'fecha';
+  const sections = !visibleMovements
+    ? []
+    : groupedByDate
+      ? sortDirection === 'asc'
+        ? [...groupMovementsByDate(visibleMovements)].reverse()
+        : groupMovementsByDate(visibleMovements)
+      : [{ fecha: '', totalDelDia: 0, data: visibleMovements }];
 
   const filterActive = !!categoryId || sortField !== 'fecha' || sortDirection !== 'desc';
 
@@ -156,13 +165,11 @@ export default function MovimientosScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener('tabPress' as never, () => {
       if (!navigation.isFocused()) return;
-      if (sections.length > 0) {
-        listRef.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: false, viewOffset: 0 });
-      }
+      listRef.current?.getScrollResponder()?.scrollTo({ y: 0, animated: false });
       handleRefresh();
     });
     return unsubscribe;
-  }, [navigation, handleRefresh, sections]);
+  }, [navigation, handleRefresh]);
 
   return (
     <FadeTabScreen>
@@ -184,9 +191,11 @@ export default function MovimientosScreen() {
           sections={sections}
           keyExtractor={(item) => item.id}
           stickySectionHeadersEnabled
-          renderSectionHeader={({ section }) => (
-            <MovementDateSectionHeader fecha={section.fecha} totalDelDia={section.totalDelDia} />
-          )}
+          renderSectionHeader={
+            groupedByDate
+              ? ({ section }) => <MovementDateSectionHeader fecha={section.fecha} totalDelDia={section.totalDelDia} todayISO={todayISO} />
+              : undefined
+          }
           // MonthSelector + the search bar live inside ListHeaderComponent
           // (not as siblings above the SectionList) for two reasons: they stay
           // visible even when this month has zero movements (previously the

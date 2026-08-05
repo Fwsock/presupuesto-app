@@ -1,13 +1,13 @@
 import { Text, View } from 'react-native';
-import { formatSectionHeaderDate, formatISODate } from '../features/movements/date';
+import { formatSectionHeaderDate } from '../features/movements/date';
 
 interface MovementDateSectionHeaderProps {
   fecha: string;
   totalDelDia: number;
+  todayISO: string;
 }
 
-export function MovementDateSectionHeader({ fecha, totalDelDia }: MovementDateSectionHeaderProps) {
-  const todayISO = formatISODate(new Date());
+export function MovementDateSectionHeader({ fecha, totalDelDia, todayISO }: MovementDateSectionHeaderProps) {
   const isNegative = totalDelDia < 0;
   return (
     <View className="flex-row items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-100">
