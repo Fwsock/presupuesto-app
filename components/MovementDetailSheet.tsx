@@ -85,24 +85,28 @@ export function MovementDetailSheet({
 
       {!isLocked && (
         <View className="border-t border-gray-100 mt-6 pt-4 flex-row" style={{ gap: 10 }}>
-          <PressableScale
-            onPress={onEdit}
-            className="flex-1 flex-row items-center justify-center py-3 rounded-lg border border-gray-300"
-            accessibilityRole="button"
-            accessibilityLabel="Editar movimiento"
-          >
-            <Ionicons name="pencil-outline" size={18} color="#374151" style={{ marginRight: 6 }} />
-            <Text className="font-semibold text-gray-700">Editar</Text>
-          </PressableScale>
-          <PressableScale
-            onPress={onDelete}
-            className="flex-1 flex-row items-center justify-center py-3 rounded-lg bg-red-600"
-            accessibilityRole="button"
-            accessibilityLabel="Eliminar movimiento"
-          >
-            <Ionicons name="trash-outline" size={18} color="#ffffff" style={{ marginRight: 6 }} />
-            <Text className="font-semibold text-white">Eliminar</Text>
-          </PressableScale>
+          <View style={{ flex: 1 }}>
+            <PressableScale
+              onPress={onEdit}
+              className="flex-row items-center justify-center py-3 px-3 rounded-lg border border-gray-300"
+              accessibilityRole="button"
+              accessibilityLabel="Editar movimiento"
+            >
+              <Ionicons name="pencil-outline" size={18} color="#374151" style={{ marginRight: 6 }} />
+              <Text className="font-semibold text-gray-700">Editar</Text>
+            </PressableScale>
+          </View>
+          <View style={{ flex: 1 }}>
+            <PressableScale
+              onPress={onDelete}
+              className="flex-row items-center justify-center py-3 px-3 rounded-lg bg-red-600"
+              accessibilityRole="button"
+              accessibilityLabel="Eliminar movimiento"
+            >
+              <Ionicons name="trash-outline" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text className="font-semibold text-white">Eliminar</Text>
+            </PressableScale>
+          </View>
         </View>
       )}
     </FullScreenFormModal>
