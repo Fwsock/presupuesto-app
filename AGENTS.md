@@ -2,6 +2,10 @@
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
 
+## Modelo de sesión
+
+Usa siempre `/model opusplan` al iniciar una sesión en este proyecto.
+
 ## Protocolo de cierre por tarea/cambio
 
 Para cada tarea o cambio de código que completes (no solo al final de un plan completo):
