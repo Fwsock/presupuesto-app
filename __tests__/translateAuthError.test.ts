@@ -46,6 +46,18 @@ describe('translateAuthError', () => {
     );
   });
 
+  it('gives a specific message for the recovery-email rate limit', () => {
+    expect(translateAuthError(new Error('email rate limit exceeded'))).toBe(
+      'Alcanzaste el límite de correos permitidos. Espera unos minutos antes de solicitar otro.'
+    );
+  });
+
+  it('gives a specific message for a 500 / SMTP failure sending the recovery email', () => {
+    expect(translateAuthError(new Error('Error sending recovery email: unexpected_failure'))).toBe(
+      'No se pudo enviar el correo de confirmación. Inténtalo de nuevo más tarde.'
+    );
+  });
+
   it('passes through a short, unrecognized message as-is', () => {
     expect(translateAuthError(new Error('Something specific went wrong'))).toBe('Something specific went wrong');
   });

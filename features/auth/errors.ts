@@ -23,6 +23,9 @@ export function translateAuthError(err: unknown): string {
   if (message.includes('Token has expired or is invalid')) return 'El código es incorrecto o ya expiró. Solicita uno nuevo.';
   if (message.includes('Email not confirmed')) return 'Confirma tu correo antes de iniciar sesión';
   if (message.includes('For security purposes')) return 'Espera unos segundos antes de solicitar otro código';
+  if (message.includes('email rate limit exceeded')) {
+    return 'Alcanzaste el límite de correos permitidos. Espera unos minutos antes de solicitar otro.';
+  }
   if (message.includes('Network request failed') || message.includes('Failed to fetch')) {
     return 'Error de conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
   }
@@ -30,6 +33,7 @@ export function translateAuthError(err: unknown): string {
     message.includes('unexpected_failure') ||
     message.includes('"status":500') ||
     message.includes('error sending confirmation email') ||
+    message.includes('error sending recovery email') ||
     message.toLowerCase().includes('smtp')
   ) {
     return 'No se pudo enviar el correo de confirmación. Inténtalo de nuevo más tarde.';
