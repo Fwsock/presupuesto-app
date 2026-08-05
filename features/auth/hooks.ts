@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 
+export { translateAuthError } from './errors';
+
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,33 @@ export function useSession() {
 
 export async function signIn(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+/**
+ * Whether the new account needs an email confirmation before it can sign
+ * in — Supabase only returns a session immediately when confirmations are
+ * disabled for the project; otherwise `data.session` is null until the user
+ * clicks the link it emails them, and the caller should say so instead of
+ * assuming they're logged in. Once a session does exist, RootNavigator's
+ * Stack.Protected guards take it from there — onboarding creates the first
+ * profile row itself, so nothing else needs to happen here.
+ */
+export async function signUp(email: string, password: string): Promise<{ needsEmailConfirmation: boolean }> {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  return { needsEmailConfirmation: !data.session };
+}
+
+/** Verifies the 6-digit signup code sent by email. On success Supabase sets a session, same as signIn -- RootNavigator's guards take it from there. */
+export async function verifySignupOtp(email: string, token: string): Promise<void> {
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+  if (error) throw error;
+}
+
+/** Re-sends the 6-digit signup code to the same address. */
+export async function resendSignupOtp(email: string): Promise<void> {
+  const { error } = await supabase.auth.resend({ type: 'signup', email });
   if (error) throw error;
 }
 

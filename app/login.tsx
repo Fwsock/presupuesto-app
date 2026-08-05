@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { router } from 'expo-router';
-import { signIn } from '../features/auth/hooks';
-import { PressableScale } from '../components/PressableScale';
+import { Link } from 'expo-router';
+import { signIn, translateAuthError } from '../features/auth/hooks';
+import { AuthTextInput } from '../components/AuthTextInput';
+import { Button } from '../components/Button';
 
 const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().email('Ingresa un correo electrónico válido'),
   password: z.string().min(1, 'La contraseña es obligatoria'),
 });
 
@@ -20,64 +21,85 @@ export default function LoginScreen() {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    // Without these, an untouched field's value is `undefined` (not `''`)
+    // going into Zod, which fails the base z.string() type check before ever
+    // reaching .email()/.min() and surfaces Zod's generic English
+    // "Invalid input: expected string, received undefined" instead of our
+    // Spanish message.
+    defaultValues: { email: '', password: '' },
+  });
 
   const onSubmit = async (values: LoginForm) => {
     setServerError(null);
     try {
+      // No manual navigation here on purpose: RootNavigator's Stack.Protected
+      // guards (app/_layout.tsx) react to useSession()'s state automatically
+      // once this resolves, and mount "(app)" declaratively. An imperative
+      // router.replace('/') here used to race that navigator's own mount and
+      // threw "action REPLACE ... was not handled by any navigator".
       await signIn(values.email, values.password);
-      router.replace('/');
     } catch (err) {
-      setServerError('Email o contraseña incorrectos');
+      setServerError(translateAuthError(err));
     }
   };
 
+  // Only one message on screen at a time, in priority order: email format,
+  // then missing password, then a failed login attempt against the API.
+  const formError = errors.email?.message ?? errors.password?.message ?? serverError;
+
   return (
-    <View className="flex-1 justify-center px-6 bg-white">
-      <Text className="text-2xl font-bold mb-6">Presupuesto</Text>
-
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-            placeholder="Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={value ?? ''}
-            onChangeText={onChange}
-          />
-        )}
-      />
-      {errors.email && <Text className="text-red-600 mb-2">{errors.email.message}</Text>}
-
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-            placeholder="Contraseña"
-            secureTextEntry
-            value={value ?? ''}
-            onChangeText={onChange}
-          />
-        )}
-      />
-      {errors.password && <Text className="text-red-600 mb-2">{errors.password.message}</Text>}
-
-      {serverError && <Text className="text-red-600 mb-2">{serverError}</Text>}
-
-      <PressableScale
-        className="bg-blue-600 rounded-md py-3 mt-4"
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      className="bg-white"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        className="px-6"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-white text-center font-semibold">
-          {isSubmitting ? 'Ingresando...' : 'Ingresar'}
-        </Text>
-      </PressableScale>
-    </View>
+        <Text className="text-2xl font-bold mb-1 text-center">Presupuesto</Text>
+        <Text className="text-gray-500 mb-6 text-center">Inicia sesión para continuar</Text>
+
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, value } }) => (
+            <AuthTextInput
+              icon="mail-outline"
+              placeholder="Email"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={value}
+              onChangeText={onChange}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value } }) => (
+            <AuthTextInput
+              icon="lock-closed-outline"
+              placeholder="Contraseña"
+              secureTextEntry
+              value={value}
+              onChangeText={onChange}
+            />
+          )}
+        />
+
+        {formError && <Text className="text-red-600 mb-2">{formError}</Text>}
+
+        <Button title="Ingresar" loadingLabel="Ingresando..." onPress={handleSubmit(onSubmit)} loading={isSubmitting} disabled={isSubmitting} />
+
+        <Link href="/register" className="mt-3">
+          <Text className="text-blue-600 text-center">¿No tienes cuenta? Regístrate</Text>
+        </Link>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
