@@ -1,5 +1,4 @@
 import { logSupabaseError, supabase } from '../../lib/supabase';
-import { sanitizeText, sanitizeNullableText } from '../shared/sanitize';
 import type { InstallmentRow } from './installments';
 import type { Movement, NewMovementInput, UpdateMovementInput } from './types';
 
@@ -60,14 +59,12 @@ export async function createMovement(input: NewMovementInput): Promise<Movement>
     .insert({
       user_id: userId,
       category_id: input.categoryId,
-      tipo: input.tipo,
-      concepto: sanitizeText(input.concepto, 120),
+      concepto: input.concepto,
       monto: input.monto,
-      notas: sanitizeNullableText(input.notas, 500),
+      notas: input.notas,
       estado: input.estado,
       fecha: input.fecha,
       icono: input.icono,
-      fixed_series_id: input.fixedSeriesId ?? null,
     })
     .select()
     .single();
@@ -99,10 +96,9 @@ export async function updateMovement(input: UpdateMovementInput): Promise<Moveme
     .from('movements')
     .update({
       category_id: input.categoryId,
-      tipo: input.tipo,
-      concepto: sanitizeText(input.concepto, 120),
+      concepto: input.concepto,
       monto: input.monto,
-      notas: sanitizeNullableText(input.notas, 500),
+      notas: input.notas,
       estado: input.estado,
       fecha: input.fecha,
       icono: input.icono,

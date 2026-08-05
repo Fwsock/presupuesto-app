@@ -5,8 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { useSession } from '../features/auth/hooks';
 import { useProfile } from '../features/profile/hooks';
-import { View } from 'react-native';
-import { ScreenSkeleton } from '../components/Skeleton';
+import { View, Text } from 'react-native';
 
 // Stack.Protected registers "(app)", "onboarding" and "login" up front and
 // just toggles which is reachable via `guard` — unlike a <Redirect> fired
@@ -20,8 +19,8 @@ function RootNavigator() {
 
   if (loading || (!!session && profileLoading)) {
     return (
-      <View className="flex-1 bg-white">
-        <ScreenSkeleton />
+      <View className="flex-1 items-center justify-center">
+        <Text>Cargando...</Text>
       </View>
     );
   }
@@ -31,7 +30,7 @@ function RootNavigator() {
   const needsOnboarding = !!session && !profile?.onboarding_completed;
 
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!!session && !needsOnboarding}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
@@ -40,8 +39,6 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="verify-otp" />
       </Stack.Protected>
     </Stack>
   );

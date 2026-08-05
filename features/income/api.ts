@@ -146,7 +146,7 @@ export async function submitIncomeForMonth(
       concepto: recurringIncome.concepto,
       monto,
       notas: null,
-      estado: 'pagado',
+      estado: 'pendiente',
       fecha: firstDayOfMonth(year, month),
       icono: suggestMovementIcon(recurringIncome.concepto),
       recurring_income_id: recurringIncome.id,

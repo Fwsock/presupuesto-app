@@ -21,7 +21,6 @@ function movement(overrides: Partial<Movement>): Movement {
     cuota_numero: null,
     cuota_total: null,
     icono: 'receipt-outline',
-    recurring_income_id: null,
     created_at: '',
     updated_at: '',
     ...overrides,

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
-import { formatDisplayDate } from '../features/movements/date';
+import { Platform, Text, View } from 'react-native';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { formatDisplayDate, formatISODate, parseISODate } from '../features/movements/date';
 import { PressableScale } from './PressableScale';
-import { CalendarPickerModal } from './CalendarPickerModal';
 
 interface DateFieldProps {
   /** Stored value, always 'YYYY-MM-DD'. */
@@ -11,34 +11,61 @@ interface DateFieldProps {
 }
 
 /**
- * Date input that displays DD-MM-AAAA and opens the app's own custom
- * calendar (CalendarPickerModal) on tap -- same modal on both platforms, no
- * Platform.OS branching, since it replaces the native DateTimePicker
- * entirely instead of wrapping it.
+ * Date input that displays DD-MM-AAAA and opens the platform's native date
+ * picker on tap. The stored value stays ISO (YYYY-MM-DD) for the API.
  */
 export function DateField({ value, onChange }: DateFieldProps) {
-  const [visible, setVisible] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState<Date | null>(null);
+
+  const openPicker = () => {
+    setPickerDate(parseISODate(value) ?? new Date());
+    setShowPicker(true);
+  };
+
+  const handleChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
+      if (event.type === 'set' && selected) onChange(formatISODate(selected));
+    } else {
+      // iOS spinner updates the value live; it is dismissed with "Listo".
+      if (selected) {
+        setPickerDate(selected);
+        onChange(formatISODate(selected));
+      }
+    }
+  };
 
   return (
     <>
-      <PressableScale
-        onPress={() => setVisible(true)}
-        className="border border-gray-300 rounded-md px-3 py-3 mb-1"
-        accessibilityRole="button"
-        accessibilityLabel="Seleccionar fecha"
-      >
-        <Text className={value ? 'text-black' : 'text-gray-400'}>{value ? formatDisplayDate(value) : 'Selecciona la fecha'}</Text>
+      <PressableScale onPress={openPicker} className="border border-gray-300 rounded-md px-3 py-3 mb-1">
+        <Text className={value ? 'text-black' : 'text-gray-400'}>
+          {value ? formatDisplayDate(value) : 'Selecciona la fecha'}
+        </Text>
       </PressableScale>
 
-      <CalendarPickerModal
-        visible={visible}
-        value={value}
-        onSave={(v) => {
-          onChange(v);
-          setVisible(false);
-        }}
-        onCancel={() => setVisible(false)}
-      />
+      {showPicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={pickerDate ?? new Date()}
+          mode="date"
+          display="default"
+          onChange={handleChange}
+        />
+      )}
+
+      {showPicker && Platform.OS === 'ios' && (
+        <View className="border border-gray-200 rounded-md p-3 mb-1">
+          <DateTimePicker
+            value={pickerDate ?? new Date()}
+            mode="date"
+            display="spinner"
+            onChange={handleChange}
+          />
+          <PressableScale onPress={() => setShowPicker(false)} className="py-2 items-end">
+            <Text className="text-blue-600 font-semibold">Listo</Text>
+          </PressableScale>
+        </View>
+      )}
     </>
   );
 }
