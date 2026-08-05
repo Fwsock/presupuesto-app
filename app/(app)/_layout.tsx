@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Alert, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useQueryClient } from '@tanstack/react-query';
-import { signOut } from '../../features/auth/hooks';
 import { useProfile } from '../../features/profile/hooks';
 import { SelectedMonthProvider } from '../../features/shared/selected-month';
 import { PressableScale } from '../../components/PressableScale';
 import { MovementFormModal } from '../../components/MovementFormModal';
+import { VariableIncomePromptHost } from '../../components/VariableIncomePromptHost';
+import { FixedCategoriesSync } from '../../components/FixedCategoriesSync';
+import { AnimatedTabBar } from '../../components/AnimatedTabBar';
 import { MovementModalContext } from '../../features/shared/movement-modal-context';
 import type { Movement } from '../../features/movements/types';
 
@@ -57,12 +57,6 @@ function CreateTabButton({ onPress }: { onPress: () => void }) {
 }
 
 export default function AppLayout() {
-  const queryClient = useQueryClient();
-  // Bottom tabs pads the bar with the device's safe-area inset (gesture bar /
-  // home indicator) on top of whatever height we set — without reserving that
-  // space ourselves, the label gets squeezed against that inset instead of
-  // sitting above it.
-  const insets = useSafeAreaInsets();
   const { data: profile } = useProfile();
   const router = useRouter();
 
@@ -89,38 +83,16 @@ export default function AppLayout() {
     setModalVisible(true);
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Drop every cached row so a later login on this device can't read the
-      // previous session's data. The auth gate in app/_layout.tsx redirects to
-      // /login on its own once the session clears.
-      queryClient.clear();
-    } catch (err) {
-      Alert.alert('No se pudo cerrar sesión', (err as Error).message);
-    }
-  };
-
   return (
     <MovementModalContext.Provider value={{ openCreate, openEdit }}>
       <SelectedMonthProvider>
         <Tabs
+          tabBar={(props) => <AnimatedTabBar {...props} />}
           screenOptions={{
             headerShown: true,
-            tabBarActiveTintColor: '#2563eb',
-            tabBarInactiveTintColor: '#6b7280',
-            tabBarStyle: {
-              height: 60 + insets.bottom,
-              paddingTop: 8,
-              paddingBottom: 8 + insets.bottom,
-            },
-            tabBarLabelStyle: { fontSize: 11 },
-            tabBarIconStyle: { marginBottom: 2 },
-            headerRight: () => (
-              <PressableScale onPress={handleSignOut} className="px-4 py-2">
-                <Text className="text-blue-600 font-medium">Cerrar sesión</Text>
-              </PressableScale>
-            ),
+            headerStyle: { backgroundColor: '#2563eb' },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: { color: '#ffffff', fontWeight: '600' },
           }}
         >
           <Tabs.Screen
@@ -166,6 +138,8 @@ export default function AppLayout() {
           movement={editingMovement}
           onClose={() => setModalVisible(false)}
         />
+        <VariableIncomePromptHost />
+        <FixedCategoriesSync />
       </SelectedMonthProvider>
     </MovementModalContext.Provider>
   );
