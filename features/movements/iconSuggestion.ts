@@ -33,6 +33,8 @@ const ICON_RULES: IconRule[] = [
   { keywords: ['inversion', 'acciones', 'fondo mutuo'], icon: 'trending-up-outline' },
   { keywords: ['reparacion', 'mantencion', 'ferreteria'], icon: 'construct-outline' },
   { keywords: ['bar', 'cerveza', 'trago', 'fiesta', 'salida'], icon: 'beer-outline' },
+  { keywords: ['transferencia', 'transf', 'traspaso'], icon: 'swap-horizontal-outline' },
+  { keywords: ['polla', 'rifa', 'sorteo'], icon: 'people-outline' },
 ];
 
 function normalize(text: string): string {
