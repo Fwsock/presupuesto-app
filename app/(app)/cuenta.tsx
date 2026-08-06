@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession, signOut, updateEmail, updatePassword } from '../../features/auth/hooks';
 import { translateAuthError } from '../../features/auth/errors';
+import { getPasswordStrength } from '../../features/auth/passwordStrength';
 import { useProfile, useUpsertProfile } from '../../features/profile/hooks';
 import { useRecurringIncome, useDeleteRecurringIncome } from '../../features/income/hooks';
 import { getInitials } from '../../features/profile/initials';
@@ -11,6 +12,8 @@ import { parsePhoneNumber, formatPhoneNumber } from '../../features/shared/count
 import { RecurringIncomeForm } from '../../components/RecurringIncomeForm';
 import { FullScreenFormModal } from '../../components/FullScreenFormModal';
 import { PhoneInput } from '../../components/PhoneInput';
+import { AuthTextInput } from '../../components/AuthTextInput';
+import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
 import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { PressableScale } from '../../components/PressableScale';
@@ -132,6 +135,7 @@ export default function CuentaScreen() {
 
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [securityPending, setSecurityPending] = useState(false);
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [securityMessage, setSecurityMessage] = useState<string | null>(null);
@@ -142,8 +146,13 @@ export default function CuentaScreen() {
     const wantsPasswordChange = newPassword.length > 0;
     if (!wantsEmailChange && !wantsPasswordChange) return;
 
-    if (wantsPasswordChange && newPassword.length < 6) {
-      setSecurityError('La contraseña debe tener al menos 6 caracteres');
+    if (wantsPasswordChange && getPasswordStrength(newPassword).score !== 4) {
+      setSecurityError('La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo');
+      setSecurityMessage(null);
+      return;
+    }
+    if (wantsPasswordChange && newPassword !== newPasswordConfirm) {
+      setSecurityError('Las contraseñas no coinciden');
       setSecurityMessage(null);
       return;
     }
@@ -173,6 +182,7 @@ export default function CuentaScreen() {
         if (passwordResult.status === 'fulfilled') {
           messages.push('Contraseña actualizada.');
           setNewPassword('');
+          setNewPasswordConfirm('');
         } else {
           errors.push(translateAuthError(passwordResult.reason));
         }
@@ -293,12 +303,20 @@ export default function CuentaScreen() {
         />
 
         <Text className="text-base font-semibold mb-2">Contraseña</Text>
-        <TextInput
-          className="border border-gray-300 rounded-md px-3 py-2 mb-4"
+        <AuthTextInput
+          icon="lock-closed-outline"
           placeholder="Nueva contraseña"
           secureTextEntry
           value={newPassword}
           onChangeText={setNewPassword}
+        />
+        <PasswordStrengthMeter password={newPassword} />
+        <AuthTextInput
+          icon="lock-closed-outline"
+          placeholder="Confirmar nueva contraseña"
+          secureTextEntry
+          value={newPasswordConfirm}
+          onChangeText={setNewPasswordConfirm}
         />
 
         {securityError && (

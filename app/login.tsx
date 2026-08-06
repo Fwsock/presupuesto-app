@@ -3,10 +3,10 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'expo-router';
 import { signIn, translateAuthError, consumePasswordJustReset } from '../features/auth/hooks';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { Button } from '../components/Button';
+import { TextLink } from '../components/TextLink';
 
 const loginSchema = z.object({
   email: z.string().email('Ingresa un correo electrónico válido'),
@@ -104,13 +104,13 @@ export default function LoginScreen() {
 
         <Button title="Ingresar" loadingLabel="Ingresando..." onPress={handleSubmit(onSubmit)} loading={isSubmitting} disabled={isSubmitting} />
 
-        <Link href={{ pathname: '/forgot-password', params: email ? { email } : undefined }} className="mt-3">
-          <Text className="text-blue-600 text-center">¿Olvidaste tu contraseña?</Text>
-        </Link>
+        <TextLink href={{ pathname: '/forgot-password', params: email ? { email } : undefined }} className="mt-3">
+          ¿Olvidaste tu contraseña?
+        </TextLink>
 
-        <Link href="/register" className="mt-3">
-          <Text className="text-blue-600 text-center">¿No tienes cuenta? Regístrate</Text>
-        </Link>
+        <TextLink href="/register" className="mt-6">
+          ¿No tienes cuenta? Regístrate
+        </TextLink>
       </ScrollView>
     </KeyboardAvoidingView>
   );
