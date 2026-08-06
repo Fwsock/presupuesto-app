@@ -52,6 +52,31 @@ describe('sortMovements', () => {
   });
 });
 
+describe('sortMovements same-day tie-break', () => {
+  it('shows the most recently created movement first within the same fecha, regardless of direction', () => {
+    const sameDay = [
+      movement({ id: 'older', fecha: '2026-08-04', created_at: '2026-08-04T10:00:00Z' }),
+      movement({ id: 'newest', fecha: '2026-08-04', created_at: '2026-08-04T18:30:00Z' }),
+      movement({ id: 'middle', fecha: '2026-08-04', created_at: '2026-08-04T14:00:00Z' }),
+    ];
+
+    expect(sortMovements(sameDay, 'fecha', 'desc').map((m) => m.id)).toEqual(['newest', 'middle', 'older']);
+    // Tie-break stays "newest created first" even when the primary field's
+    // own direction flips -- only the day ordering (not tested here) should
+    // ever reverse, never the within-day order.
+    expect(sortMovements(sameDay, 'fecha', 'asc').map((m) => m.id)).toEqual(['newest', 'middle', 'older']);
+  });
+
+  it('falls back to id when created_at exactly ties', () => {
+    const exactTie = [
+      movement({ id: 'b', fecha: '2026-08-04', created_at: '2026-08-04T10:00:00Z' }),
+      movement({ id: 'a', fecha: '2026-08-04', created_at: '2026-08-04T10:00:00Z' }),
+    ];
+
+    expect(sortMovements(exactTie, 'fecha', 'desc').map((m) => m.id)).toEqual(['a', 'b']);
+  });
+});
+
 describe('filterMovementsByQuery', () => {
   const movements = [
     movement({ id: 'a', concepto: 'Zapatillas Nike' }),

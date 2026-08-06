@@ -12,9 +12,16 @@ export function sortMovements(movements: Movement[], field: MovementSortField, d
     else if (field === 'monto') primary = a.monto - b.monto;
     else primary = a.concepto.localeCompare(b.concepto, 'es', { sensitivity: 'base' });
     if (primary !== 0) return sign * primary;
-    // Stable tie-breaker independent of `direction`/array-order, so rows
-    // that tie on the primary field (e.g. same-date movements) never
-    // visually reorder just because the underlying cache array shifted.
+    // Tie-breaker independent of `direction`: rows that tie on the primary
+    // field (most commonly same-date movements, grouped together by
+    // MovementDateSectionHeader) always show the most recently created one
+    // first, regardless of which way the primary sort is toggled -- e.g.
+    // two movements both dated today, the one just added shows above one
+    // added yesterday for today's date. Falls back to `id` only for full
+    // determinism on the practically-impossible case of an exact
+    // created_at tie.
+    const byCreatedAt = b.created_at.localeCompare(a.created_at);
+    if (byCreatedAt !== 0) return byCreatedAt;
     return a.id.localeCompare(b.id);
   });
 }
