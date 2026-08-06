@@ -133,6 +133,42 @@ export async function deleteMovementGroup(groupId: string): Promise<void> {
   }
 }
 
+/**
+ * Updates `cuota_total` on the rows of a group that come BEFORE
+ * `fromCuotaNumero`, without touching their monto/fecha/estado -- keeps
+ * already-paid (or otherwise untouched) cuotas showing the new grand total
+ * (e.g. "cuota 2/8") after the remaining cuotas from `fromCuotaNumero`
+ * onward get regenerated with a different count.
+ */
+export async function updateInstallmentGroupTotal(
+  groupId: string,
+  newTotalCuotas: number,
+  fromCuotaNumero: number
+): Promise<void> {
+  const { error } = await supabase
+    .from('movements')
+    .update({ cuota_total: newTotalCuotas })
+    .eq('installment_group_id', groupId)
+    .lt('cuota_numero', fromCuotaNumero);
+  if (error) {
+    logSupabaseError('updateInstallmentGroupTotal', error);
+    throw error;
+  }
+}
+
+/** Deletes a group's rows from `fromCuotaNumero` onward (inclusive) — the tail about to be replaced by a fresh split via createInstallments. */
+export async function deleteInstallmentsFrom(groupId: string, fromCuotaNumero: number): Promise<void> {
+  const { error } = await supabase
+    .from('movements')
+    .delete()
+    .eq('installment_group_id', groupId)
+    .gte('cuota_numero', fromCuotaNumero);
+  if (error) {
+    logSupabaseError('deleteInstallmentsFrom', error);
+    throw error;
+  }
+}
+
 /** Marks every pendiente movement of one category, in one month, as pagado. */
 export async function payAllPendingForCategory(
   categoryId: string,

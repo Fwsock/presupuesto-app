@@ -6,7 +6,13 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../features/categories/hooks';
-import { useCreateMovement, useCreateInstallments, useUpdateMovement } from '../features/movements/hooks';
+import {
+  useCreateMovement,
+  useCreateInstallments,
+  useUpdateMovement,
+  useUpdateInstallmentGroupFrom,
+  useConvertMovementToInstallments,
+} from '../features/movements/hooks';
 import { generateInstallments } from '../features/movements/installments';
 import { isValidISODate } from '../features/movements/date';
 import { suggestMovementIcon, DEFAULT_MOVEMENT_ICON } from '../features/movements/iconSuggestion';
@@ -59,6 +65,14 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   const createMovement = useCreateMovement();
   const createInstallments = useCreateInstallments();
   const updateMovement = useUpdateMovement();
+  const updateInstallmentGroupFrom = useUpdateInstallmentGroupFrom();
+  const convertToInstallments = useConvertMovementToInstallments();
+
+  // Editing a cuota that's already part of a group: only its remaining
+  // count can change (see useUpdateInstallmentGroupFrom's comment for why
+  // earlier cuotas stay untouched) -- turning cuotas off entirely isn't
+  // supported, so the switch below is locked on whenever this is true.
+  const hasExistingGroup = mode === 'edit' && !!movement?.installment_group_id;
 
   const [formError, setFormError] = useState<string | null>(null);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
@@ -110,8 +124,8 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       notas: movement?.notas ?? '',
       fecha: movement?.fecha ?? new Date().toISOString().slice(0, 10),
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
-      esCuota: false,
-      totalCuotas: '',
+      esCuota: !!movement?.installment_group_id,
+      totalCuotas: movement?.cuota_total ? String(movement.cuota_total) : '',
       icono: movement?.icono ?? DEFAULT_MOVEMENT_ICON,
     });
   }, [visible, movement, mode, reset]);
@@ -119,6 +133,15 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   const esCuota = watch('esCuota');
   const concepto = watch('concepto');
   const icono = watch('icono');
+  const totalCuotas = watch('totalCuotas');
+
+  // Only true once the user actually types a different cuota count than
+  // this row already had -- editing concepto/monto/fecha/estado on a cuota
+  // WITHOUT touching this field must stay a plain single-row update
+  // (updateMovement), never regenerate the group. Regenerating on every
+  // save regardless would silently reinterpret this row's own amount as a
+  // "remaining balance to split", corrupting every later cuota's monto.
+  const cuotaCountChanged = hasExistingGroup && totalCuotas !== '' && Number(totalCuotas) !== movement?.cuota_total;
 
   // Auto-suggest as the user types, until they override it manually.
   useEffect(() => {
@@ -126,13 +149,67 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     setValue('icono', suggestMovementIcon(concepto));
   }, [concepto, iconTouched, setValue]);
 
-  const isSaving = createMovement.isPending || createInstallments.isPending || updateMovement.isPending;
+  const isSaving =
+    createMovement.isPending ||
+    createInstallments.isPending ||
+    updateMovement.isPending ||
+    updateInstallmentGroupFrom.isPending ||
+    convertToInstallments.isPending;
 
   const onSubmit = (values: MovementForm) => {
     setFormError(null);
     const concepto = values.concepto.trim();
 
-    if (mode === 'edit' && movement) {
+    if (mode === 'edit' && movement && cuotaCountChanged) {
+      // Editing an existing cuota's total: the new total can't leave this
+      // cuota's own position stranded past the end of the series.
+      if (Number(values.totalCuotas) < movement.cuota_numero!) {
+        setFormError(`El total debe ser al menos ${movement.cuota_numero} (el número de esta cuota).`);
+        return;
+      }
+      updateInstallmentGroupFrom.mutate(
+        {
+          groupId: movement.installment_group_id!,
+          categoryId: values.categoryId,
+          tipo: values.tipo,
+          concepto,
+          montoRestante: Number(values.monto),
+          notas: values.notas || null,
+          fromCuotaNumero: movement.cuota_numero!,
+          newTotalCuotas: Number(values.totalCuotas),
+          fechaInicio: values.fecha,
+          icono: values.icono,
+        },
+        {
+          onSuccess: () => onClose(),
+          onError: (err) => setFormError((err as Error).message),
+        }
+      );
+    } else if (mode === 'edit' && movement && values.esCuota && !hasExistingGroup) {
+      // Converting a one-time payment into cuotas for the first time: cuota
+      // 1 inherits this movement's current estado (already-paid lump sums
+      // stay paid), every later cuota starts pendiente.
+      convertToInstallments.mutate(
+        {
+          movementId: movement.id,
+          groupId: uuidv4(),
+          categoryId: values.categoryId,
+          tipo: values.tipo,
+          concepto,
+          montoRestante: Number(values.monto),
+          notas: values.notas || null,
+          fromCuotaNumero: 1,
+          newTotalCuotas: Number(values.totalCuotas),
+          fechaInicio: values.fecha,
+          icono: values.icono,
+          firstRowEstado: values.estado,
+        },
+        {
+          onSuccess: () => onClose(),
+          onError: (err) => setFormError((err as Error).message),
+        }
+      );
+    } else if (mode === 'edit' && movement) {
       updateMovement.mutate(
         {
           id: movement.id,
@@ -262,14 +339,22 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   className="border border-gray-300 rounded-md px-3 py-2 mb-1"
-                  placeholder={esCuota ? 'Monto total de la compra' : 'Monto'}
+                  placeholder={
+                    !esCuota
+                      ? 'Monto'
+                      : cuotaCountChanged
+                        ? 'Saldo restante a repartir'
+                        : hasExistingGroup
+                          ? 'Monto de esta cuota'
+                          : 'Monto total de la compra'
+                  }
                   keyboardType="number-pad"
                   value={value}
                   onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
                 />
               )}
             />
-            {esCuota && (
+            {esCuota && (!hasExistingGroup || cuotaCountChanged) && (
               <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
             )}
             {errors.monto && <Text className="text-red-600">{errors.monto.message}</Text>}
@@ -384,41 +469,58 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           </View>
 
           {/* Section 4: Opciones avanzadas */}
-          {mode === 'create' && (
-            <View className="mb-5 pt-5 border-t border-gray-100">
-              <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Opciones avanzadas</Text>
+          <View className="mb-5 pt-5 border-t border-gray-100">
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Opciones avanzadas</Text>
 
-              <Controller
-                control={control}
-                name="esCuota"
-                render={({ field: { onChange, value } }) => (
-                  <View className="flex-row items-center justify-between">
-                    <Text>¿Es en cuotas?</Text>
-                    <Switch value={value} onValueChange={onChange} />
-                  </View>
-                )}
-              />
-
-              {esCuota && (
-                <>
-                  <Controller
-                    control={control}
-                    name="totalCuotas"
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        className="border border-gray-300 rounded-md px-3 py-2 mt-3 mb-1"
-                        placeholder="Cuotas"
-                        keyboardType="number-pad"
-                        value={value}
-                        onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
-                      />
-                    )}
-                  />
-                  {errors.totalCuotas && <Text className="text-red-600">{errors.totalCuotas.message}</Text>}
-                </>
+            <Controller
+              control={control}
+              name="esCuota"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row items-center justify-between">
+                  <Text>¿Es en cuotas?</Text>
+                  <Switch value={value} onValueChange={onChange} disabled={hasExistingGroup} />
+                </View>
               )}
-            </View>
-          )}
+            />
+            {hasExistingGroup && (
+              <Text className="text-gray-400 text-xs mt-1">
+                Ya es parte de una compra en cuotas ({movement!.cuota_numero}/{movement!.cuota_total}) — no se puede
+                volver a pago único desde acá.
+              </Text>
+            )}
+
+            {esCuota && (
+              <>
+                <Controller
+                  control={control}
+                  name="totalCuotas"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      className="border border-gray-300 rounded-md px-3 py-2 mt-3 mb-1"
+                      placeholder="Cuotas"
+                      keyboardType="number-pad"
+                      value={value}
+                      onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
+                    />
+                  )}
+                />
+                {errors.totalCuotas && <Text className="text-red-600">{errors.totalCuotas.message}</Text>}
+                {hasExistingGroup && !cuotaCountChanged && (
+                  <Text className="text-gray-400 text-xs mt-1">
+                    Cambia este número para dividir el saldo restante entre otra cantidad de cuotas — las cuotas
+                    anteriores a la {movement!.cuota_numero} no se tocan.
+                  </Text>
+                )}
+                {cuotaCountChanged && (
+                  <Text className="text-gray-500 text-xs mt-1">
+                    Esto solo cambia la cuota {movement!.cuota_numero} en adelante — las cuotas anteriores no se
+                    tocan. El campo "Monto" de arriba pasa a ser el saldo restante a repartir entre las cuotas desde
+                    esta en adelante, no el total original de la compra.
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
 
           <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
         </ScrollView>

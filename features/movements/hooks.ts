@@ -2,15 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createInstallments,
   createMovement,
+  deleteInstallmentsFrom,
   deleteMovement,
   deleteMovementGroup,
   fetchMovementsForMonth,
   fetchMovementsForMonthRange,
   payAllPendingForCategory,
+  updateInstallmentGroupTotal,
   updateMovement,
 } from './api';
 import { ensureFixedCategoryMovementsForMonth } from './fixedCategories';
-import type { InstallmentRow } from './installments';
+import { generateInstallmentsFrom, type InstallmentRow, type RegenerateInstallmentsInput } from './installments';
 import type { NewMovementInput, UpdateMovementInput, Movement } from './types';
 
 export function useMovements(year: number, month: number) {
@@ -139,6 +141,50 @@ export function useCreateInstallments() {
       data.forEach(addMovement);
       invalidate();
     },
+  });
+}
+
+/**
+ * Changes how many cuotas remain on a purchase already split into an
+ * installment group, starting from one specific cuota in that group
+ * (fromCuotaNumero) — earlier cuotas are left completely alone (see
+ * updateInstallmentGroupTotal), so any of them already marked "pagado"
+ * keeps its date/monto/estado exactly as it was. Only the tail from
+ * fromCuotaNumero onward gets deleted and regenerated with the new count.
+ * No fine-grained cache patch here (unlike the other mutations in this
+ * file): a variable number of rows across a variable number of months is
+ * added, removed and re-dated all at once, so a full invalidate + refetch
+ * is simpler and safer than trying to hand-reconcile the cache.
+ */
+export function useUpdateInstallmentGroupFrom() {
+  const invalidate = useInvalidateMovements();
+  return useMutation({
+    mutationFn: async (input: { groupId: string } & RegenerateInstallmentsInput) => {
+      await updateInstallmentGroupTotal(input.groupId, input.newTotalCuotas, input.fromCuotaNumero);
+      await deleteInstallmentsFrom(input.groupId, input.fromCuotaNumero);
+      const rows = generateInstallmentsFrom(input, input.groupId);
+      return createInstallments(rows);
+    },
+    onSuccess: () => invalidate(),
+  });
+}
+
+/**
+ * Converts a standalone (non-cuota) movement into the first cuota of a
+ * brand-new installment group: deletes the original single row and inserts
+ * the freshly generated cuotas in its place. The original movement's own
+ * `estado` carries over onto the new cuota 1 (a lump sum already marked
+ * "pagado" stays paid once split), every later cuota starts "pendiente".
+ */
+export function useConvertMovementToInstallments() {
+  const invalidate = useInvalidateMovements();
+  return useMutation({
+    mutationFn: async (input: { movementId: string; groupId: string } & RegenerateInstallmentsInput) => {
+      await deleteMovement(input.movementId);
+      const rows = generateInstallmentsFrom(input, input.groupId);
+      return createInstallments(rows);
+    },
+    onSuccess: () => invalidate(),
   });
 }
 

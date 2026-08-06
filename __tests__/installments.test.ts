@@ -1,4 +1,4 @@
-import { generateInstallments } from '../features/movements/installments';
+import { generateInstallments, generateInstallmentsFrom } from '../features/movements/installments';
 
 describe('generateInstallments', () => {
   it('generates one row per cuota with sequential months', () => {
@@ -140,5 +140,113 @@ describe('generateInstallments', () => {
 
     expect(rows.map((r) => r.monto)).toEqual([33333, 33333, 33334]);
     expect(rows.reduce((sum, r) => sum + r.monto, 0)).toBe(100000);
+  });
+});
+
+describe('generateInstallmentsFrom', () => {
+  it('generates only the remaining cuotas, numbered from fromCuotaNumero to newTotalCuotas', () => {
+    // Editing cuota 3 of an original 6, bumping the total to 8: rows 3..8 (6 rows).
+    const rows = generateInstallmentsFrom(
+      {
+        categoryId: 'cat-1',
+        tipo: 'gasto',
+        concepto: 'Notebook',
+        montoRestante: 60000,
+        notas: null,
+        fromCuotaNumero: 3,
+        newTotalCuotas: 8,
+        fechaInicio: '2026-03-15',
+        icono: 'card-outline',
+      },
+      'group-1'
+    );
+
+    expect(rows).toHaveLength(6);
+    expect(rows.map((r) => r.cuota_numero)).toEqual([3, 4, 5, 6, 7, 8]);
+    expect(rows.every((r) => r.cuota_total === 8)).toBe(true);
+    expect(rows.map((r) => r.monto)).toEqual([10000, 10000, 10000, 10000, 10000, 10000]);
+    expect(rows[0].fecha).toBe('2026-03-15');
+    expect(rows[5].fecha).toBe('2026-08-15');
+  });
+
+  it('only the first regenerated row gets firstRowEstado, every later row is pendiente', () => {
+    const rows = generateInstallmentsFrom(
+      {
+        categoryId: 'cat-1',
+        tipo: 'gasto',
+        concepto: 'TV',
+        montoRestante: 4000,
+        notas: null,
+        fromCuotaNumero: 1,
+        newTotalCuotas: 2,
+        fechaInicio: '2026-03-15',
+        icono: 'card-outline',
+        firstRowEstado: 'pagado',
+      },
+      'group-2'
+    );
+
+    expect(rows[0].estado).toBe('pagado');
+    expect(rows[1].estado).toBe('pendiente');
+  });
+
+  it('defaults firstRowEstado to pendiente when not given', () => {
+    const rows = generateInstallmentsFrom(
+      {
+        categoryId: 'cat-1',
+        tipo: 'gasto',
+        concepto: 'TV',
+        montoRestante: 4000,
+        notas: null,
+        fromCuotaNumero: 4,
+        newTotalCuotas: 6,
+        fechaInicio: '2026-03-15',
+        icono: 'card-outline',
+      },
+      'group-3'
+    );
+
+    expect(rows.every((r) => r.estado === 'pendiente')).toBe(true);
+  });
+
+  it('puts the rounding remainder on the last regenerated cuota', () => {
+    const rows = generateInstallmentsFrom(
+      {
+        categoryId: 'cat-1',
+        tipo: 'gasto',
+        concepto: 'Compra',
+        montoRestante: 10000,
+        notas: null,
+        fromCuotaNumero: 5,
+        newTotalCuotas: 7,
+        fechaInicio: '2026-01-15',
+        icono: 'receipt-outline',
+      },
+      'group-4'
+    );
+
+    // 10000 / 3 = 3333.33... -> 3333, 3333, 3334
+    expect(rows.map((r) => r.monto)).toEqual([3333, 3333, 3334]);
+    expect(rows.reduce((sum, r) => sum + r.monto, 0)).toBe(10000);
+  });
+
+  it('handles the single-remaining-cuota case (editing the very last cuota)', () => {
+    const rows = generateInstallmentsFrom(
+      {
+        categoryId: 'cat-1',
+        tipo: 'gasto',
+        concepto: 'Compra',
+        montoRestante: 5000,
+        notas: null,
+        fromCuotaNumero: 6,
+        newTotalCuotas: 6,
+        fechaInicio: '2026-06-15',
+        icono: 'receipt-outline',
+      },
+      'group-5'
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ cuota_numero: 6, cuota_total: 6, monto: 5000 });
   });
 });
