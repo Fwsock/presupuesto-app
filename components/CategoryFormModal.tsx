@@ -9,6 +9,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { FullScreenFormModal } from './FullScreenFormModal';
 import { PressableScale } from './PressableScale';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -84,7 +85,11 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
         render={({ field: { onChange, value } }) => (
           <TextInput
             className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+            style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Nombre"
+            placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+            selectionColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_SELECTION_COLOR}
             value={value}
             onChangeText={onChange}
             autoFocus

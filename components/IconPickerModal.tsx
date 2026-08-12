@@ -1,7 +1,8 @@
-import { Dimensions, FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Dimensions, FlatList, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AVAILABLE_MOVEMENT_ICONS } from '../features/movements/iconSuggestion';
 import { PressableScale } from './PressableScale';
+import { AnimatedBottomSheet } from './AnimatedBottomSheet';
 
 interface IconPickerModalProps {
   visible: boolean;
@@ -27,49 +28,39 @@ const CELL_SIZE = (Dimensions.get('window').width - GRID_PADDING * 2) / NUM_COLU
  */
 export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: IconPickerModalProps) {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <Pressable
-          onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          accessibilityRole="button"
-          accessibilityLabel="Cerrar"
-        />
-        <View className="bg-white rounded-t-2xl" style={{ maxHeight: '90%' }}>
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-            <PressableScale onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
-              <Ionicons name="arrow-back" size={24} color="#111827" />
-            </PressableScale>
-            <Text className="text-lg font-semibold">Elegir ícono</Text>
-          </View>
-
-          <FlatList
-            data={AVAILABLE_MOVEMENT_ICONS}
-            keyExtractor={(icon) => icon}
-            numColumns={NUM_COLUMNS}
-            contentContainerStyle={{ padding: GRID_PADDING, paddingBottom: 24 }}
-            renderItem={({ item: icon }) => {
-              const isSelected = icon === selectedIcon;
-              return (
-                <PressableScale
-                  onPress={() => {
-                    onSelect(icon);
-                    onClose();
-                  }}
-                  style={{ width: CELL_SIZE, height: CELL_SIZE, margin: CELL_MARGIN }}
-                  className={`items-center justify-center rounded-lg border ${
-                    isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-200'
-                  }`}
-                  accessibilityRole="button"
-                  accessibilityLabel={icon}
-                >
-                  <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={26} color={isSelected ? '#fff' : '#374151'} />
-                </PressableScale>
-              );
-            }}
-          />
-        </View>
+    <AnimatedBottomSheet visible={visible} onClose={onClose} maxHeightPercent={90}>
+      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+        <PressableScale onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
+          <Ionicons name="arrow-back" size={24} color="#111827" />
+        </PressableScale>
+        <Text className="text-lg font-semibold">Elegir ícono</Text>
       </View>
-    </Modal>
+
+      <FlatList
+        data={AVAILABLE_MOVEMENT_ICONS}
+        keyExtractor={(icon) => icon}
+        numColumns={NUM_COLUMNS}
+        contentContainerStyle={{ padding: GRID_PADDING, paddingBottom: 24 }}
+        renderItem={({ item: icon }) => {
+          const isSelected = icon === selectedIcon;
+          return (
+            <PressableScale
+              onPress={() => {
+                onSelect(icon);
+                onClose();
+              }}
+              style={{ width: CELL_SIZE, height: CELL_SIZE, margin: CELL_MARGIN }}
+              className={`items-center justify-center rounded-lg border ${
+                isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-200'
+              }`}
+              accessibilityRole="button"
+              accessibilityLabel={icon}
+            >
+              <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={26} color={isSelected ? '#fff' : '#374151'} />
+            </PressableScale>
+          );
+        }}
+      />
+    </AnimatedBottomSheet>
   );
 }

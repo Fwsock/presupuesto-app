@@ -2,6 +2,7 @@
   "expo": {
     "name": "presupuesto-app-mvp",
     "slug": "presupuesto-app-mvp",
+    "owner": "bastian-apps",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,7 +18,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.presupuestoappmvp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,6 +27,12 @@
     "plugins": [
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1db2e5d-2728-43e7-a658-45a9fc7f7034"
+      }
+    }
   }
 }

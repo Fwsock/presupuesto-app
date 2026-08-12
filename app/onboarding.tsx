@@ -6,6 +6,7 @@ import { RecurringIncomeForm } from '../components/RecurringIncomeForm';
 import { PhoneInput } from '../components/PhoneInput';
 import { Button } from '../components/Button';
 import { BackButton } from '../components/BackButton';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from '../components/inputTheme';
 
 type Step = 'perfil' | 'ingreso';
 
@@ -61,7 +62,11 @@ export default function OnboardingScreen() {
 
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-3"
+          style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre completo"
+          placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+          selectionColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_SELECTION_COLOR}
           value={nombre}
           onChangeText={setNombre}
           autoFocus

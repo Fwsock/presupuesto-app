@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Modal, Pressable, View, Text, TextInput, ScrollView } from 'react-native';
+import { View, Text, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { AnimatedBottomSheet } from './AnimatedBottomSheet';
 import { COUNTRIES } from '../features/shared/countries';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const FIELD_HEIGHT = 44;
 
@@ -34,52 +36,45 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
 
       <TextInput
         className="flex-1 border border-gray-300 rounded-md px-3"
-        style={{ height: FIELD_HEIGHT }}
+        style={{ height: FIELD_HEIGHT, color: INPUT_TEXT_COLOR }}
         placeholder="Número"
+        placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+        selectionColor={INPUT_SELECTION_COLOR}
+        cursorColor={INPUT_SELECTION_COLOR}
         keyboardType="number-pad"
         value={digits}
         onChangeText={(text) => onChangeDigits(text.replace(/[^0-9]/g, ''))}
       />
 
-      <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
-        <View className="flex-1 justify-end bg-black/40">
-          <Pressable
+      <AnimatedBottomSheet visible={pickerOpen} onClose={() => setPickerOpen(false)} maxHeightPercent={70}>
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+          <Text className="text-lg font-semibold">Elegir país</Text>
+          <PressableScale
             onPress={() => setPickerOpen(false)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Cerrar"
-          />
-          <View className="bg-white rounded-t-2xl" style={{ maxHeight: '70%' }}>
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-              <Text className="text-lg font-semibold">Elegir país</Text>
-              <PressableScale
-                onPress={() => setPickerOpen(false)}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Cerrar"
-              >
-                <Ionicons name="close" size={22} color="#111827" />
-              </PressableScale>
-            </View>
-            <ScrollView contentContainerClassName="pb-6">
-              {COUNTRIES.map((country) => (
-                <PressableScale
-                  key={country.code}
-                  onPress={() => {
-                    onChangeCountryCode(country.code);
-                    setPickerOpen(false);
-                  }}
-                  className="flex-row items-center px-4 py-3"
-                >
-                  <Text style={{ fontSize: 20 }}>{country.flag}</Text>
-                  <Text className="ml-3 flex-1 text-base">{country.name}</Text>
-                  <Text className="text-gray-500">+{country.dialCode}</Text>
-                </PressableScale>
-              ))}
-            </ScrollView>
-          </View>
+          >
+            <Ionicons name="close" size={22} color="#111827" />
+          </PressableScale>
         </View>
-      </Modal>
+        <ScrollView contentContainerClassName="pb-6">
+          {COUNTRIES.map((country) => (
+            <PressableScale
+              key={country.code}
+              onPress={() => {
+                onChangeCountryCode(country.code);
+                setPickerOpen(false);
+              }}
+              className="flex-row items-center px-4 py-3"
+            >
+              <Text style={{ fontSize: 20 }}>{country.flag}</Text>
+              <Text className="ml-3 flex-1 text-base">{country.name}</Text>
+              <Text className="text-gray-500">+{country.dialCode}</Text>
+            </PressableScale>
+          ))}
+        </ScrollView>
+      </AnimatedBottomSheet>
     </View>
   );
 }

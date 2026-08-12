@@ -1,0 +1,20 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!--
+      Bound only by the OS, protected by BIND_NOTIFICATION_LISTENER_SERVICE
+      (which only the system holds). android:exported="true" is required
+      here purely because Android 12+ mandates an explicit exported value on
+      any service with an intent-filter, not because third-party apps can
+      reach it.
+    -->
+    <service
+      android:name="expo.modules.banknotificationlistener.BankNotificationListenerService"
+      android:label="Presupuesto - Notificaciones bancarias"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>

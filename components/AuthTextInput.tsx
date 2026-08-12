@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, TextInput, type TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 interface AuthTextInputProps extends Omit<TextInputProps, 'style'> {
   icon: keyof typeof Ionicons.glyphMap;
@@ -21,7 +22,15 @@ export function AuthTextInput({ icon, secureTextEntry, ...rest }: AuthTextInputP
   return (
     <View className="flex-row items-center border border-gray-300 rounded-md px-3 mb-3" style={{ height: 48 }}>
       <Ionicons name={icon} size={20} color="#6b7280" style={{ marginRight: 8 }} />
-      <TextInput className="flex-1" secureTextEntry={isPasswordField && !visible} {...rest} />
+      <TextInput
+        className="flex-1"
+        style={{ color: INPUT_TEXT_COLOR }}
+        placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+        selectionColor={INPUT_SELECTION_COLOR}
+        cursorColor={INPUT_SELECTION_COLOR}
+        secureTextEntry={isPasswordField && !visible}
+        {...rest}
+      />
       {isPasswordField && (
         <PressableScale
           onPress={() => setVisible((v) => !v)}

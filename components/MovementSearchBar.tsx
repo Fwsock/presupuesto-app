@@ -1,6 +1,7 @@
 import { View, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 interface MovementSearchBarProps {
   query: string;
@@ -21,7 +22,11 @@ export function MovementSearchBar({ query, onQueryChange, onPressFilter, filterA
         <Ionicons name="search" size={18} color="#6b7280" style={{ marginRight: 6 }} />
         <TextInput
           className="flex-1"
+          style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Buscar por nombre o descripción"
+          placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+          selectionColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_SELECTION_COLOR}
           value={query}
           onChangeText={onQueryChange}
         />

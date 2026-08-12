@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useProfile } from '../../features/profile/hooks';
 import { SelectedMonthProvider } from '../../features/shared/selected-month';
@@ -9,6 +9,9 @@ import { MovementFormModal } from '../../components/MovementFormModal';
 import { VariableIncomePromptHost } from '../../components/VariableIncomePromptHost';
 import { FixedCategoriesSync } from '../../components/FixedCategoriesSync';
 import { AnimatedTabBar } from '../../components/AnimatedTabBar';
+import { PendingNotificationsInbox } from '../../components/PendingNotificationsInbox';
+import { BankNotificationListenerSync } from '../../components/BankNotificationListenerSync';
+import { usePendingNotifications } from '../../features/pendingNotifications/hooks';
 import { MovementModalContext } from '../../features/shared/movement-modal-context';
 import type { Movement } from '../../features/movements/types';
 
@@ -56,9 +59,35 @@ function CreateTabButton({ onPress }: { onPress: () => void }) {
   );
 }
 
+// Header button shown on every tab, badged with how many captured
+// notifications are still waiting to be confirmed or discarded.
+function InboxHeaderButton({ count, onPress }: { count: number; onPress: () => void }) {
+  return (
+    <PressableScale
+      onPress={onPress}
+      className="mr-4"
+      accessibilityRole="button"
+      accessibilityLabel="Notificaciones pendientes"
+    >
+      <View>
+        <Ionicons name="mail-unread-outline" size={24} color="#ffffff" />
+        {count > 0 && (
+          <View
+            className="absolute -top-1.5 -right-2 bg-red-600 rounded-full items-center justify-center px-1"
+            style={{ minWidth: 16, height: 16 }}
+          >
+            <Text className="text-white text-[10px] font-bold">{count > 9 ? '9+' : count}</Text>
+          </View>
+        )}
+      </View>
+    </PressableScale>
+  );
+}
+
 export default function AppLayout() {
   const { data: profile } = useProfile();
   const router = useRouter();
+  const { data: pendingNotifications } = usePendingNotifications();
 
   // Hosted here (not in movimientos.tsx) so the center tab-bar button can
   // open it from any tab, and Movimientos' row "editar" action can open it
@@ -69,6 +98,7 @@ export default function AppLayout() {
   // below) so each session starts with fresh internal state - see the
   // component's own comment for why this matters.
   const [formSessionId, setFormSessionId] = useState(0);
+  const [inboxVisible, setInboxVisible] = useState(false);
 
   const openCreate = useCallback(() => {
     setEditingMovement(null);
@@ -93,6 +123,9 @@ export default function AppLayout() {
             headerStyle: { backgroundColor: '#2563eb' },
             headerTintColor: '#ffffff',
             headerTitleStyle: { color: '#ffffff', fontWeight: '600' },
+            headerRight: () => (
+              <InboxHeaderButton count={pendingNotifications?.length ?? 0} onPress={() => setInboxVisible(true)} />
+            ),
           }}
         >
           <Tabs.Screen
@@ -140,6 +173,8 @@ export default function AppLayout() {
         />
         <VariableIncomePromptHost />
         <FixedCategoriesSync />
+        <BankNotificationListenerSync />
+        <PendingNotificationsInbox visible={inboxVisible} onClose={() => setInboxVisible(false)} />
       </SelectedMonthProvider>
     </MovementModalContext.Provider>
   );

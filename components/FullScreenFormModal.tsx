@@ -1,6 +1,7 @@
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { AnimatedBottomSheet } from './AnimatedBottomSheet';
 
 interface FullScreenFormModalProps {
   visible: boolean;
@@ -19,32 +20,22 @@ interface FullScreenFormModalProps {
  */
 export function FullScreenFormModal({ visible, title, onClose, children }: FullScreenFormModalProps) {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <Pressable
+    <AnimatedBottomSheet visible={visible} onClose={onClose}>
+      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+        <PressableScale
           onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          className="pr-3 py-1"
           accessibilityRole="button"
           accessibilityLabel="Cerrar"
-        />
-        <View className="bg-white rounded-t-2xl" style={{ maxHeight: '85%' }}>
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-            <PressableScale
-              onPress={onClose}
-              className="pr-3 py-1"
-              accessibilityRole="button"
-              accessibilityLabel="Cerrar"
-            >
-              <Ionicons name="arrow-back" size={24} color="#111827" />
-            </PressableScale>
-            <Text className="text-lg font-semibold">{title}</Text>
-          </View>
-
-          <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">
-            {children}
-          </ScrollView>
-        </View>
+        >
+          <Ionicons name="arrow-back" size={24} color="#111827" />
+        </PressableScale>
+        <Text className="text-lg font-semibold">{title}</Text>
       </View>
-    </Modal>
+
+      <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
+    </AnimatedBottomSheet>
   );
 }

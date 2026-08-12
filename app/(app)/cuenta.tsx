@@ -18,6 +18,7 @@ import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { PressableScale } from '../../components/PressableScale';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
 import { FadeTabScreen } from '../../components/FadeTabScreen';
 
 type AccountSection = 'personal' | 'seguridad' | 'ingreso' | 'terminos' | 'ayuda' | null;
@@ -273,7 +274,11 @@ export default function CuentaScreen() {
         </Text>
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-2"
+          style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre"
+          placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+          selectionColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_SELECTION_COLOR}
           value={nombre}
           onChangeText={setNombre}
         />
@@ -295,7 +300,11 @@ export default function CuentaScreen() {
         <Text className="text-gray-500 mb-2">Actual: {session?.user.email}</Text>
         <TextInput
           className="border border-gray-300 rounded-md px-3 py-2 mb-4"
+          style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nuevo correo"
+          placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+          selectionColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_SELECTION_COLOR}
           autoCapitalize="none"
           keyboardType="email-address"
           value={newEmail}

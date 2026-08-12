@@ -10,6 +10,7 @@ import { Button } from './Button';
 import { PressableScale } from './PressableScale';
 import { ErrorBanner } from './ErrorBanner';
 import { useConfirmDialog } from './ConfirmDialog';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const schema = z
   .object({
@@ -89,7 +90,11 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
         render={({ field: { onChange, value } }) => (
           <TextInput
             className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+            style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Concepto (ej. Sueldo)"
+            placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+            selectionColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_SELECTION_COLOR}
             value={value}
             onChangeText={onChange}
           />
@@ -163,7 +168,11 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
             render={({ field: { onChange, value } }) => (
               <TextInput
                 className="border border-gray-300 rounded-md px-3 py-2 mb-1 mt-2"
+                style={{ color: INPUT_TEXT_COLOR }}
                 placeholder="Monto mensual"
+                placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                selectionColor={INPUT_SELECTION_COLOR}
+                cursorColor={INPUT_SELECTION_COLOR}
                 keyboardType="number-pad"
                 value={value}
                 onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Modal, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Platform, Text, TextInput, View } from 'react-native';
 import { MONTH_NAMES } from '../features/shared/monthNames';
 import { Button } from './Button';
 import { ErrorBanner } from './ErrorBanner';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 interface VariableIncomePromptModalProps {
   visible: boolean;
@@ -17,6 +18,9 @@ interface VariableIncomePromptModalProps {
   onSkip: () => void;
   onDismissError: () => void;
 }
+
+const KEYBOARD_SHOW_EVENT = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+const KEYBOARD_HIDE_EVENT = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
 /** Asks for this month's amount of a 'variable' recurring income the first time the user views a month it hasn't been entered for. */
 export function VariableIncomePromptModal({
@@ -40,6 +44,20 @@ export function VariableIncomePromptModal({
   // otherwise flash back to its normal, re-pressable blue state for a few
   // frames before the modal disappears.
   const [justSubmitted, setJustSubmitted] = useState(false);
+  // No KeyboardAvoidingView -- see AnimatedBottomSheet's comment for why.
+  // Same fix here: the backdrop (flex: 1, never resized) stays full-screen
+  // no matter what; only this padding, applied to that same static
+  // container, nudges the centered card up above the keyboard.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(KEYBOARD_SHOW_EVENT, (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hideSub = Keyboard.addListener(KEYBOARD_HIDE_EVENT, () => setKeyboardHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Pre-fill with last month's amount every time the prompt opens for a new
   // month — this component stays mounted with `visible` toggling, so a plain
@@ -60,8 +78,11 @@ export function VariableIncomePromptModal({
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onSkip}>
-      <View className="flex-1 justify-center items-center bg-black/40 px-6">
+    <Modal visible={visible} animationType="fade" transparent statusBarTranslucent onRequestClose={onSkip}>
+      <View
+        className="flex-1 justify-center items-center bg-black/40 px-6"
+        style={{ paddingBottom: keyboardHeight }}
+      >
         <View className="bg-white rounded-2xl p-6 w-full">
           <Text className="text-lg font-bold mb-1">
             {concepto} — {MONTH_NAMES[month - 1]} {year}
@@ -72,7 +93,11 @@ export function VariableIncomePromptModal({
 
           <TextInput
             className="border border-gray-300 rounded-md px-3 py-2 mb-4"
+            style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Monto"
+            placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+            selectionColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_SELECTION_COLOR}
             keyboardType="number-pad"
             value={monto}
             onChangeText={(text) => setMonto(text.replace(/[^0-9]/g, ''))}

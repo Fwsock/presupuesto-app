@@ -1,0 +1,25 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'expo.modules.banknotificationlistener'
+version = '1.0.0'
+
+def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+// Sets compileSdkVersion/minSdkVersion/targetSdkVersion from the root
+// project's ext values (same helper every other Expo module uses) --
+// without this, the android {} block below has no compileSdk and Gradle
+// fails immediately.
+useDefaultAndroidSdkVersions()
+// Adds the expo-modules-core project dependency (for expo.modules.kotlin.*,
+// which BankNotificationListenerModule.kt imports) and the Kotlin stdlib.
+useCoreDependencies()
+
+android {
+  namespace "expo.modules.banknotificationlistener"
+}
+
+dependencies {
+  implementation "androidx.core:core-ktx:1.13.1"
+}

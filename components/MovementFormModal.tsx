@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, View, Text, TextInput, Switch, ScrollView } from 'react-native';
+import { View, Text, TextInput, Switch, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +22,8 @@ import { Button } from './Button';
 import { DateField } from './DateField';
 import { IconPickerModal } from './IconPickerModal';
 import { PressableScale } from './PressableScale';
+import { AnimatedBottomSheet } from './AnimatedBottomSheet';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const movementSchema = z
   .object({
@@ -274,15 +276,12 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <Pressable
-          onPress={isSaving ? undefined : onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          accessibilityRole="button"
-          accessibilityLabel="Cerrar"
-        />
-        <View className="bg-white rounded-t-2xl" style={{ maxHeight: '90%' }}>
+    <AnimatedBottomSheet
+      visible={visible}
+      onClose={onClose}
+      onBackdropPress={isSaving ? undefined : onClose}
+      maxHeightPercent={90}
+    >
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
           <PressableScale
             onPress={onClose}
@@ -322,7 +321,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       className="border border-gray-300 rounded-md px-3 py-2"
+                      style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Concepto"
+                      placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                      selectionColor={INPUT_SELECTION_COLOR}
+                      cursorColor={INPUT_SELECTION_COLOR}
                       value={value}
                       onChangeText={onChange}
                     />
@@ -339,6 +342,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+                  style={{ color: INPUT_TEXT_COLOR }}
                   placeholder={
                     !esCuota
                       ? 'Monto'
@@ -348,6 +352,9 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                           ? 'Monto de esta cuota'
                           : 'Monto total de la compra'
                   }
+                  placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                  selectionColor={INPUT_SELECTION_COLOR}
+                  cursorColor={INPUT_SELECTION_COLOR}
                   keyboardType="number-pad"
                   value={value}
                   onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
@@ -460,7 +467,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   className="border border-gray-300 rounded-md px-3 py-2"
+                  style={{ color: INPUT_TEXT_COLOR }}
                   placeholder="Notas (opcional)"
+                  placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                  selectionColor={INPUT_SELECTION_COLOR}
+                  cursorColor={INPUT_SELECTION_COLOR}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -497,7 +508,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       className="border border-gray-300 rounded-md px-3 py-2 mt-3 mb-1"
+                      style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Cuotas"
+                      placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                      selectionColor={INPUT_SELECTION_COLOR}
+                      cursorColor={INPUT_SELECTION_COLOR}
                       keyboardType="number-pad"
                       value={value}
                       onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
@@ -524,7 +539,6 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
 
           <Button title="Guardar" onPress={handleSubmit(onSubmit)} loading={isSaving} disabled={isSaving} />
         </ScrollView>
-        </View>
 
         <IconPickerModal
           visible={iconPickerVisible}
@@ -535,7 +549,6 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           }}
           onClose={() => setIconPickerVisible(false)}
         />
-      </View>
-    </Modal>
+    </AnimatedBottomSheet>
   );
 }
