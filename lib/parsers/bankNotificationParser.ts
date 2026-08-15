@@ -38,6 +38,35 @@ const GASTO_KEYWORDS = [
   'retiro',
 ];
 
+// Bank marketing copy ("¿Necesitas efectivo?", "Pide tu crédito preaprobado")
+// often reads a lot like a real transaction notification -- these keywords
+// catch it before it ever reaches the pending inbox, see isRealTransactionNotification.
+const PROMOTIONAL_KEYWORDS = [
+  'necesitas efectivo',
+  'pide tu credito',
+  'solicita tu credito',
+  'preaprobado',
+  'pre aprobado',
+  'oferta especial',
+  'descuento',
+  'promocion',
+  'cupon',
+  'sorteo',
+  'aumenta tu linea',
+  'super tasa',
+  'tasa preferencial',
+  'postula',
+  'cotiza',
+  'activa tu tarjeta',
+  'conoce mas',
+  'entérate',
+  'enterate',
+  'te invitamos',
+  'aprovecha',
+  'nueva tarjeta',
+  'sube tu cupo',
+];
+
 function normalize(text: string): string {
   return text
     .toLowerCase()
@@ -45,8 +74,10 @@ function normalize(text: string): string {
     .replace(/[̀-ͯ]/g, '');
 }
 
+/** parseFloat can return NaN for malformed input -- callers must never trust this without checking Number.isFinite. */
 function parseAmount(raw: string): number {
-  return parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+  const value = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(value) ? value : 0;
 }
 
 function extractAmount(text: string): number | null {
@@ -85,4 +116,22 @@ export function parseBankNotification(text: string): ParsedBankNotification {
     comercio: extractMerchant(text),
     tipo: extractType(text),
   };
+}
+
+export function isPromotionalNotification(text: string): boolean {
+  const normalized = normalize(text);
+  return PROMOTIONAL_KEYWORDS.some((keyword) => normalized.includes(normalize(keyword)));
+}
+
+/**
+ * Security filter applied before a captured/pasted/OCR'd notification is
+ * ever added to the pending inbox: only messages that both (a) have an
+ * extractable amount and (b) don't read as bank marketing copy count as a
+ * real transaction. Used identically by the background listener, the
+ * persisted-queue drain, manual paste, and OCR -- they all funnel through
+ * useAddPendingNotificationFromText, so checking it there covers every path.
+ */
+export function isRealTransactionNotification(text: string): boolean {
+  if (isPromotionalNotification(text)) return false;
+  return extractAmount(text) !== null;
 }

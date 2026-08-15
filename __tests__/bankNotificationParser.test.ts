@@ -1,4 +1,4 @@
-import { parseBankNotification } from '../lib/parsers/bankNotificationParser';
+import { parseBankNotification, isPromotionalNotification, isRealTransactionNotification } from '../lib/parsers/bankNotificationParser';
 
 describe('parseBankNotification', () => {
   it('parses a Banco de Chile compra notification', () => {
@@ -109,5 +109,35 @@ describe('parseBankNotification', () => {
       comercio: null,
       tipo: null,
     });
+  });
+});
+
+describe('isPromotionalNotification', () => {
+  it('flags a "necesitas efectivo" cash-advance ad', () => {
+    expect(isPromotionalNotification('¿Necesitas efectivo? Solicita tu crédito preaprobado hoy mismo')).toBe(true);
+  });
+
+  it('flags a card-upsell promotion, case- and accent-insensitively', () => {
+    expect(isPromotionalNotification('PROMOCIÓN: Sube tu cupo y aprovecha nuestra tasa preferencial')).toBe(true);
+  });
+
+  it('does not flag a real compra notification', () => {
+    expect(isPromotionalNotification('Banco de Chile: Compra por $12.990 en STARBUCKS CHILE')).toBe(false);
+  });
+});
+
+describe('isRealTransactionNotification', () => {
+  it('accepts a real compra notification with an extractable amount', () => {
+    expect(isRealTransactionNotification('Compra por $12.990 en STARBUCKS CHILE')).toBe(true);
+  });
+
+  it('rejects a promotional message even when it contains a number', () => {
+    expect(
+      isRealTransactionNotification('Pide tu crédito preaprobado de hasta $2.000.000 y recíbelo hoy')
+    ).toBe(false);
+  });
+
+  it('rejects a message with no extractable amount', () => {
+    expect(isRealTransactionNotification('Recordatorio: revisa tu estado de cuenta')).toBe(false);
   });
 });

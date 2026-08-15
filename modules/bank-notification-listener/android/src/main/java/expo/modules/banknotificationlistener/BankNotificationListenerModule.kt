@@ -27,6 +27,17 @@ class BankNotificationListenerModule : Module() {
       }
     }
 
+    // Catches up on notifications BankNotificationListenerService captured
+    // while nothing was listening live (app fully closed, not just
+    // backgrounded) -- see that service's class doc for why this queue
+    // exists. Called once on app launch from useBankNotificationListener.
+    AsyncFunction("drainPersistedNotifications") {
+      val context = appContext.reactContext ?: return@AsyncFunction emptyList<Map<String, String>>()
+      BankNotificationListenerService.drain(context).map { (packageName, text) ->
+        mapOf("packageName" to packageName, "text" to text)
+      }
+    }
+
     OnCreate {
       BankNotificationListenerService.onNotificationCaptured = { packageName, text ->
         sendEvent("onBankNotification", mapOf("packageName" to packageName, "text" to text))

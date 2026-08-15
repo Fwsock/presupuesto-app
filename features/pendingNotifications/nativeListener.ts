@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { AppState, Platform } from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addBankNotificationListener,
+  drainPersistedBankNotifications,
   isBankNotificationListenerAvailable,
   isNotificationAccessGranted,
   openNotificationAccessSettings,
@@ -12,12 +13,38 @@ import { useAddPendingNotificationFromText } from './hooks';
 
 export { openNotificationAccessSettings, isBankNotificationListenerAvailable };
 
+const ACCESS_GRANTED_QUERY_KEY = ['bank-notification-access-granted'];
+
+/**
+ * The permission itself is granted from Android's system settings, entirely
+ * outside the app, so nothing in-app mutates this query when it changes --
+ * without this listener the banner in PendingNotificationsInbox stayed
+ * showing "not granted" forever after the user granted it and came back.
+ * Re-checking on every app-foreground event (not just while the inbox
+ * happens to be open) means it clears the moment they return, regardless of
+ * which screen they land back on.
+ */
 export function useNotificationAccessGranted() {
-  return useQuery({
-    queryKey: ['bank-notification-access-granted'],
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ACCESS_GRANTED_QUERY_KEY,
     queryFn: isNotificationAccessGranted,
     enabled: Platform.OS === 'android' && isBankNotificationListenerAvailable(),
   });
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isBankNotificationListenerAvailable()) return;
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        queryClient.invalidateQueries({ queryKey: ACCESS_GRANTED_QUERY_KEY });
+      }
+    });
+
+    return () => subscription.remove();
+  }, [queryClient]);
+
+  return query;
 }
 
 /**
@@ -42,4 +69,25 @@ export function useBankNotificationListener() {
     return () => subscription?.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
+
+  // Once per app launch: catches up on anything BankNotificationListenerService
+  // captured while the app's JS context was fully dead (process killed, not
+  // just backgrounded) and had nowhere to deliver it live -- see that
+  // service's class doc for why this queue exists.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isBankNotificationListenerAvailable()) return;
+
+    drainPersistedBankNotifications()
+      .then((events) => {
+        events.forEach((event) => {
+          addFromText.mutate({ rawText: event.text, categories: categories ?? [] });
+        });
+      })
+      .catch(() => {
+        // Best-effort catch-up -- a failure here (e.g. a native-side hiccup
+        // reading the persisted queue) shouldn't be fatal, the live listener
+        // above still works for anything captured from here on.
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

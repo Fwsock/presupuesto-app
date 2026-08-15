@@ -11,9 +11,12 @@ function makeNotification(overrides: Partial<PendingNotification> = {}): Pending
     rawText: 'Compra por $12.990 en STARBUCKS',
     monto: 12990,
     comercio: 'STARBUCKS',
+    fecha: null,
     tipo: 'gasto',
     suggestedCategoryId: null,
     capturedAt: '2026-08-12T10:00:00.000Z',
+    source: 'text',
+    items: [],
     ...overrides,
   };
 }

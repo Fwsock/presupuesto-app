@@ -4,12 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { FullScreenFormModal } from './FullScreenFormModal';
 import { PressableScale } from './PressableScale';
 import { Button } from './Button';
+import { DateField } from './DateField';
 import { ErrorBanner } from './ErrorBanner';
 import { useCategories } from '../features/categories/hooks';
 import { useConfirmPendingNotification, useDiscardPendingNotification } from '../features/pendingNotifications/hooks';
 import { suggestMovementIcon } from '../features/movements/iconSuggestion';
-import { formatISODate } from '../features/movements/date';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { formatISODate, formatDisplayDate, isValidISODate } from '../features/movements/date';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 import type { PendingNotification } from '../features/pendingNotifications/types';
 import type { NotificationMovementType } from '../lib/parsers/bankNotificationParser';
 
@@ -24,6 +25,14 @@ interface PendingNotificationConfirmModalProps {
  * field arrives pre-filled from the parser (features/movements categoría
  * suggestion included), the user only has to glance and tap Guardar --
  * or correct a field first if the parser got something wrong.
+ *
+ * The raw-OCR-text toggle for scan-sourced entries is deliberately NOT
+ * gated behind __DEV__: this project's `eas.json` has no development-client
+ * profile, so every build actually installed and tested on a device
+ * (including the `preview` profile used throughout this project) runs with
+ * __DEV__ false -- gating on it would make the toggle permanently
+ * unreachable in the only kind of build anyone ever tests. It's collapsed
+ * by default instead, which already satisfies "don't clutter the screen".
  */
 export function PendingNotificationConfirmModal({ visible, notification, onClose }: PendingNotificationConfirmModalProps) {
   const { data: categories } = useCategories();
@@ -34,7 +43,13 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
   const [monto, setMonto] = useState('');
   const [tipo, setTipo] = useState<NotificationMovementType>('gasto');
   const [categoryId, setCategoryId] = useState('');
+  const [fecha, setFecha] = useState(formatISODate(new Date()));
+  const [notas, setNotas] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  // Only ever surfaced when __DEV__ is true (see the bottom section below) --
+  // an escape hatch for auditing the exact OCR output while iterating on the
+  // parser, without dumping raw text in front of real users.
+  const [showRawText, setShowRawText] = useState(false);
 
   useEffect(() => {
     if (!visible || !notification) return;
@@ -42,7 +57,15 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
     setMonto(notification.monto ? String(notification.monto) : '');
     setTipo(notification.tipo ?? 'gasto');
     setCategoryId(notification.suggestedCategoryId ?? '');
+    // Falls back to today whenever the scan didn't confidently read a date
+    // (e.g. plain pasted/notification-listener text, which never had one).
+    setFecha(notification.fecha && isValidISODate(notification.fecha) ? notification.fecha : formatISODate(new Date()));
+    // Pre-fills Notas with the detected item list (blank when the scan
+    // found none, or for a text-sourced notification) -- purely a starting
+    // point, the user can freely edit or clear it before saving.
+    setNotas(notification.items.length > 0 ? notification.items.map((item) => item.replace(/\s+/g, ' ').trim()).join('\n') : '');
     setFormError(null);
+    setShowRawText(false);
   }, [visible, notification]);
 
   if (!notification) return null;
@@ -65,9 +88,9 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
           tipo,
           concepto: concepto.trim(),
           monto: Number(monto),
-          notas: null,
+          notas: notas.trim() || null,
           estado: 'pendiente',
-          fecha: formatISODate(new Date()),
+          fecha,
           icono,
         },
       },
@@ -105,7 +128,7 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
           placeholder="Ej: Lider, Uber, Jumbo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
           selectionColor={INPUT_SELECTION_COLOR}
-          cursorColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
           value={concepto}
           onChangeText={setConcepto}
         />
@@ -119,7 +142,7 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
           placeholder="Monto"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
           selectionColor={INPUT_SELECTION_COLOR}
-          cursorColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
           keyboardType="number-pad"
           value={monto}
           onChangeText={(text) => setMonto(text.replace(/[^0-9]/g, ''))}
@@ -127,11 +150,16 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       </View>
 
       <View className="mb-4">
+        <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Fecha</Text>
+        <DateField value={fecha} onChange={setFecha} />
+      </View>
+
+      <View className="mb-4">
         <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Tipo</Text>
         <View className="flex-row" style={{ gap: 0 }}>
           <View style={{ flex: 1 }}>
             <PressableScale
-              className={`py-2 rounded-l-md border ${tipo === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+              className={`py-2 rounded-l-md border ${tipo === 'ingreso' ? 'bg-brand border-brand' : 'border-gray-300'}`}
               onPress={() => setTipo('ingreso')}
             >
               <Text className={`text-center ${tipo === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
@@ -139,13 +167,28 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
           </View>
           <View style={{ flex: 1 }}>
             <PressableScale
-              className={`py-2 rounded-r-md border ${tipo === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+              className={`py-2 rounded-r-md border ${tipo === 'gasto' ? 'bg-brand border-brand' : 'border-gray-300'}`}
               onPress={() => setTipo('gasto')}
             >
               <Text className={`text-center ${tipo === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
             </PressableScale>
           </View>
         </View>
+      </View>
+
+      <View className="mb-4">
+        <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Notas</Text>
+        <TextInput
+          className="border border-gray-300 rounded-md px-3 py-2"
+          style={{ color: INPUT_TEXT_COLOR }}
+          placeholder="Notas (opcional)"
+          placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+          selectionColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
+          value={notas}
+          onChangeText={setNotas}
+          multiline
+        />
       </View>
 
       <View className="mb-5">
@@ -157,7 +200,7 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
               <PressableScale
                 key={c.id}
                 onPress={() => setCategoryId(selected ? '' : c.id)}
-                className={`px-3 py-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-300'}`}
               >
                 <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
               </PressableScale>
@@ -167,13 +210,60 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       </View>
 
       <View className="mb-5 pt-4 border-t border-gray-100">
-        <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Notificación original</Text>
-        <Text className="text-gray-500 text-xs italic">{notification.rawText}</Text>
+        {notification.source === 'scan' ? (
+          <>
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Información extraída</Text>
+            <View className="bg-gray-50 rounded-md p-3" style={{ gap: 6 }}>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-500 text-xs">Comercio</Text>
+                <Text className="text-gray-800 text-xs font-medium">{notification.comercio ?? 'No detectado'}</Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-500 text-xs">Monto total</Text>
+                <Text className="text-gray-800 text-xs font-medium">
+                  {notification.monto != null ? `$${notification.monto.toLocaleString('es-CL')}` : 'No detectado'}
+                </Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-500 text-xs">Fecha</Text>
+                <Text className="text-gray-800 text-xs font-medium">
+                  {notification.fecha ? formatDisplayDate(notification.fecha) : 'No detectada'}
+                </Text>
+              </View>
+            </View>
+
+            {notification.items.length > 0 && (
+              <View className="mt-3">
+                <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Items detectados</Text>
+                {notification.items.map((item, index) => (
+                  <Text key={index} className="text-gray-600 text-xs mb-1">
+                    {item.replace(/\s+/g, ' ').trim()}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Collapsed by default so the raw OCR dump never clutters the
+                screen -- see the module-level comment for why this isn't
+                gated behind __DEV__ in this project specifically. */}
+            <PressableScale onPress={() => setShowRawText((v) => !v)} className="mt-3 py-1">
+              <Text className="text-brand text-xs font-medium">
+                {showRawText ? 'Ocultar texto OCR crudo' : 'Ver texto OCR crudo'}
+              </Text>
+            </PressableScale>
+            {showRawText && <Text className="text-gray-500 text-xs italic mt-2">{notification.rawText}</Text>}
+          </>
+        ) : (
+          <>
+            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Notificación original</Text>
+            <Text className="text-gray-500 text-xs italic">{notification.rawText}</Text>
+          </>
+        )}
       </View>
 
       <Button title="Guardar" onPress={handleConfirm} loading={confirmNotification.isPending} disabled={isSaving} />
       <PressableScale onPress={handleDiscard} disabled={isSaving} className="py-2 items-center">
-        <Text className="text-red-600 font-semibold">Descartar</Text>
+        <Text className="text-danger font-semibold">Descartar</Text>
       </PressableScale>
     </FullScreenFormModal>
   );

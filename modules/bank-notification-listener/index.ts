@@ -8,6 +8,7 @@ export interface BankNotificationEvent {
 interface BankNotificationListenerNativeModule {
   isPermissionGranted(): Promise<boolean>;
   openNotificationSettings(): void;
+  drainPersistedNotifications(): Promise<BankNotificationEvent[]>;
   addListener(eventName: 'onBankNotification', listener: (event: BankNotificationEvent) => void): EventSubscription;
 }
 
@@ -36,4 +37,10 @@ export function addBankNotificationListener(
   callback: (event: BankNotificationEvent) => void
 ): EventSubscription | null {
   return NativeModule?.addListener('onBankNotification', callback) ?? null;
+}
+
+/** Notifications captured while the app's JS context was fully dead (process killed, not just backgrounded) -- see BankNotificationListenerService's class doc. Call once on launch. */
+export async function drainPersistedBankNotifications(): Promise<BankNotificationEvent[]> {
+  if (!NativeModule) return [];
+  return NativeModule.drainPersistedNotifications();
 }
