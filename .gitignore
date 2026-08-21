@@ -44,15 +44,11 @@ yarn-error.*
 # local build output (see `npm run build:android:local`)
 *.apk
 
-# git worktrees (each is its own working tree with its own node_modules)
-.claude/worktrees/
-
-# Claude Code: personal/local-machine overrides only -- never shared or
-# committed (permissions, paths, etc. specific to one machine). This is
-# distinct from .claude/settings.json and .claude/skills/, which ARE
-# intentionally tracked project config (shared team settings, the
-# ui-ux-design skill used throughout this project) and must stay tracked.
-.claude/settings.local.json
+# Claude Code: kept out of the remote entirely by explicit request (this
+# used to keep settings.json/skills/ui-ux-design/SKILL.md tracked as
+# legitimate, secret-free project config -- both still exist locally, just
+# no longer published to GitHub).
+.claude/
 
 # AI-assistant-generated planning/spec docs from past sessions -- kept
 # locally for reference, not published to the remote (mentions another
