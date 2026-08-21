@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createInstallments,
   createMovement,
@@ -12,6 +13,8 @@ import {
   updateMovement,
 } from './api';
 import { ensureFixedCategoryMovementsForMonth } from './fixedCategories';
+import { monthOffset } from './monthlySeries';
+import { ensureRecurringIncomeForMonth } from '../income/api';
 import { generateInstallmentsFrom, type InstallmentRow, type RegenerateInstallmentsInput } from './installments';
 import type { NewMovementInput, UpdateMovementInput, Movement } from './types';
 
@@ -19,6 +22,12 @@ export function useMovements(year: number, month: number) {
   return useQuery({
     queryKey: ['movements', year, month],
     queryFn: () => fetchMovementsForMonth(year, month),
+    // Landing on a month that wasn't prefetched (e.g. jumping several months
+    // via the picker or tapping a far bar in the chart) would otherwise drop
+    // straight to isLoading/undefined for a beat -- keepPreviousData renders
+    // the last month's numbers in the meantime instead of a blank/skeleton
+    // flash, then swaps in the real data the moment it resolves.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -34,7 +43,63 @@ export function useMovementsForMonthRange(
   return useQuery({
     queryKey: ['movements', 'range', centerYear, centerMonth, monthsBefore, monthsAfter],
     queryFn: () => fetchMovementsForMonthRange(centerYear, centerMonth, monthsBefore, monthsAfter),
+    // The range shifts its whole window by a month on every navigation, so
+    // it's never actually prefetched (usePrefetchAdjacentMonths only warms
+    // single-month queries) -- without this, MonthSaldoChart's bars vanish
+    // for a beat every time (chartPoints turns [] while rangeMovements is
+    // undefined). keepPreviousData keeps the old bars on screen until the
+    // new range resolves, instead of the chart blanking out.
+    placeholderData: keepPreviousData,
   });
+}
+
+// How many months out, in each direction, usePrefetchAdjacentMonths warms.
+const PREFETCH_MONTHS_RADIUS = 2;
+
+/**
+ * Warms the cache for the 2 months on either side of the one on screen, so
+ * Resumen's arrows/chart navigation lands on already-cached data instead of
+ * showing the loading skeleton. Mirrors the exact three queries that gate
+ * Resumen's own isLoading (raw movements, the recurring-income check, the
+ * fixed-categories check) via prefetchQuery -- a plain queryClient call, not
+ * a hook, so it can run for months that are never actually mounted/selected.
+ * Both ensure-checks are idempotent (guarded by DB unique indexes), so
+ * running them a few steps early for a month the user hasn't viewed yet is
+ * safe -- worst case it's a no-op check that ran a little sooner than usual.
+ */
+export function usePrefetchAdjacentMonths(year: number, month: number) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const nearbyMonths = [];
+    for (let offset = -PREFETCH_MONTHS_RADIUS; offset <= PREFETCH_MONTHS_RADIUS; offset++) {
+      if (offset === 0) continue; // the active month is already fetched by the screen itself
+      nearbyMonths.push(monthOffset(year, month, offset));
+    }
+
+    for (const { year: y, month: m } of nearbyMonths) {
+      queryClient.prefetchQuery({
+        queryKey: ['movements', y, m],
+        queryFn: () => fetchMovementsForMonth(y, m),
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['recurring-income-check', y, m],
+        queryFn: async () => {
+          const result = await ensureRecurringIncomeForMonth(y, m);
+          await queryClient.invalidateQueries({ queryKey: ['movements'] });
+          return result;
+        },
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['fixed-categories-check', y, m],
+        queryFn: async () => {
+          await ensureFixedCategoryMovementsForMonth(y, m);
+          await queryClient.invalidateQueries({ queryKey: ['movements'] });
+          return true;
+        },
+      });
+    }
+  }, [year, month, queryClient]);
 }
 
 /**

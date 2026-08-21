@@ -3,7 +3,7 @@ import { Keyboard, Modal, Platform, Text, TextInput, View } from 'react-native';
 import { MONTH_NAMES } from '../features/shared/monthNames';
 import { Button } from './Button';
 import { ErrorBanner } from './ErrorBanner';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 interface VariableIncomePromptModalProps {
   visible: boolean;
@@ -83,7 +83,7 @@ export function VariableIncomePromptModal({
         className="flex-1 justify-center items-center bg-black/40 px-6"
         style={{ paddingBottom: keyboardHeight }}
       >
-        <View className="bg-white rounded-2xl p-6 w-full">
+        <View className="bg-surface rounded-3xl p-6 w-full">
           <Text className="text-lg font-bold mb-1">
             {concepto} — {MONTH_NAMES[month - 1]} {year}
           </Text>
@@ -92,12 +92,12 @@ export function VariableIncomePromptModal({
           {error && <ErrorBanner message={error} onRetry={onDismissError} actionLabel="Descartar" />}
 
           <TextInput
-            className="border border-gray-300 rounded-md px-3 py-2 mb-4"
+            className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Monto"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
             selectionColor={INPUT_SELECTION_COLOR}
-            cursorColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_CURSOR_COLOR}
             keyboardType="number-pad"
             value={monto}
             onChangeText={(text) => setMonto(text.replace(/[^0-9]/g, ''))}

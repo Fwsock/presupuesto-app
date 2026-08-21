@@ -6,7 +6,7 @@ import { RecurringIncomeForm } from '../components/RecurringIncomeForm';
 import { PhoneInput } from '../components/PhoneInput';
 import { Button } from '../components/Button';
 import { BackButton } from '../components/BackButton';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from '../components/inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../components/inputTheme';
 
 type Step = 'perfil' | 'ingreso';
 
@@ -61,12 +61,12 @@ export default function OnboardingScreen() {
         </Text>
 
         <TextInput
-          className="border border-gray-300 rounded-md px-3 py-2 mb-3"
+          className="border border-gray-200 rounded-xl px-3 py-2 mb-3"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre completo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
           selectionColor={INPUT_SELECTION_COLOR}
-          cursorColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
           value={nombre}
           onChangeText={setNombre}
           autoFocus
@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
           onChangeDigits={setPhoneDigits}
         />
 
-        {profileError && <Text className="text-red-600 mb-2 mt-1">{profileError}</Text>}
+        {profileError && <Text className="text-danger mb-2 mt-1">{profileError}</Text>}
 
         <Button
           title="Siguiente"

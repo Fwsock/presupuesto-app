@@ -5,6 +5,10 @@ import type { Movement } from '../movements/types';
 export interface MovementModalController {
   openCreate: () => void;
   openEdit: (movement: Movement) => void;
+  /** Opens the shared pending-notifications inbox -- lets a screen with its own headerRight override (Categorías' "+ Nueva categoría") still render the same notification bell alongside it, via InboxHeaderButton. */
+  openInbox: () => void;
+  /** Count for InboxHeaderButton's badge -- kept here (not re-fetched per screen) so every header shows the exact same number. */
+  pendingCount: number;
 }
 
 export const MovementModalContext = createContext<MovementModalController | null>(null);

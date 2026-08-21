@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
 import { AnimatedBottomSheet } from './AnimatedBottomSheet';
 import { COUNTRIES } from '../features/shared/countries';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const FIELD_HEIGHT = 44;
 
@@ -25,7 +25,7 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
       <PressableScale
         onPress={() => setPickerOpen(true)}
         style={{ minWidth: 92, height: FIELD_HEIGHT }}
-        className="flex-row items-center border border-gray-300 rounded-md px-2 mr-2"
+        className="flex-row items-center border border-gray-200 rounded-xl px-2 mr-2"
         accessibilityRole="button"
         accessibilityLabel="Elegir país"
       >
@@ -35,19 +35,19 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
       </PressableScale>
 
       <TextInput
-        className="flex-1 border border-gray-300 rounded-md px-3"
+        className="flex-1 border border-gray-200 rounded-xl px-3"
         style={{ height: FIELD_HEIGHT, color: INPUT_TEXT_COLOR }}
         placeholder="Número"
         placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
         selectionColor={INPUT_SELECTION_COLOR}
-        cursorColor={INPUT_SELECTION_COLOR}
+        cursorColor={INPUT_CURSOR_COLOR}
         keyboardType="number-pad"
         value={digits}
         onChangeText={(text) => onChangeDigits(text.replace(/[^0-9]/g, ''))}
       />
 
       <AnimatedBottomSheet visible={pickerOpen} onClose={() => setPickerOpen(false)} maxHeightPercent={70}>
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
           <Text className="text-lg font-semibold">Elegir país</Text>
           <PressableScale
             onPress={() => setPickerOpen(false)}

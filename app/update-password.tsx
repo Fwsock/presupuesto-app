@@ -66,7 +66,7 @@ export default function UpdatePasswordScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       className="bg-white"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         className="px-6"
@@ -105,7 +105,7 @@ export default function UpdatePasswordScreen() {
           )}
         />
 
-        {formError && <Text className="text-red-600 mb-2">{formError}</Text>}
+        {formError && <Text className="text-danger mb-2">{formError}</Text>}
 
         <Button
           title="Actualizar contraseña"

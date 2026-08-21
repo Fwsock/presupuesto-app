@@ -45,7 +45,7 @@ export function TextLink({ href, children, className }: TextLinkProps) {
               paddingHorizontal: 12,
             }}
           >
-            <Text className="text-blue-600 text-center">{children}</Text>
+            <Text className="text-brand text-center">{children}</Text>
           </Animated.View>
         )}
       </Pressable>

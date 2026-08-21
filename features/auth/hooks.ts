@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../../lib/supabase';
 
 export { translateAuthError } from './errors';
@@ -52,6 +53,60 @@ export function useSession() {
 
 export async function signIn(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+/**
+ * Google sign-in, native OAuth flow: `signInWithOAuth` doesn't redirect the
+ * browser itself on native (only on web) -- `skipBrowserRedirect: true`
+ * makes that explicit and just hands back the provider's authorize URL,
+ * which `WebBrowser.openAuthSessionAsync` opens in an in-app browser tab
+ * that closes itself once Google redirects back to `redirectTo`.
+ *
+ * `redirectTo` is the bare `presupuestoapp://` scheme (app.json's `scheme`),
+ * not `Linking.createURL(...)` with a path -- Supabase only honors a
+ * `redirectTo` that exactly matches (or matches a wildcard in) its Redirect
+ * URLs allow-list; anything else silently falls back to the project's
+ * default Site URL (which is why this was opening `localhost:3000` instead
+ * of coming back to the app). Keep this in sync with whatever's entered in
+ * Supabase Auth's Redirect URLs list.
+ *
+ * Supabase appends the session as URL fragment params on that final
+ * redirect, which `setSessionFromUrl` below turns into a real session --
+ * from there `useSession`'s own `onAuthStateChange` listener takes over
+ * exactly like it does after `signIn`, no extra navigation needed here.
+ *
+ * NOTE: requires the "Google" provider enabled in Supabase Auth (with its
+ * OAuth client id/secret) and `presupuestoapp://` added as a Redirect URL
+ * in that same provider config -- both are dashboard-side setup, not code.
+ */
+export async function signInWithGoogle(): Promise<void> {
+  const redirectTo = 'presupuestoapp://';
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (!data.url) throw new Error('No se pudo iniciar el flujo de Google.');
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  if (result.type !== 'success' || !result.url) {
+    // User closed the browser tab / cancelled -- not an error to surface.
+    return;
+  }
+  await setSessionFromUrl(result.url);
+}
+
+/** Parses the `#access_token=...&refresh_token=...` fragment Supabase appends to the OAuth redirect and turns it into a real session. */
+async function setSessionFromUrl(url: string): Promise<void> {
+  const fragment = url.split('#')[1];
+  if (!fragment) throw new Error('Google no devolvió una sesión válida.');
+  const params = new URLSearchParams(fragment);
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  if (!access_token || !refresh_token) throw new Error('Google no devolvió una sesión válida.');
+
+  const { error } = await supabase.auth.setSession({ access_token, refresh_token });
   if (error) throw error;
 }
 

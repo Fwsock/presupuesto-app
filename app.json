@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "presupuesto-app-mvp",
+    "name": "FinanFlow",
     "slug": "presupuesto-app-mvp",
     "owner": "bastian-apps",
     "version": "1.0.0",
@@ -9,14 +9,13 @@
     "userInterfaceStyle": "light",
     "scheme": "presupuestoapp",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.presupuestoappmvp"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#2563EB",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.presupuestoappmvp"
@@ -25,8 +24,35 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir que FinanFlow acceda a tus fotos para leer capturas de notificaciones bancarias.",
+          "cameraPermission": "Permitir que FinanFlow use la cámara para escanear boletas y comprobantes.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#2563EB"
+        }
+      ],
+      "./plugins/withGradlePerf.js",
+      "expo-web-browser"
     ],
     "extra": {
       "router": {},

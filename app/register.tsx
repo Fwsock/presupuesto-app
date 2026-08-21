@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useRouter } from 'expo-router';
 import { signUp, translateAuthError } from '../features/auth/hooks';
+import { AuthHeader } from '../components/AuthHeader';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { Button } from '../components/Button';
@@ -65,15 +66,14 @@ export default function RegisterScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       className="bg-white"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         className="px-6"
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold mb-1 text-center">Presupuesto</Text>
-        <Text className="text-gray-500 mb-6 text-center">Crea tu cuenta para empezar</Text>
+        <AuthHeader subtitle="Crea tu cuenta para empezar" />
 
         <Controller
           control={control}
@@ -119,7 +119,7 @@ export default function RegisterScreen() {
           )}
         />
 
-        {formError && <Text className="text-red-600 mb-2">{formError}</Text>}
+        {formError && <Text className="text-danger mb-2">{formError}</Text>}
 
         <Button
           title="Crear cuenta"
@@ -130,7 +130,7 @@ export default function RegisterScreen() {
         />
 
         <Link href="/login" className="mt-3">
-          <Text className="text-blue-600 text-center">¿Ya tienes cuenta? Inicia sesión</Text>
+          <Text className="text-brand text-center">¿Ya tienes cuenta? Inicia sesión</Text>
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

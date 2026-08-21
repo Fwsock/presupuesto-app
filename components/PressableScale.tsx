@@ -1,9 +1,25 @@
 import { useRef } from 'react';
 import { Animated, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 interface PressableScaleProps extends Omit<PressableProps, 'style'> {
   children: React.ReactNode;
   scaleTo?: number;
+  /**
+   * Opacity while pressed. Defaults to 0.6 -- a fairly strong dip, right for
+   * a small icon-only touch target (nav arrows, edit/delete icons). A
+   * full-width row/card reads that same 0.6 as an abrupt flash rather than
+   * subtle feedback -- pass something gentler (0.7-0.85) for those.
+   */
+  activeOpacity?: number;
+  /**
+   * Use a soft spring for the scale instead of the default linear timing --
+   * better suited to a full row/card press (a gentle settle) than the
+   * snappy default tuned for small buttons.
+   */
+  spring?: boolean;
+  /** Fires a light haptic tick on press-in. Opt-in -- not every tap in the app should buzz. */
+  haptics?: boolean;
   style?: StyleProp<ViewStyle>;
   className?: string;
 }
@@ -26,6 +42,9 @@ interface PressableScaleProps extends Omit<PressableProps, 'style'> {
 export function PressableScale({
   children,
   scaleTo = 0.85,
+  activeOpacity = 0.6,
+  spring = false,
+  haptics = false,
   onPressIn,
   onPressOut,
   style,
@@ -37,7 +56,9 @@ export function PressableScale({
 
   const animateTo = (toScale: number, toOpacity: number) => {
     Animated.parallel([
-      Animated.timing(scale, { toValue: toScale, duration: 90, useNativeDriver: true }),
+      spring
+        ? Animated.spring(scale, { toValue: toScale, useNativeDriver: true, friction: 9, tension: 120 })
+        : Animated.timing(scale, { toValue: toScale, duration: 90, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: toOpacity, duration: 90, useNativeDriver: true }),
     ]).start();
   };
@@ -49,7 +70,8 @@ export function PressableScale({
         style={style}
         className={className}
         onPressIn={(e) => {
-          animateTo(scaleTo, 0.6);
+          if (haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          animateTo(scaleTo, activeOpacity);
           onPressIn?.(e);
         }}
         onPressOut={(e) => {

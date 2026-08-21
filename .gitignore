@@ -41,5 +41,8 @@ yarn-error.*
 /ios
 /android
 
+# local build output (see `npm run build:android:local`)
+*.apk
+
 # git worktrees (each is its own working tree with its own node_modules)
 .claude/worktrees/

@@ -2,13 +2,21 @@ import { Skia, ImageFormat } from '@shopify/react-native-skia';
 import { File, Paths } from 'expo-file-system';
 import { buildGrayscaleContrastMatrix } from '../../lib/image/colorMatrix';
 
-// Moderate contrast boost -- strong enough to cut through a soft table
-// shadow or uneven ceiling-light glare on a photographed boleta, without
-// clipping so hard that faint thermal-printer ink gets crushed to pure
-// white. This is a fixed constant rather than something tuned per-photo:
-// there's no reliable signal available here (before OCR even runs) to
-// measure how shadowed a given image is.
-const OCR_CONTRAST = 1.35;
+// Mild contrast boost -- was 1.35, which real-device testing on faded/
+// low-ink thermal receipts (Unimarc, Strip La Florida Spa) showed pushing
+// already-faint print (thermal ink is often barely 0.75-0.85 luminance to
+// begin with, well before this filter runs, on paper that isn't freshly
+// printed) close enough to white to visibly increase OCR misreads -- e.g.
+// "STRIP LA FLORIDA SPA" coming back as "SIRP LA ELORNIOA SA", or a boleta's
+// own "TOTAL" section becoming unreadable while a bolder nearby item price
+// still OCR'd fine (see extractDocumentAmount's corroboration-based
+// selection for the parser-side half of that same failure mode). 1.15 still
+// helps cut through a soft table shadow or uneven ceiling-light glare on a
+// well-lit photo, without pushing faint ink as close to the clipping point.
+// This is a fixed constant rather than something tuned per-photo: there's
+// no reliable signal available here (before OCR even runs) to measure how
+// faded/shadowed a given image is.
+const OCR_CONTRAST = 1.15;
 
 export interface PreprocessedImage {
   uri: string;

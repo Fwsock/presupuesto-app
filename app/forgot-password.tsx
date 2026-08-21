@@ -45,7 +45,7 @@ export default function ForgotPasswordScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       className="bg-white"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <BackButton onPress={() => router.back()} />
       <ScrollView
@@ -86,7 +86,7 @@ export default function ForgotPasswordScreen() {
               )}
             />
 
-            {formError && <Text className="text-red-600 mb-2">{formError}</Text>}
+            {formError && <Text className="text-danger mb-2">{formError}</Text>}
 
             <Button
               title="Enviar instrucciones"

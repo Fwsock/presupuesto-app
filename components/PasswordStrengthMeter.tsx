@@ -1,11 +1,12 @@
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getPasswordStrength, type PasswordStrengthLevel } from '../features/auth/passwordStrength';
+import { theme } from '../lib/theme';
 
 const LEVEL_COLOR: Record<PasswordStrengthLevel, string> = {
-  baja: '#dc2626',
+  baja: theme.danger,
   media: '#f59e0b',
-  alta: '#16a34a',
+  alta: theme.income,
 };
 
 const LEVEL_LABEL: Record<PasswordStrengthLevel, string> = {
@@ -20,10 +21,10 @@ function ChecklistItem({ met, label }: { met: boolean; label: string }) {
       <Ionicons
         name={met ? 'checkmark-circle' : 'ellipse-outline'}
         size={16}
-        color={met ? '#16a34a' : '#9ca3af'}
+        color={met ? theme.income : '#9ca3af'}
         style={{ marginRight: 6 }}
       />
-      <Text className={met ? 'text-green-600' : 'text-gray-500'}>{label}</Text>
+      <Text className={met ? 'text-income' : 'text-gray-500'}>{label}</Text>
     </View>
   );
 }

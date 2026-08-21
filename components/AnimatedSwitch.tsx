@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Pressable } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { theme } from '../lib/theme';
 
 const TRACK_WIDTH = 46;
 const TRACK_HEIGHT = 26;
@@ -30,7 +31,7 @@ export function AnimatedSwitch({ value, onValueChange, disabled = false }: Anima
   }, [value, progress]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], ['#d1d5db', '#16a34a']),
+    backgroundColor: interpolateColor(progress.value, [0, 1], ['#d1d5db', theme.income]),
   }));
   const thumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: progress.value * TRAVEL }],

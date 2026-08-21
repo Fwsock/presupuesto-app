@@ -100,6 +100,25 @@ function assertTextRecognitionAvailable() {
  * document scan as the gallery path -- a physical boleta/factura, a small
  * vale, or a photo taken of a phone screen showing a transfer confirmation
  * all work here. Returns null only when the user cancels the camera.
+ *
+ * A version of this briefly used @infinitered/react-native-mlkit-document-
+ * scanner (Google ML Kit's own edge-detection/perspective-crop/B&N-filter
+ * scanning UI) instead of plain ImagePicker capture -- reverted after it
+ * crashed the app on launch with `NoClassDefFoundError: Failed resolution
+ * of: Lexpo/modules/kotlin/types/AnyTypeCache`. Root cause wasn't the
+ * document-scanner module's own Kotlin code: it (transitively, via
+ * @infinitered/react-native-mlkit-core) depends on `expo-image` with an
+ * unpinned `"*"` version range, which resolved to expo-image@57.0.3 (built
+ * for Expo SDK 57's expo-modules-core Kotlin API) inside this SDK 54
+ * project -- a native ABI mismatch, not anything specific to camera
+ * scanning. `npm uninstall` removed that whole transitive chain along with
+ * it. ImagePicker.launchCameraAsync has none of that risk: it's already a
+ * direct, SDK-54-pinned dependency (expo-image-picker), so this is back to
+ * exactly what worked before that experiment. Edge detection/perspective
+ * correction is not something ImagePicker itself offers; the grayscale +
+ * contrast-boost pass in imagePreprocessing.ts (recognizeText below) is
+ * still the enhancement actually running ahead of OCR, unaffected by any
+ * of this.
  */
 export async function scanDocumentFromCamera(): Promise<ScannedDocumentResult | null> {
   assertTextRecognitionAvailable();

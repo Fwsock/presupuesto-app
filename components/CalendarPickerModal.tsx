@@ -135,7 +135,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
                     disabled={!cell.isCurrentMonth}
                     style={{ width: CELL_SIZE, height: CELL_SIZE }}
                     className={`items-center justify-center rounded-full ${
-                      isSelected ? 'bg-blue-600' : isToday ? 'border border-blue-600' : ''
+                      isSelected ? 'bg-brand' : isToday ? 'border border-brand' : ''
                     }`}
                     accessibilityRole="button"
                     accessibilityLabel={`${cell.day} de ${MONTH_NAMES[cell.month - 1]}`}
@@ -157,7 +157,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
             <View style={{ flex: 1 }}>
               <PressableScale
                 onPress={onCancel}
-                className="py-3 rounded-lg items-center border border-gray-300"
+                className="py-3 rounded-lg items-center border border-gray-200"
                 accessibilityRole="button"
                 accessibilityLabel="Cancelar"
               >
@@ -168,7 +168,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
               <PressableScale
                 onPress={() => selected && onSave(selected)}
                 disabled={!selected}
-                className={`py-3 rounded-lg items-center ${selected ? 'bg-blue-600' : 'bg-blue-200'}`}
+                className={`py-3 rounded-lg items-center ${selected ? 'bg-brand' : 'bg-blue-200'}`}
                 accessibilityRole="button"
                 accessibilityLabel="Guardar"
               >

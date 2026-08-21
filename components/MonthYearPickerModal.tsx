@@ -89,7 +89,7 @@ export function MonthYearPickerModal({ visible, year, month, onSelect, onClose }
                     key={m}
                     onPress={() => onSelect(viewYear, m)}
                     style={{ width: 92, height: 44 }}
-                    className={`items-center justify-center rounded-lg ${isActive ? 'bg-blue-600' : 'bg-gray-50'}`}
+                    className={`items-center justify-center rounded-lg ${isActive ? 'bg-brand' : 'bg-gray-50'}`}
                     accessibilityRole="button"
                     accessibilityLabel={`${MONTH_NAMES[m - 1]} ${viewYear}`}
                   >

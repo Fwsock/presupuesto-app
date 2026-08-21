@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { memo, useEffect, useState } from 'react';
+import { Image, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession, signOut, updateEmail, updatePassword } from '../../features/auth/hooks';
@@ -18,10 +18,26 @@ import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { PressableScale } from '../../components/PressableScale';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
-import { FadeTabScreen } from '../../components/FadeTabScreen';
+import { Accordion } from '../../components/Accordion';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
+import { theme } from '../../lib/theme';
 
-type AccountSection = 'personal' | 'seguridad' | 'ingreso' | 'terminos' | 'ayuda' | null;
+type AccountSection =
+  | 'personal'
+  | 'seguridad'
+  | 'ingreso'
+  | 'terminos'
+  | 'ayuda'
+  | 'acerca'
+  | 'privacidad'
+  | 'soporte'
+  | null;
+
+// Keep in sync with app.json's expo.version -- there's no live wiring to it
+// (expo-constants would work at runtime, but a static string matches this
+// project's existing convention of plain example copy for legal/about
+// sections, see the Términos y Condiciones section below).
+const APP_VERSION = '1.0.0';
 
 const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
@@ -48,6 +64,31 @@ const FAQ_ITEMS: { question: string; answer: string }[] = [
     answer:
       'Tus datos se almacenan de forma aislada por usuario: nadie más puede ver tus movimientos, categorías ni tu información personal.',
   },
+  {
+    question: '¿Cómo funcionan las notificaciones pendientes?',
+    answer:
+      'Cada boleta escaneada o notificación bancaria capturada automáticamente llega primero a la bandeja de pendientes (el ícono de sobre arriba a la derecha), no directamente a tus movimientos. Ahí revisas los datos detectados y confirmas o descartas cada una antes de que se registre.',
+  },
+  {
+    question: '¿Qué tipo de boletas o comprobantes puedo escanear o subir desde la galería?',
+    answer:
+      'Boletas de supermercado y retail, comprobantes o capturas de transferencias, y vales de pago. La app lee el texto automáticamente para sugerir comercio, monto y fecha (ignorando puntos o datos de fidelización), y siempre puedes corregir cualquier campo antes de confirmar.',
+  },
+  {
+    question: '¿Qué diferencia hay entre una categoría fija y una categoría normal?',
+    answer:
+      'Una categoría "Fija" genera automáticamente su movimiento cada mes (como un arriendo o una suscripción), sin que tengas que crearlo a mano. Una categoría normal no genera nada por sí sola: solo agrupa los movimientos que le asignes manualmente.',
+  },
+  {
+    question: '¿Cómo puedo crear y personalizar mis categorías?',
+    answer:
+      'Ve a la pestaña Categorías y toca "+ Nueva categoría". Elige un nombre, un ícono de la lista disponible, y si quieres márcala como "Fija" para que se repita cada mes automáticamente. Puedes editar o eliminar cualquier categoría propia después desde esa misma pantalla.',
+  },
+  {
+    question: '¿Cómo funciona la lectura automática de notificaciones bancarias?',
+    answer:
+      'Si activas el acceso a notificaciones (Cuenta → el aviso en la bandeja de pendientes, o ajustes de Android), la app detecta avisos de tu banco apenas llegan, extrae el monto y el comercio, y los deja listos en la bandeja de pendientes para que los confirmes. Es exclusivo de Android y nunca crea un movimiento sin tu confirmación.',
+  },
 ];
 
 function AccountRow({
@@ -55,17 +96,23 @@ function AccountRow({
   label,
   onPress,
   danger = false,
+  isLast = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   danger?: boolean;
+  isLast?: boolean;
 }) {
-  const color = danger ? '#dc2626' : '#374151';
+  const color = danger ? theme.danger : '#374151';
   return (
     <PressableScale
       onPress={onPress}
-      className="flex-row items-center px-4 py-4 border-b border-gray-100"
+      scaleTo={0.965}
+      activeOpacity={0.7}
+      spring
+      haptics
+      className={`flex-row items-center px-4 py-4 ${isLast ? '' : 'border-b border-border'}`}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
@@ -78,7 +125,31 @@ function AccountRow({
   );
 }
 
-export default function CuentaScreen() {
+/**
+ * Compact navigable row for the "Acerca de" screen -- unlike AccountRow
+ * (used by the main account list, which supplies its own px-4), this one
+ * assumes it's already inside a FullScreenFormModal body that has its own
+ * horizontal padding, so it doesn't add a second layer of it.
+ */
+function AboutLinkRow({ label, onPress, isLast = false }: { label: string; onPress: () => void; isLast?: boolean }) {
+  return (
+    <PressableScale
+      onPress={onPress}
+      scaleTo={0.965}
+      activeOpacity={0.7}
+      spring
+      haptics
+      className={`flex-row items-center justify-between py-3 ${isLast ? '' : 'border-b border-border'}`}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Text className="text-base">{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+    </PressableScale>
+  );
+}
+
+function CuentaScreen() {
   const { session } = useSession();
   const queryClient = useQueryClient();
   const { data: profile } = useProfile();
@@ -243,25 +314,30 @@ export default function CuentaScreen() {
   const displayName = profile?.nombre?.trim() || session?.user.email || 'Usuario';
 
   return (
-    <FadeTabScreen>
-    <View className="flex-1 bg-white">
-      <View className="items-center py-8 border-b border-gray-100">
-        <View className="w-20 h-20 rounded-full bg-blue-600 items-center justify-center mb-3">
+    <View className="flex-1 bg-background">
+      {/* No card here on purpose (Option B) -- sits directly on the page
+          background, fluid with the top of the screen, so only the options
+          list below reads as an actual "card". */}
+      <View className="items-center pt-6 pb-8">
+        <View className="w-20 h-20 rounded-full bg-brand items-center justify-center mb-3">
           <Text className="text-white text-2xl font-semibold">
             {getInitials(profile?.nombre, session?.user.email ?? null)}
           </Text>
         </View>
-        <Text className="text-lg font-semibold">{displayName}</Text>
-        {session?.user.email && <Text className="text-gray-500 mt-0.5">{session.user.email}</Text>}
+        <Text className="text-lg font-semibold text-ink">{displayName}</Text>
+        {session?.user.email && <Text className="text-secondary mt-0.5">{session.user.email}</Text>}
       </View>
 
-      <View className="mt-4">
+      <View
+        className="mx-4 mt-4 bg-surface rounded-2xl border border-border overflow-hidden"
+        style={{ shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 0 }}
+      >
         <AccountRow icon="card-outline" label="Información personal" onPress={() => setOpenSection('personal')} />
         <AccountRow icon="lock-closed-outline" label="Seguridad" onPress={() => setOpenSection('seguridad')} />
         <AccountRow icon="repeat-outline" label="Ingreso mensual recurrente" onPress={() => setOpenSection('ingreso')} />
-        <AccountRow icon="document-text-outline" label="Términos y Condiciones" onPress={() => setOpenSection('terminos')} />
         <AccountRow icon="help-circle-outline" label="Ayuda / Preguntas Frecuentes" onPress={() => setOpenSection('ayuda')} />
-        <AccountRow icon="log-out-outline" label="Cerrar sesión" onPress={confirmSignOut} danger />
+        <AccountRow icon="information-circle-outline" label="Acerca de" onPress={() => setOpenSection('acerca')} />
+        <AccountRow icon="log-out-outline" label="Cerrar sesión" onPress={confirmSignOut} danger isLast />
       </View>
 
       <FullScreenFormModal
@@ -269,16 +345,16 @@ export default function CuentaScreen() {
         title="Información personal"
         onClose={() => setOpenSection(null)}
       >
-        <Text className="text-gray-500 mb-3">
+        <Text className="text-secondary mb-3">
           Ingresa tu apodo y número de contacto para actualizar tu perfil.
         </Text>
         <TextInput
-          className="border border-gray-300 rounded-md px-3 py-2 mb-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 mb-2"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
           selectionColor={INPUT_SELECTION_COLOR}
-          cursorColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
           value={nombre}
           onChangeText={setNombre}
         />
@@ -291,20 +367,20 @@ export default function CuentaScreen() {
         {profileError && (
           <ErrorBanner message={profileError} onRetry={() => setProfileError(null)} actionLabel="Descartar" />
         )}
-        {profileSaved && <Text className="text-green-600 mb-2">Guardado.</Text>}
+        {profileSaved && <Text className="text-income mb-2">Guardado.</Text>}
         <Button title="Guardar" onPress={saveProfile} loading={upsertProfile.isPending} disabled={upsertProfile.isPending} />
       </FullScreenFormModal>
 
       <FullScreenFormModal visible={openSection === 'seguridad'} title="Seguridad" onClose={() => setOpenSection(null)}>
         <Text className="text-base font-semibold mb-2">Correo electrónico</Text>
-        <Text className="text-gray-500 mb-2">Actual: {session?.user.email}</Text>
+        <Text className="text-secondary mb-2">Actual: {session?.user.email}</Text>
         <TextInput
-          className="border border-gray-300 rounded-md px-3 py-2 mb-4"
+          className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nuevo correo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
           selectionColor={INPUT_SELECTION_COLOR}
-          cursorColor={INPUT_SELECTION_COLOR}
+          cursorColor={INPUT_CURSOR_COLOR}
           autoCapitalize="none"
           keyboardType="email-address"
           value={newEmail}
@@ -331,7 +407,7 @@ export default function CuentaScreen() {
         {securityError && (
           <ErrorBanner message={securityError} onRetry={() => setSecurityError(null)} actionLabel="Descartar" />
         )}
-        {securityMessage && <Text className="text-green-600 mb-3">{securityMessage}</Text>}
+        {securityMessage && <Text className="text-income mb-3">{securityMessage}</Text>}
 
         <Button
           title="Guardar cambios"
@@ -363,14 +439,14 @@ export default function CuentaScreen() {
         onClose={() => setOpenSection(null)}
       >
         {/* Placeholder copy — reemplazar con el texto legal real de la app. */}
-        <Text className="text-gray-500 text-xs mb-3">Última actualización: agosto de 2026</Text>
+        <Text className="text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
         <Text className="mb-3">
-          Bienvenido a Presupuesto. Al usar esta aplicación, aceptas los presentes Términos y Condiciones. Este es un
+          Bienvenido a FinanFlow. Al usar esta aplicación, aceptas los presentes Términos y Condiciones. Este es un
           texto de ejemplo pensado para ser reemplazado con el contenido legal definitivo de la aplicación.
         </Text>
         <Text className="font-semibold mb-1">1. Uso de la aplicación</Text>
         <Text className="text-gray-700 mb-3">
-          Presupuesto está pensada para el registro y seguimiento personal de tus ingresos y gastos. Eres responsable
+          FinanFlow está pensada para el registro y seguimiento personal de tus ingresos y gastos. Eres responsable
           de la exactitud de la información que ingresas.
         </Text>
         <Text className="font-semibold mb-1">2. Tus datos</Text>
@@ -388,16 +464,63 @@ export default function CuentaScreen() {
         title="Ayuda / Preguntas Frecuentes"
         onClose={() => setOpenSection(null)}
       >
-        {FAQ_ITEMS.map((item, index) => (
-          <View key={item.question} className={index < FAQ_ITEMS.length - 1 ? 'mb-4' : ''}>
-            <Text className="font-semibold mb-1">{item.question}</Text>
-            <Text className="text-gray-700">{item.answer}</Text>
-          </View>
-        ))}
+        <Accordion items={FAQ_ITEMS} />
+      </FullScreenFormModal>
+
+      <FullScreenFormModal visible={openSection === 'acerca'} title="Acerca de" onClose={() => setOpenSection(null)}>
+        <View className="items-center mb-5">
+          <Image
+            source={require('../../assets/icon.png')}
+            className="w-20 h-20 rounded-2xl mb-3"
+            accessibilityLabel="Ícono de FinanFlow"
+          />
+          <Text className="text-lg font-semibold">FinanFlow para Android</Text>
+          <Text className="text-secondary mt-1">Versión {APP_VERSION}</Text>
+          <Text className="text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
+        </View>
+
+        <AboutLinkRow label="Términos y Condiciones" onPress={() => setOpenSection('terminos')} />
+        <AboutLinkRow label="Política de Privacidad" onPress={() => setOpenSection('privacidad')} />
+        <AboutLinkRow label="Soporte" onPress={() => setOpenSection('soporte')} isLast />
+      </FullScreenFormModal>
+
+      <FullScreenFormModal
+        visible={openSection === 'privacidad'}
+        title="Política de Privacidad"
+        onClose={() => setOpenSection(null)}
+      >
+        {/* Placeholder copy — reemplazar con el texto legal real de la app. */}
+        <Text className="text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
+        <Text className="mb-3">
+          En FinanFlow tu privacidad es prioritaria. Este es un texto de ejemplo pensado para ser reemplazado con la
+          política de privacidad definitiva de la aplicación.
+        </Text>
+        <Text className="font-semibold mb-1">1. Qué datos guardamos</Text>
+        <Text className="text-gray-700 mb-3">
+          Tu correo, tus movimientos, categorías y la configuración de tu cuenta — nada más, y solo para que la app
+          funcione para ti.
+        </Text>
+        <Text className="font-semibold mb-1">2. Con quién los compartimos</Text>
+        <Text className="text-gray-700 mb-3">
+          Con nadie. Tus datos nunca se venden ni se comparten con terceros con fines publicitarios.
+        </Text>
+        <Text className="font-semibold mb-1">3. Tu control sobre tus datos</Text>
+        <Text className="text-gray-700 mb-3">
+          Puedes editar o eliminar tu información personal y tus movimientos en cualquier momento desde la app.
+        </Text>
+      </FullScreenFormModal>
+
+      <FullScreenFormModal visible={openSection === 'soporte'} title="Soporte" onClose={() => setOpenSection(null)}>
+        <Text className="mb-4">¿Tienes un problema o una sugerencia? Escríbenos, con gusto te ayudamos.</Text>
+        <View className="bg-gray-50 rounded-xl p-3 flex-row items-center">
+          <Ionicons name="mail-outline" size={20} color="#374151" style={{ marginRight: 10 }} />
+          <Text className="text-base">soporte@finanflow.app</Text>
+        </View>
       </FullScreenFormModal>
 
       {confirmDialog}
     </View>
-    </FadeTabScreen>
   );
 }
+
+export default memo(CuentaScreen);

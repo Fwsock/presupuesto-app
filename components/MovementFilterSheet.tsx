@@ -38,10 +38,15 @@ export function MovementFilterSheet({
 }: MovementFilterSheetProps) {
   return (
     <FullScreenFormModal visible={visible} title="Filtrar y ordenar" onClose={onClose}>
-      <Text className="text-gray-500 text-xs mb-2">Categoría</Text>
-      <CategoryFilterChips categories={categories} selectedCategoryId={selectedCategoryId} onSelect={onSelectCategory} />
+      <Text className="text-secondary text-xs mb-2">Categoría</Text>
+      <CategoryFilterChips
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        onSelect={onSelectCategory}
+        resetScrollOn={visible}
+      />
 
-      <Text className="text-gray-500 text-xs mb-2 mt-5">Ordenar por</Text>
+      <Text className="text-secondary text-xs mb-2 mt-5">Ordenar por</Text>
       <View className="flex-row items-center" style={{ gap: 8 }}>
         {SORT_OPTIONS.map(({ field, label }) => {
           const selected = field === sortField;
@@ -49,7 +54,10 @@ export function MovementFilterSheet({
             <PressableScale
               key={field}
               onPress={() => onSortFieldChange(field)}
-              className={`px-3 py-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+              scaleTo={0.965}
+              activeOpacity={0.7}
+              spring
+              className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
             >
               <Text className={selected ? 'text-white' : 'text-black'}>{label}</Text>
             </PressableScale>
@@ -58,8 +66,11 @@ export function MovementFilterSheet({
         <PressableScale
           onPress={onToggleDirection}
           hitSlop={8}
+          scaleTo={0.965}
+          activeOpacity={0.7}
+          spring
           style={{ minWidth: 40, minHeight: 40 }}
-          className="items-center justify-center rounded-full border border-gray-300"
+          className="items-center justify-center rounded-full border border-gray-200"
           accessibilityRole="button"
           accessibilityLabel={direction === 'asc' ? 'Orden ascendente' : 'Orden descendente'}
         >

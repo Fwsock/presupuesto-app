@@ -1,8 +1,10 @@
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FullScreenFormModal } from './FullScreenFormModal';
+import { MovementIconBadge } from './MovementIconBadge';
 import { PressableScale } from './PressableScale';
 import { formatFullDate } from '../features/movements/date';
+import { theme } from '../lib/theme';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
 
@@ -42,11 +44,12 @@ export function MovementDetailSheet({
   return (
     <FullScreenFormModal visible={visible} title="Detalle del movimiento" onClose={onClose}>
       <View className="items-center mb-6">
-        <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-3">
-          <Ionicons name={movement.icono as keyof typeof Ionicons.glyphMap} size={30} color="#374151" />
-        </View>
+        <MovementIconBadge label={movement.concepto} iconName={movement.icono} size={64} style={{ marginBottom: 12 }} />
         <Text className="text-lg font-semibold text-center">{title}</Text>
-        <Text className={`text-3xl font-bold mt-2 ${isGasto ? 'text-red-600' : 'text-green-600'}`}>
+        <Text
+          className={`text-3xl font-bold mt-2 ${isGasto ? 'text-danger' : 'text-income'}`}
+          style={{ fontVariant: ['tabular-nums'] }}
+        >
           {isGasto ? '-' : ''}${movement.monto.toLocaleString('es-CL')}
         </Text>
       </View>
@@ -57,7 +60,7 @@ export function MovementDetailSheet({
         <Ionicons
           name={isPagado ? 'checkmark-circle' : 'time-outline'}
           size={16}
-          color={isPagado ? '#16a34a' : '#f59e0b'}
+          color={isPagado ? theme.income : '#f59e0b'}
           style={{ marginRight: 6 }}
         />
         <Text className={`text-sm font-medium ${isPagado ? 'text-green-700' : 'text-orange-700'}`}>
@@ -65,30 +68,30 @@ export function MovementDetailSheet({
         </Text>
       </View>
 
-      <View className="border-t border-gray-100 pt-4" style={{ gap: 16 }}>
+      <View className="border-t border-border pt-4" style={{ gap: 16 }}>
         <View className="flex-row justify-between">
-          <Text className="text-gray-500">Categoría</Text>
+          <Text className="text-secondary">Categoría</Text>
           <Text className="font-medium">{category?.nombre ?? 'Sin categoría'}</Text>
         </View>
         <View className="flex-row justify-between">
-          <Text className="text-gray-500">Fecha</Text>
+          <Text className="text-secondary">Fecha</Text>
           <Text className="font-medium">{formatFullDate(movement.fecha)}</Text>
         </View>
       </View>
 
       {notas ? (
-        <View className="border-t border-gray-100 mt-4 pt-4">
-          <Text className="text-gray-500 mb-2">Notas</Text>
+        <View className="border-t border-border mt-4 pt-4">
+          <Text className="text-secondary mb-2">Notas</Text>
           <Text className="text-gray-800 leading-5">{notas}</Text>
         </View>
       ) : null}
 
       {!isLocked && (
-        <View className="border-t border-gray-100 mt-6 pt-4 flex-row" style={{ gap: 10 }}>
+        <View className="border-t border-border mt-6 pt-4 flex-row" style={{ gap: 10 }}>
           <View style={{ flex: 1 }}>
             <PressableScale
               onPress={onEdit}
-              className="flex-row items-center justify-center py-3 px-3 rounded-lg border border-gray-300"
+              className="flex-row items-center justify-center py-3 px-3 rounded-2xl border border-gray-200"
               accessibilityRole="button"
               accessibilityLabel="Editar movimiento"
             >
@@ -99,7 +102,7 @@ export function MovementDetailSheet({
           <View style={{ flex: 1 }}>
             <PressableScale
               onPress={onDelete}
-              className="flex-row items-center justify-center py-3 px-3 rounded-lg bg-red-600"
+              className="flex-row items-center justify-center py-3 px-3 rounded-2xl bg-danger"
               accessibilityRole="button"
               accessibilityLabel="Eliminar movimiento"
             >

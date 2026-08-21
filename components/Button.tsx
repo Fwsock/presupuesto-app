@@ -26,7 +26,7 @@ export function Button({
   const isDisabled = disabled || loading;
   const isPrimary = variant === 'primary';
   const pressableClass = [
-    isPrimary ? 'bg-blue-600 rounded-md py-3 mt-2 mb-2' : 'py-2 mb-4',
+    isPrimary ? 'bg-brand rounded-2xl py-3 mt-2 mb-2' : 'py-2 mb-4',
     'items-center justify-center',
     isDisabled ? 'opacity-60' : '',
   ].join(' ');
@@ -35,7 +35,10 @@ export function Button({
     <PressableScale
       onPress={onPress}
       disabled={isDisabled}
-      scaleTo={0.97}
+      scaleTo={0.965}
+      activeOpacity={0.7}
+      spring
+      haptics
       className={pressableClass}
       accessibilityRole="button"
     >

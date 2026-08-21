@@ -23,7 +23,7 @@ export function DateField({ value, onChange }: DateFieldProps) {
     <>
       <PressableScale
         onPress={() => setVisible(true)}
-        className="border border-gray-300 rounded-md px-3 py-3 mb-1"
+        className="border border-gray-200 rounded-xl px-3 py-3 mb-1"
         accessibilityRole="button"
         accessibilityLabel="Seleccionar fecha"
       >

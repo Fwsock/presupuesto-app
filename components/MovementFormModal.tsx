@@ -21,9 +21,10 @@ import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { DateField } from './DateField';
 import { IconPickerModal } from './IconPickerModal';
+import { MovementIconBadge } from './MovementIconBadge';
 import { PressableScale } from './PressableScale';
 import { AnimatedBottomSheet } from './AnimatedBottomSheet';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const movementSchema = z
   .object({
@@ -80,11 +81,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   // Once the user picks an icon manually (or we're editing an existing
   // movement, which already has an intentional icon), stop overwriting it
-  // as they keep typing the concepto.
-  // The parent remounts this component fresh (via a `key` that changes on
-  // every open) for each create/edit session, so this initializer alone is
-  // enough to scope "has the user manually picked an icon" to that one
-  // session — no leftover state to carry into the next movement.
+  // as they keep typing the concepto. This component stays mounted across
+  // opens (no remounting `key` -- that used to make every "+" tap pop the
+  // sheet open instead of sliding it, since a fresh Modal/native window had
+  // to be created each time), so this state is reset explicitly in the
+  // effect below rather than relying on a fresh mount to clear it.
   const [iconTouched, setIconTouched] = useState(mode === 'edit');
 
   const {
@@ -118,6 +119,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
     if (!visible) return;
     setFormError(null);
     setIconTouched(mode === 'edit');
+    setIconPickerVisible(false);
     reset({
       concepto: movement?.concepto ?? '',
       monto: String(movement?.monto ?? '').replace(/[^0-9]/g, ''),
@@ -282,7 +284,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       onBackdropPress={isSaving ? undefined : onClose}
       maxHeightPercent={90}
     >
-        <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+        <View className="flex-row items-center px-4 py-3 border-b border-border">
           <PressableScale
             onPress={onClose}
             disabled={isSaving}
@@ -307,11 +309,10 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             <View className="flex-row items-start mb-1">
               <PressableScale
                 onPress={() => setIconPickerVisible(true)}
-                className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3"
                 accessibilityRole="button"
                 accessibilityLabel="Elegir ícono"
               >
-                <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={22} color="#374151" />
+                <MovementIconBadge label={concepto} iconName={icono} size={48} style={{ marginRight: 12 }} />
               </PressableScale>
 
               <View className="flex-1">
@@ -320,18 +321,18 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   name="concepto"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-md px-3 py-2"
+                      className="border border-gray-200 rounded-xl px-3 py-2"
                       style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Concepto"
                       placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                       selectionColor={INPUT_SELECTION_COLOR}
-                      cursorColor={INPUT_SELECTION_COLOR}
+                      cursorColor={INPUT_CURSOR_COLOR}
                       value={value}
                       onChangeText={onChange}
                     />
                   )}
                 />
-                {errors.concepto && <Text className="text-red-600 mt-1">{errors.concepto.message}</Text>}
+                {errors.concepto && <Text className="text-danger mt-1">{errors.concepto.message}</Text>}
               </View>
             </View>
             <Text className="text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
@@ -341,7 +342,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               name="monto"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+                  className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
                   style={{ color: INPUT_TEXT_COLOR }}
                   placeholder={
                     !esCuota
@@ -354,7 +355,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   }
                   placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                   selectionColor={INPUT_SELECTION_COLOR}
-                  cursorColor={INPUT_SELECTION_COLOR}
+                  cursorColor={INPUT_CURSOR_COLOR}
                   keyboardType="number-pad"
                   value={value}
                   onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
@@ -364,11 +365,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
             {esCuota && (!hasExistingGroup || cuotaCountChanged) && (
               <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
             )}
-            {errors.monto && <Text className="text-red-600">{errors.monto.message}</Text>}
+            {errors.monto && <Text className="text-danger">{errors.monto.message}</Text>}
           </View>
 
           {/* Section 2: Tipo y Categoría */}
-          <View className="mb-5 pt-5 border-t border-gray-100">
+          <View className="mb-5 pt-5 border-t border-border">
             <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Tipo y categoría</Text>
 
             <Controller
@@ -380,7 +381,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       PressableScale's own comment for why. */}
                   <View style={{ flex: 1 }}>
                     <PressableScale
-                      className={`py-2 rounded-l-md border ${value === 'ingreso' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      className={`py-2 rounded-l-xl border ${value === 'ingreso' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('ingreso')}
                     >
                       <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
@@ -388,7 +389,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   </View>
                   <View style={{ flex: 1 }}>
                     <PressableScale
-                      className={`py-2 rounded-r-md border ${value === 'gasto' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      className={`py-2 rounded-r-xl border ${value === 'gasto' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('gasto')}
                     >
                       <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
@@ -410,7 +411,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                         <PressableScale
                           key={c.id}
                           onPress={() => onChange(selected ? '' : c.id)}
-                          className={`px-3 py-2 rounded-full border ${selected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                          className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
                         >
                           <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
                         </PressableScale>
@@ -420,11 +421,11 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                 </ScrollView>
               )}
             />
-            {errors.categoryId && <Text className="text-red-600 mt-2">{errors.categoryId.message}</Text>}
+            {errors.categoryId && <Text className="text-danger mt-2">{errors.categoryId.message}</Text>}
           </View>
 
           {/* Section 3: Detalles */}
-          <View className="mb-5 pt-5 border-t border-gray-100">
+          <View className="mb-5 pt-5 border-t border-border">
             <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Detalles</Text>
 
             <Controller
@@ -432,7 +433,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               name="fecha"
               render={({ field: { onChange, value } }) => <DateField value={value} onChange={onChange} />}
             />
-            {errors.fecha && <Text className="text-red-600 mb-2">{errors.fecha.message}</Text>}
+            {errors.fecha && <Text className="text-danger mb-2">{errors.fecha.message}</Text>}
 
             <Controller
               control={control}
@@ -443,7 +444,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       PressableScale's own comment for why. */}
                   <View style={{ flex: 1 }}>
                     <PressableScale
-                      className={`py-2 rounded-l-md border ${value === 'pendiente' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      className={`py-2 rounded-l-xl border ${value === 'pendiente' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('pendiente')}
                     >
                       <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
@@ -451,7 +452,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   </View>
                   <View style={{ flex: 1 }}>
                     <PressableScale
-                      className={`py-2 rounded-r-md border ${value === 'pagado' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                      className={`py-2 rounded-r-xl border ${value === 'pagado' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('pagado')}
                     >
                       <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
@@ -466,12 +467,12 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               name="notas"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  className="border border-gray-300 rounded-md px-3 py-2"
+                  className="border border-gray-200 rounded-xl px-3 py-2"
                   style={{ color: INPUT_TEXT_COLOR }}
                   placeholder="Notas (opcional)"
                   placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                   selectionColor={INPUT_SELECTION_COLOR}
-                  cursorColor={INPUT_SELECTION_COLOR}
+                  cursorColor={INPUT_CURSOR_COLOR}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -480,7 +481,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           </View>
 
           {/* Section 4: Opciones avanzadas */}
-          <View className="mb-5 pt-5 border-t border-gray-100">
+          <View className="mb-5 pt-5 border-t border-border">
             <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Opciones avanzadas</Text>
 
             <Controller
@@ -507,19 +508,19 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   name="totalCuotas"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-md px-3 py-2 mt-3 mb-1"
+                      className="border border-gray-200 rounded-xl px-3 py-2 mt-3 mb-1"
                       style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Cuotas"
                       placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                       selectionColor={INPUT_SELECTION_COLOR}
-                      cursorColor={INPUT_SELECTION_COLOR}
+                      cursorColor={INPUT_CURSOR_COLOR}
                       keyboardType="number-pad"
                       value={value}
                       onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
                     />
                   )}
                 />
-                {errors.totalCuotas && <Text className="text-red-600">{errors.totalCuotas.message}</Text>}
+                {errors.totalCuotas && <Text className="text-danger">{errors.totalCuotas.message}</Text>}
                 {hasExistingGroup && !cuotaCountChanged && (
                   <Text className="text-gray-400 text-xs mt-1">
                     Cambia este número para dividir el saldo restante entre otra cantidad de cuotas — las cuotas

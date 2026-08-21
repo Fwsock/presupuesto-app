@@ -10,7 +10,8 @@ import { Button } from './Button';
 import { PressableScale } from './PressableScale';
 import { ErrorBanner } from './ErrorBanner';
 import { useConfirmDialog } from './ConfirmDialog';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { theme } from '../lib/theme';
 
 const schema = z
   .object({
@@ -89,18 +90,18 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
         name="concepto"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+            className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Concepto (ej. Sueldo)"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
             selectionColor={INPUT_SELECTION_COLOR}
-            cursorColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_CURSOR_COLOR}
             value={value}
             onChangeText={onChange}
           />
         )}
       />
-      {errors.concepto && <Text className="text-red-600 mb-2">{errors.concepto.message}</Text>}
+      {errors.concepto && <Text className="text-danger mb-2">{errors.concepto.message}</Text>}
 
       <View className="mb-1">
         <Text className="text-gray-700 mb-2">Ingreso:</Text>
@@ -123,7 +124,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
                 <View style={{ flex: 1 }}>
                   <PressableScale
                     onPress={() => onChange('fijo')}
-                    className={`py-2.5 rounded-l-md border items-center ${value === 'fijo' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    className={`py-2.5 rounded-l-xl border items-center ${value === 'fijo' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                   >
                     <Text className={value === 'fijo' ? 'text-white' : 'text-black'}>Fijo</Text>
                   </PressableScale>
@@ -131,7 +132,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
                 <View style={{ flex: 1 }}>
                   <PressableScale
                     onPress={() => onChange('variable')}
-                    className={`py-2.5 rounded-r-md border items-center ${value === 'variable' ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                    className={`py-2.5 rounded-r-xl border items-center ${value === 'variable' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                   >
                     <Text className={value === 'variable' ? 'text-white' : 'text-black'}>Variable</Text>
                   </PressableScale>
@@ -145,7 +146,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
                 title: 'Fijo vs Variable',
                 message: INFO_MESSAGE,
                 icon: 'information-circle-outline',
-                iconColor: '#2563eb',
+                iconColor: theme.brand,
                 actions: [{ label: 'Entendido', variant: 'default' }],
               })
             }
@@ -167,19 +168,19 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
             name="monto"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                className="border border-gray-300 rounded-md px-3 py-2 mb-1 mt-2"
+                className="border border-gray-200 rounded-xl px-3 py-2 mb-1 mt-2"
                 style={{ color: INPUT_TEXT_COLOR }}
                 placeholder="Monto mensual"
                 placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                 selectionColor={INPUT_SELECTION_COLOR}
-                cursorColor={INPUT_SELECTION_COLOR}
+                cursorColor={INPUT_CURSOR_COLOR}
                 keyboardType="number-pad"
                 value={value}
                 onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ''))}
               />
             )}
           />
-          {errors.monto && <Text className="text-red-600 mb-2">{errors.monto.message}</Text>}
+          {errors.monto && <Text className="text-danger mb-2">{errors.monto.message}</Text>}
         </>
       )}
 

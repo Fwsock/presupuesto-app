@@ -1,10 +1,14 @@
-import { useState } from 'react';
-import { View, Text } from 'react-native';
+import { memo, useRef, useState } from 'react';
+import { View, Text, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AnimatedSwitch } from './AnimatedSwitch';
 import { PressableScale } from './PressableScale';
 import { MovementDetailSheet } from './MovementDetailSheet';
+import { MovementIconBadge } from './MovementIconBadge';
 import { isRecurringGeneratedMovement } from '../features/movements/recurringLock';
+import { runSwipeToDeleteAction } from '../features/movements/swipeDelete';
 import { formatLongDate } from '../features/movements/date';
 import type { Movement } from '../features/movements/types';
 import type { Category } from '../features/categories/types';
@@ -12,12 +16,23 @@ import type { Category } from '../features/categories/types';
 interface MovementListItemProps {
   movement: Movement;
   category: Category | undefined;
-  onToggleEstado: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  // Item-aware (not pre-bound per-row): lets the parent list pass ONE
+  // stable function reference for every row instead of a fresh closure per
+  // row per render, which is what actually lets React.memo below skip
+  // re-rendering rows whose own props didn't change -- see the identical
+  // convention already used by PendingNotificationRow.
+  onToggleEstado: (movement: Movement) => void;
+  onEdit: (movement: Movement) => void;
+  onDelete: (id: string) => void;
   /** True while this row's estado is being saved, so the switch disables. */
   isUpdating?: boolean;
 }
+
+// Stable reference (not a fresh object literal on every render) -- passed
+// as MovementIconBadge's `style` prop, which is itself React.memo'd and
+// would otherwise never skip a re-render since a new {marginRight:12}
+// object fails the default shallow prop comparison every time.
+const ICON_BADGE_STYLE = { marginRight: 12 };
 
 // Fixed widths for the amount + switch slots, so the switch's right edge
 // always sits flush against the row's own padding. Editar/Eliminar moved
@@ -27,8 +42,22 @@ interface MovementListItemProps {
 const AMOUNT_WIDTH = 88;
 const SWITCH_SLOT_WIDTH = 46;
 const TRAILING_GAP = 6;
+// The delete-reveal panel is sized to the same distance required to commit
+// to it (see deleteRevealWidth below) -- rightWidth === rightThreshold means
+// Swipeable can only ever settle at 0 (snap back) or fully open (delete),
+// never at some smaller "stays open" reveal in between. Kept short (a third
+// of the row) so the gesture feels quick/agile, while still requiring a
+// real deliberate drag -- not just an accidental brush of the row.
+const DELETE_REVEAL_RATIO = 0.32;
 
-export function MovementListItem({
+/**
+ * Wrapped in React.memo: rendered once per row in a month's whole movement
+ * list, so re-rendering every row whenever an unrelated row's own mutation
+ * (toggling estado, deleting) causes the list's parent to re-render was
+ * pure wasted work -- this only re-renders a row whose own props actually
+ * changed.
+ */
+export const MovementListItem = memo(function MovementListItem({
   movement,
   category,
   onToggleEstado,
@@ -37,6 +66,9 @@ export function MovementListItem({
   isUpdating = false,
 }: MovementListItemProps) {
   const [detailVisible, setDetailVisible] = useState(false);
+  const swipeableRef = useRef<SwipeableMethods>(null);
+  const { width: screenWidth } = useWindowDimensions();
+  const deleteRevealWidth = screenWidth * DELETE_REVEAL_RATIO;
   const isPagado = movement.estado === 'pagado';
   // While the save is in flight, show the target state so the switch doesn't
   // snap back to the old value; it settles to the server state when done.
@@ -45,8 +77,32 @@ export function MovementListItem({
   const isGasto = movement.tipo === 'gasto';
   const openDetail = () => setDetailVisible(true);
 
+  // Fires only once the row has fully settled open -- which, since
+  // rightThreshold === the panel's own width, only happens when the drag
+  // cleared the full 50%-of-screen distance. A lighter partial swipe never
+  // reaches this: Swipeable springs it straight back to 0 on its own.
+  const handleFullSwipeDelete = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    runSwipeToDeleteAction(() => swipeableRef.current?.close(), () => onDelete(movement.id));
+  };
+
+  const renderRightActions = () => (
+    <View style={{ width: deleteRevealWidth }} className="h-full bg-danger items-center justify-center">
+      <Ionicons name="trash-outline" size={22} color="#fff" />
+      <Text className="text-white text-xs font-medium mt-1">Eliminar</Text>
+    </View>
+  );
+
   return (
-    <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+    <Swipeable
+      ref={swipeableRef}
+      enabled={!isLocked}
+      renderRightActions={isLocked ? undefined : renderRightActions}
+      rightThreshold={deleteRevealWidth}
+      overshootRight={false}
+      onSwipeableOpen={handleFullSwipeDelete}
+    >
+    <View className="flex-row items-center px-4 py-3 border-b border-border bg-white">
       {/* This plain View -- not PressableScale itself -- is what carries
           flex-1: PressableScale's className lands on its INNER Pressable,
           one level below the Animated.View that's the actual flex child of
@@ -56,20 +112,27 @@ export function MovementListItem({
       <View className="flex-1">
         <PressableScale
           onPress={openDetail}
+          scaleTo={0.965}
+          activeOpacity={0.7}
+          spring
+          haptics
           className="flex-row items-center"
           accessibilityRole="button"
           accessibilityLabel={`Ver detalle de ${movement.concepto}`}
         >
-          <View className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center mr-3">
-            <Ionicons name={movement.icono as keyof typeof Ionicons.glyphMap} size={18} color="#374151" />
-          </View>
+          <MovementIconBadge
+            label={movement.concepto}
+            iconName={movement.icono}
+            size={36}
+            style={ICON_BADGE_STYLE}
+          />
 
           <View className="flex-1 pr-2">
             <Text className="font-medium" numberOfLines={1} ellipsizeMode="tail">
               {movement.concepto}
               {movement.cuota_numero && movement.cuota_total ? ` (${movement.cuota_numero}/${movement.cuota_total})` : ''}
             </Text>
-            <Text className="text-gray-500 text-xs mt-0.5">{formatLongDate(movement.fecha)}</Text>
+            <Text className="text-secondary text-xs mt-0.5">{formatLongDate(movement.fecha)}</Text>
           </View>
         </PressableScale>
       </View>
@@ -80,16 +143,20 @@ export function MovementListItem({
       <View className="flex-row items-center" style={{ gap: TRAILING_GAP }}>
         <PressableScale
           onPress={openDetail}
+          scaleTo={0.965}
+          activeOpacity={0.7}
+          spring
+          haptics
           style={{ width: AMOUNT_WIDTH }}
           accessibilityRole="button"
           accessibilityLabel={`Ver detalle de ${movement.concepto}`}
         >
           <Text
-            className={`font-semibold ${isGasto ? 'text-red-600' : 'text-green-600'}`}
+            className={`font-semibold ${isGasto ? 'text-danger' : 'text-income'}`}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.75}
-            style={{ textAlign: 'right' }}
+            style={{ textAlign: 'right', fontVariant: ['tabular-nums'] }}
           >
             {isGasto ? '-' : ''}${movement.monto.toLocaleString('es-CL')}
           </Text>
@@ -97,7 +164,7 @@ export function MovementListItem({
 
         <View style={{ width: SWITCH_SLOT_WIDTH, alignItems: 'center' }}>
           {!isLocked && (
-            <AnimatedSwitch value={displayPagado} onValueChange={onToggleEstado} disabled={isUpdating} />
+            <AnimatedSwitch value={displayPagado} onValueChange={() => onToggleEstado(movement)} disabled={isUpdating} />
           )}
         </View>
       </View>
@@ -109,14 +176,15 @@ export function MovementListItem({
         onClose={() => setDetailVisible(false)}
         onEdit={() => {
           setDetailVisible(false);
-          onEdit();
+          onEdit(movement);
         }}
         onDelete={() => {
           setDetailVisible(false);
-          onDelete();
+          onDelete(movement.id);
         }}
         isLocked={isLocked}
       />
     </View>
+    </Swipeable>
   );
-}
+});

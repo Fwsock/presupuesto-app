@@ -29,7 +29,7 @@ const CELL_SIZE = (Dimensions.get('window').width - GRID_PADDING * 2) / NUM_COLU
 export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: IconPickerModalProps) {
   return (
     <AnimatedBottomSheet visible={visible} onClose={onClose} maxHeightPercent={90}>
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+      <View className="flex-row items-center px-4 py-3 border-b border-border">
         <PressableScale onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </PressableScale>
@@ -51,7 +51,7 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
               }}
               style={{ width: CELL_SIZE, height: CELL_SIZE, margin: CELL_MARGIN }}
               className={`items-center justify-center rounded-lg border ${
-                isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-200'
+                isSelected ? 'bg-brand border-brand' : 'border-gray-200'
               }`}
               accessibilityRole="button"
               accessibilityLabel={icon}
@@ -60,6 +60,10 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
             </PressableScale>
           );
         }}
+        removeClippedSubviews
+        initialNumToRender={30}
+        maxToRenderPerBatch={20}
+        windowSize={9}
       />
     </AnimatedBottomSheet>
   );

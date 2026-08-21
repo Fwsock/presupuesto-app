@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { theme } from '../lib/theme';
 
-const ACTIVE_COLOR = '#2563eb';
+const ACTIVE_COLOR = theme.brand;
 const INACTIVE_COLOR = '#6b7280';
 
 /**

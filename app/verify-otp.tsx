@@ -6,6 +6,7 @@ import { OtpInput } from '../components/OtpInput';
 import { Button } from '../components/Button';
 import { PressableScale } from '../components/PressableScale';
 import { BackButton } from '../components/BackButton';
+import { theme } from '../lib/theme';
 
 const RESEND_SECONDS = 60;
 const OTP_LENGTH = 6;
@@ -71,7 +72,7 @@ export default function VerifyOtpScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       className="bg-white"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <BackButton onPress={() => router.back()} />
       <ScrollView
@@ -88,13 +89,13 @@ export default function VerifyOtpScreen() {
 
         {verifying && (
           <View className="flex-row items-center justify-center mt-4">
-            <ActivityIndicator size="small" color="#2563eb" />
+            <ActivityIndicator size="small" color={theme.brand} />
             <Text className="text-gray-500 ml-2">Validando código...</Text>
           </View>
         )}
 
-        {error && <Text className="text-red-600 text-center mt-4">{error}</Text>}
-        {resendMessage && !error && <Text className="text-green-600 text-center mt-4">{resendMessage}</Text>}
+        {error && <Text className="text-danger text-center mt-4">{error}</Text>}
+        {resendMessage && !error && <Text className="text-income text-center mt-4">{resendMessage}</Text>}
 
         <View className="mt-6">
           <Button
@@ -112,7 +113,7 @@ export default function VerifyOtpScreen() {
           accessibilityRole="button"
           accessibilityLabel="Reenviar código"
         >
-          <Text className={`text-center ${resendSeconds > 0 ? 'text-gray-400' : 'text-blue-600'}`}>
+          <Text className={`text-center ${resendSeconds > 0 ? 'text-gray-400' : 'text-brand'}`}>
             {resendSeconds > 0
               ? `Reenviar código (${resendSeconds}s)`
               : resending

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { theme } from '../lib/theme';
 
 export interface ConfirmDialogAction {
   label: string;
@@ -27,9 +28,9 @@ interface ConfirmDialogProps extends ConfirmDialogOptions {
 }
 
 const VARIANT_CLASSES: Record<NonNullable<ConfirmDialogAction['variant']>, string> = {
-  destructive: 'bg-red-600',
-  default: 'bg-blue-600',
-  cancel: 'bg-transparent border border-gray-300',
+  destructive: 'bg-danger',
+  default: 'bg-brand',
+  cancel: 'bg-transparent border border-gray-200',
 };
 
 const VARIANT_TEXT_CLASSES: Record<NonNullable<ConfirmDialogAction['variant']>, string> = {
@@ -89,19 +90,19 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
           accessibilityLabel="Cerrar"
         />
         <Animated.View
-          className="bg-white rounded-2xl p-6 w-full"
+          className="bg-surface rounded-3xl p-6 w-full"
           style={{ transform: [{ scale }], maxWidth: 360 }}
         >
           <View className="items-center mb-3">
             <View
               className="w-14 h-14 rounded-full items-center justify-center mb-3"
-              style={{ backgroundColor: `${iconColor ?? '#dc2626'}1A` }}
+              style={{ backgroundColor: `${iconColor ?? theme.danger}1A` }}
             >
-              <Ionicons name={icon ?? 'trash-outline'} size={28} color={iconColor ?? '#dc2626'} />
+              <Ionicons name={icon ?? 'trash-outline'} size={28} color={iconColor ?? theme.danger} />
             </View>
             <Text className="text-lg font-bold text-center">{title}</Text>
           </View>
-          <Text className="text-gray-600 text-center mb-5">{message}</Text>
+          <Text className="text-secondary text-center mb-5">{message}</Text>
 
           {isTwoWayWithCancel ? (
             <View className="flex-row" style={{ gap: 10 }}>
@@ -111,7 +112,7 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                   <View key={action.label} style={{ flex: 1 }}>
                     <PressableScale
                       onPress={action.onPress}
-                      className={`py-3 rounded-lg items-center ${VARIANT_CLASSES[variant]}`}
+                      className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
                     >
                       <Text className={`font-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
                     </PressableScale>
@@ -127,7 +128,7 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                   <PressableScale
                     key={action.label}
                     onPress={action.onPress}
-                    className={`py-3 rounded-lg items-center ${VARIANT_CLASSES[variant]}`}
+                    className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
                   >
                     <Text className={`font-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
                   </PressableScale>

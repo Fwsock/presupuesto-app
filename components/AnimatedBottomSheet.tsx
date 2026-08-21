@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, Modal, Platform, Pressable, View } from 'react-native';
+import { Animated, Easing, Keyboard, Modal, Platform, Pressable, View } from 'react-native';
 
 interface AnimatedBottomSheetProps {
   visible: boolean;
@@ -71,7 +71,18 @@ export function AnimatedBottomSheet({
       setMounted(true);
       Animated.parallel([
         Animated.timing(backdropOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, friction: 9, tension: 65 }),
+        // A fixed-duration ease-out (not a spring) so every sheet in the app
+        // opens with the exact same feel regardless of how heavy its own
+        // content is to mount -- a spring's perceived smoothness can vary
+        // with the very first frames it has to run alongside, which read as
+        // "rígido" on a form-heavy sheet even though the tuning was
+        // identical to a lighter one.
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
       ]).start();
     } else if (mounted) {
       Animated.parallel([
@@ -100,7 +111,7 @@ export function AnimatedBottomSheet({
           accessibilityLabel="Cerrar"
         />
         <Animated.View
-          className="bg-white rounded-t-2xl"
+          className="bg-surface rounded-t-3xl"
           style={{
             maxHeight: `${maxHeightPercent}%`,
             paddingBottom: keyboardHeight,

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FullScreenFormModal } from './FullScreenFormModal';
 import { PressableScale } from './PressableScale';
 import { ErrorBanner } from './ErrorBanner';
+import { MovementIconBadge } from './MovementIconBadge';
 import { PendingNotificationConfirmModal } from './PendingNotificationConfirmModal';
 import { useCategories } from '../features/categories/hooks';
 import {
@@ -51,17 +52,21 @@ const PendingNotificationRow = memo(function PendingNotificationRow({
   return (
     <PressableScale
       onPress={() => onPress(notification)}
-      className="flex-row items-center py-3 border-b border-gray-100"
+      // Same row feel as MovementListItem/CategoryTotalsList -- every
+      // tappable row in the app uses this exact intensity now.
+      scaleTo={0.965}
+      activeOpacity={0.7}
+      spring
+      haptics
+      className="flex-row items-center py-3 border-b border-border"
       accessibilityRole="button"
     >
-      <View className="w-11 h-11 rounded-full bg-gray-100 items-center justify-center mr-3">
-        <Ionicons name={icono as keyof typeof Ionicons.glyphMap} size={20} color="#374151" />
-      </View>
+      <MovementIconBadge label={notification.comercio} iconName={icono} size={44} style={{ marginRight: 12 }} />
       <View className="flex-1">
         <Text className="font-medium" numberOfLines={1}>
           {notification.comercio ?? 'Comercio no detectado'}
         </Text>
-        <Text className="text-gray-400 text-xs" numberOfLines={1}>
+        <Text className="text-secondary text-xs" numberOfLines={1}>
           {notification.rawText}
         </Text>
       </View>
@@ -97,6 +102,10 @@ function QuickActionButton({
     <PressableScale
       onPress={onPress}
       disabled={disabled || loading}
+      scaleTo={0.965}
+      activeOpacity={0.7}
+      spring
+      haptics
       className="flex-1 items-center justify-center border border-gray-200 rounded-2xl py-5 px-2"
       style={{ opacity: disabled && !loading ? 0.5 : 1 }}
       accessibilityRole="button"
@@ -185,7 +194,7 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
         {formError && <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />}
 
         {showAccessBanner && (
-          <View className="bg-blue-50 border border-blue-200 rounded-md px-4 py-3 mb-5">
+          <View className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
             <Text className="text-blue-900 mb-2">
               Activa el acceso a notificaciones para capturar avisos bancarios automáticamente, sin tener que
               pegarlos a mano.
@@ -198,7 +207,7 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
 
         {isTextRecognitionAvailable() && (
           <View className="mb-5">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Agregar movimiento</Text>
+            <Text className="text-secondary text-xs font-semibold uppercase mb-2">Agregar movimiento</Text>
             <View className="flex-row" style={{ gap: 10 }}>
               <QuickActionButton
                 icon="image-outline"
@@ -218,12 +227,12 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
           </View>
         )}
 
-        <View className="pt-4 border-t border-gray-100">
-          <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">
+        <View className="pt-4 border-t border-border">
+          <Text className="text-secondary text-xs font-semibold uppercase mb-2">
             {pending && pending.length > 0 ? `Pendientes (${pending.length})` : 'Pendientes'}
           </Text>
           {!pending || pending.length === 0 ? (
-            <Text className="text-gray-400 text-sm py-6 text-center">No hay notificaciones pendientes.</Text>
+            <Text className="text-secondary text-sm py-6 text-center">No hay notificaciones pendientes.</Text>
           ) : (
             pending.map((notification) => (
               <Animated.View

@@ -50,6 +50,72 @@ Reglas a seguir en todo momento, sin que el usuario tenga que pedirlo cada vez:
 3. No dejes `npx expo start` corriendo indefinidamente salvo que el usuario lo esté probando activamente o lo haya pedido explícitamente — este proyecto además se prueba casi siempre vía APK standalone, no vía Metro/Expo Go, así que rara vez hace falta tenerlo levantado.
 4. Un servidor HTTP local usado para servir un APK recién compilado (`python3 -m http.server`) puede quedar corriendo mientras ese build siga siendo el vigente para instalar — pero avisa que existe y bájalo apenas quede obsoleto (se generó uno nuevo, o el usuario ya terminó de probar).
 
+## Rendimiento de builds locales
+
+`android/gradle.properties` **no se puede editar a mano** en este proyecto:
+no hay `android/` comprometido al repo (ver protocolo de arriba), así que cada
+`eas build --platform android --local` lo regenera desde cero en un
+directorio temporal — cualquier edición manual se pierde en el siguiente
+build. El ajuste durable vive en `plugins/withGradlePerf.js` (un config
+plugin de Expo, registrado en `app.json`), que reinyecta estas propiedades
+en cada prebuild:
+
+- `org.gradle.jvmargs=-Xmx6g -XX:+UseParallelGC -XX:MaxMetaspaceSize=1g`
+- `org.gradle.parallel=true`
+- `org.gradle.caching=true`
+- `org.gradle.configureondemand=true`
+- `android.enableJetifier=false`
+- `reactNativeArchitectures=arm64-v8a` — **solo cuando `EAS_BUILD_PROFILE=preview`** (`production` sigue compilando las 4 arquitecturas, porque ese perfil sí va a la Play Store).
+
+El heap de 6g está pensado para esta Mac (24GB RAM / 8 núcleos) — bajarlo si
+se usa en una máquina con menos RAM. `org.gradle.caching=true` ayuda algo
+(la caché de tareas de Gradle vive en `~/.gradle/caches`, fuera del
+directorio temporal que se borra en cada build), pero medido en la práctica
+**no fue la palanca real**: un build con JVM/paralelismo/caché tuneados
+tardó prácticamente lo mismo (859s) que builds anteriores sin ese tuning
+(811-950s). No hay ningún paso de "clean" que evitar en `eas build --local`
+— el rebuild completo es inherente a que regenera el proyecto entero.
+
+**La palanca que sí importa, medida directamente del profile de Gradle de
+un build real:** cada módulo nativo en C++ (Skia, Reanimated, Worklets,
+gesture-handler, screens, expo-modules-core) se compila una vez POR
+ARQUITECTURA — arm64-v8a, armeabi-v7a, x86, x86_64 — por defecto. Eso es
+**31.6% de todo el tiempo de tareas de un build real (577 de 1826s)**,
+repartido casi parejo entre las 4, aunque el `preview` profile solo se
+instala en un teléfono real (arm64-v8a). `reactNativeArchitectures=arm64-v8a`
+(scopeado a `preview` vía el propio plugin, ver arriba) elimina ~3/4 de esa
+compilación nativa. Trade-off: un APK `preview` compilado así ya no instala
+en emuladores x86/x86_64 ni celulares ARM de 32-bit — para eso, compilar
+`production` (o borrar/comentar esa línea) en vez de `preview`.
+
+Script de conveniencia: `npm run build:android:local` (requiere
+`JAVA_HOME`/`ANDROID_HOME` ya exportados en el shell, igual que siempre).
+
+## Iterar cambios de JS/TS sin reconstruir el APK nativo completo
+
+**Estado actual de este proyecto: no aplica todavía.** `npx expo start` solo
+sirve para probar sin rebuild nativo si la app corre dentro de **Expo Go**
+o de un **development build** (un APK con `expo-dev-client` incluido) — este
+proyecto no tiene `expo-dev-client` instalado, y además usa módulos nativos
+custom (el listener de notificaciones bancarias en `modules/`, ML Kit para
+OCR) que Expo Go no puede cargar. Por eso la convención de esta sesión ha
+sido probar todo vía APK standalone (`preview` profile), y cualquier cambio
+—JS/TS incluido— requiere un build local completo para probarse en el
+dispositivo.
+
+**Recomendación para acelerar esto a futuro** (requiere decisión explícita
+del usuario antes de aplicarse, porque cambia el flujo de prueba establecido
+arriba):
+1. Instalar `expo-dev-client` y agregar un perfil `development` en
+   `eas.json` (`"developmentClient": true`).
+2. Compilar ESE build una sola vez (mismo costo que un build normal).
+3. De ahí en adelante, `npx expo start` conecta a ese APK ya instalado vía
+   Metro con Fast Refresh — cualquier cambio de JS/TS (parsers, componentes,
+   hooks, estilos) se ve al instante, sin recompilar nada nativo. Solo hace
+   falta un build nuevo cuando cambian dependencias nativas o config de
+   `app.json`/`plugins/` (exactamente los mismos casos en los que hoy ya se
+   relanza el build).
+
 ## Artifact de instalación tras un build local
 
 Cada vez que termines un build local de Android (`eas build --platform

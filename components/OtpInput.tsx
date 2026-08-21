@@ -38,7 +38,7 @@ export function OtpInput({ length, value, onChange, autoFocus = false, disabled 
           <View
             key={index}
             className={`items-center justify-center rounded-lg border-2 ${
-              isCursor ? 'border-blue-600' : 'border-gray-300'
+              isCursor ? 'border-brand' : 'border-gray-200'
             }`}
             style={{ width: BOX_SIZE, height: BOX_SIZE + 6 }}
           >

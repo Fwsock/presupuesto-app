@@ -9,7 +9,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { Button } from './Button';
 import { FullScreenFormModal } from './FullScreenFormModal';
 import { PressableScale } from './PressableScale';
-import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
+import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
 
 const categorySchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -84,21 +84,21 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
         name="nombre"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            className="border border-gray-300 rounded-md px-3 py-2 mb-1"
+            className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Nombre"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
             selectionColor={INPUT_SELECTION_COLOR}
-            cursorColor={INPUT_SELECTION_COLOR}
+            cursorColor={INPUT_CURSOR_COLOR}
             value={value}
             onChangeText={onChange}
             autoFocus
           />
         )}
       />
-      {errors.nombre && <Text className="text-red-600 mb-2">{errors.nombre.message}</Text>}
+      {errors.nombre && <Text className="text-danger mb-2">{errors.nombre.message}</Text>}
 
-      <Text className="text-gray-500 text-xs mb-2">Tipo de categoría</Text>
+      <Text className="text-secondary text-xs mb-2">Tipo de categoría</Text>
       <Controller
         control={control}
         name="esFija"
@@ -108,7 +108,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
                 PressableScale's own comment for why. */}
             <View style={{ flex: 1 }}>
               <PressableScale
-                className={`py-2 rounded-l-md border ${!value ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                className={`py-2 rounded-l-xl border ${!value ? 'bg-brand border-brand' : 'border-gray-200'}`}
                 onPress={() => onChange(false)}
               >
                 <Text className={`text-center ${!value ? 'text-white' : 'text-black'}`}>Variable</Text>
@@ -116,7 +116,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
             </View>
             <View style={{ flex: 1 }}>
               <PressableScale
-                className={`py-2 rounded-r-md border ${value ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}
+                className={`py-2 rounded-r-xl border ${value ? 'bg-brand border-brand' : 'border-gray-200'}`}
                 onPress={() => onChange(true)}
               >
                 <Text className={`text-center ${value ? 'text-white' : 'text-black'}`}>Fija / Recurrente</Text>
@@ -125,7 +125,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
           </View>
         )}
       />
-      <Text className="text-gray-400 text-xs mb-4">
+      <Text className="text-secondary text-xs mb-4">
         Las categorías fijas (Insumos básicos, Vivienda, Suscripciones...) replican sus movimientos automáticamente cada mes.
       </Text>
 
