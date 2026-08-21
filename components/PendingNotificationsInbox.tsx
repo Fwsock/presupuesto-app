@@ -23,6 +23,7 @@ import {
   scanDocumentFromCamera,
   scanDocumentFromGallery,
 } from '../features/pendingNotifications/documentCapture';
+import { useExperimentalScanEnabled } from '../features/shared/experimentalFeatures';
 import { suggestMovementIcon } from '../features/movements/iconSuggestion';
 import { theme } from '../lib/theme';
 import type { PendingNotification } from '../features/pendingNotifications/types';
@@ -142,6 +143,10 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
   // useNotificationAccessGranted's own comment for why.
   const { data: accessGranted } = useNotificationAccessGranted();
   const showAccessBanner = Platform.OS === 'android' && isBankNotificationListenerAvailable() && accessGranted === false;
+  // Off by default -- see Cuenta's "Funciones Experimentales" switch and
+  // experimentalFeatures.ts's own comment for why only these two OCR paths
+  // (not the background listener) are gated by it.
+  const experimentalScanEnabled = useExperimentalScanEnabled();
 
   const [formError, setFormError] = useState<string | null>(null);
   const [selected, setSelected] = useState<PendingNotification | null>(null);
@@ -205,7 +210,7 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
           </View>
         )}
 
-        {isTextRecognitionAvailable() && (
+        {isTextRecognitionAvailable() && experimentalScanEnabled && (
           <View className="mb-5">
             <Text className="text-secondary text-xs font-semibold uppercase mb-2">Agregar movimiento</Text>
             <View className="flex-row" style={{ gap: 10 }}>

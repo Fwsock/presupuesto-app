@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Image, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession, signOut, updateEmail, updatePassword } from '../../features/auth/hooks';
@@ -9,6 +9,7 @@ import { useProfile, useUpsertProfile } from '../../features/profile/hooks';
 import { useRecurringIncome, useDeleteRecurringIncome } from '../../features/income/hooks';
 import { getInitials } from '../../features/profile/initials';
 import { parsePhoneNumber, formatPhoneNumber } from '../../features/shared/countries';
+import { useExperimentalScanEnabled, useSetExperimentalScanEnabled } from '../../features/shared/experimentalFeatures';
 import { RecurringIncomeForm } from '../../components/RecurringIncomeForm';
 import { FullScreenFormModal } from '../../components/FullScreenFormModal';
 import { PhoneInput } from '../../components/PhoneInput';
@@ -17,6 +18,8 @@ import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
 import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { PressableScale } from '../../components/PressableScale';
+import { AnimatedSwitch } from '../../components/AnimatedSwitch';
+import { InstallQRCode } from '../../components/InstallQRCode';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
 import { Accordion } from '../../components/Accordion';
 import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
@@ -26,6 +29,7 @@ type AccountSection =
   | 'personal'
   | 'seguridad'
   | 'ingreso'
+  | 'experimental'
   | 'terminos'
   | 'ayuda'
   | 'acerca'
@@ -157,6 +161,8 @@ function CuentaScreen() {
   const { data: recurringIncome } = useRecurringIncome();
   const deleteRecurringIncome = useDeleteRecurringIncome();
   const { confirm, element: confirmDialog } = useConfirmDialog();
+  const experimentalScanEnabled = useExperimentalScanEnabled();
+  const setExperimentalScanEnabled = useSetExperimentalScanEnabled();
 
   const [openSection, setOpenSection] = useState<AccountSection>(null);
 
@@ -279,6 +285,27 @@ function CuentaScreen() {
     });
   };
 
+  // Turning it OFF is immediate (hides the two OCR scan entry points right
+  // away, nothing risky about that). Turning it ON requires explicit
+  // confirmation first -- it's the one direction that exposes a beta path.
+  const toggleExperimentalScan = () => {
+    if (experimentalScanEnabled) {
+      setExperimentalScanEnabled.mutate(false);
+      return;
+    }
+    confirm({
+      title: 'Funcionalidad en fase beta',
+      message:
+        'El escaneo de boletas con cámara y la subida de comprobantes desde la galería son funciones experimentales. Pueden fallar, leer datos incorrectos, o cambiar sin aviso. ¿Quieres activarlas de todas formas?',
+      icon: 'warning-outline',
+      iconColor: '#F59E0B',
+      actions: [
+        { label: 'Cancelar', variant: 'cancel' },
+        { label: 'Activar', variant: 'default', onPress: () => setExperimentalScanEnabled.mutate(true) },
+      ],
+    });
+  };
+
   const confirmSignOut = () => {
     confirm({
       title: 'Cerrar sesión',
@@ -335,6 +362,9 @@ function CuentaScreen() {
         <AccountRow icon="card-outline" label="Información personal" onPress={() => setOpenSection('personal')} />
         <AccountRow icon="lock-closed-outline" label="Seguridad" onPress={() => setOpenSection('seguridad')} />
         <AccountRow icon="repeat-outline" label="Ingreso mensual recurrente" onPress={() => setOpenSection('ingreso')} />
+        {Platform.OS === 'android' && (
+          <AccountRow icon="flask-outline" label="Funciones Experimentales" onPress={() => setOpenSection('experimental')} />
+        )}
         <AccountRow icon="help-circle-outline" label="Ayuda / Preguntas Frecuentes" onPress={() => setOpenSection('ayuda')} />
         <AccountRow icon="information-circle-outline" label="Acerca de" onPress={() => setOpenSection('acerca')} />
         <AccountRow icon="log-out-outline" label="Cerrar sesión" onPress={confirmSignOut} danger isLast />
@@ -433,6 +463,29 @@ function CuentaScreen() {
         )}
       </FullScreenFormModal>
 
+      {Platform.OS === 'android' && (
+        <FullScreenFormModal
+          visible={openSection === 'experimental'}
+          title="Funciones Experimentales"
+          onClose={() => setOpenSection(null)}
+        >
+          <Text className="text-secondary mb-5">
+            Activa o desactiva funciones en fase beta. Controla el escaneo de boletas y comprobantes por imagen
+            (cámara y galería).
+          </Text>
+
+          <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-4">
+            <View className="flex-1 pr-3">
+              <Text className="font-semibold mb-1">Escaneo de boletas por imagen</Text>
+              <Text className="text-secondary text-xs">
+                Escanear con cámara y subir capturas desde la galería en la bandeja de pendientes.
+              </Text>
+            </View>
+            <AnimatedSwitch value={experimentalScanEnabled} onValueChange={toggleExperimentalScan} />
+          </View>
+        </FullScreenFormModal>
+      )}
+
       <FullScreenFormModal
         visible={openSection === 'terminos'}
         title="Términos y Condiciones"
@@ -475,8 +528,17 @@ function CuentaScreen() {
             accessibilityLabel="Ícono de FinanFlow"
           />
           <Text className="text-lg font-semibold">FinanFlow para Android</Text>
-          <Text className="text-secondary mt-1">Versión {APP_VERSION}</Text>
-          <Text className="text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
+        </View>
+
+        <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-5">
+          <View className="flex-1 pr-3">
+            <Text className="text-secondary">Versión {APP_VERSION}</Text>
+            <Text className="text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
+            {Platform.OS === 'android' && (
+              <Text className="text-secondary text-xs mt-2">Escanea para instalar el APK</Text>
+            )}
+          </View>
+          {Platform.OS === 'android' && <InstallQRCode />}
         </View>
 
         <AboutLinkRow label="Términos y Condiciones" onPress={() => setOpenSection('terminos')} />

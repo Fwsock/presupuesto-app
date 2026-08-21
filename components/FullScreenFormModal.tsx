@@ -2,6 +2,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
 import { AnimatedBottomSheet } from './AnimatedBottomSheet';
+import { headerTitleFont } from '../lib/theme';
 
 interface FullScreenFormModalProps {
   visible: boolean;
@@ -30,7 +31,7 @@ export function FullScreenFormModal({ visible, title, onClose, children }: FullS
         >
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </PressableScale>
-        <Text className="text-lg font-semibold">{title}</Text>
+        <Text className="text-lg" style={headerTitleFont}>{title}</Text>
       </View>
 
       <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">

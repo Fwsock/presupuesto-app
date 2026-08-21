@@ -64,7 +64,7 @@ export const BRAND_LOGOS: Partial<Record<string, number>> = {
   tricot: require('../../assets/brands/tricot_logo.png'),
   sodimac: require('../../assets/brands/Logotipo_Sodimac.png'),
   easy: require('../../assets/brands/Easy-Logo.png'),
-  hm: require('../../assets/brands/H&M-Logo.png'),
+  hm: require('../../assets/brands/hm-logo.png'),
   zara: require('../../assets/brands/Zara_Logo.png'),
 
   // Malls / estacionamientos

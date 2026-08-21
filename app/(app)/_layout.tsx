@@ -15,7 +15,7 @@ import { BankNotificationListenerSync } from '../../components/BankNotificationL
 import { usePendingNotifications } from '../../features/pendingNotifications/hooks';
 import { MovementModalContext } from '../../features/shared/movement-modal-context';
 import { MovementFilterContext } from '../../features/shared/movement-filter-context';
-import { theme } from '../../lib/theme';
+import { theme, headerTitleFont } from '../../lib/theme';
 import type { Movement } from '../../features/movements/types';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -34,7 +34,7 @@ function firstName(nombre: string | null | undefined): string | null {
 // (white, semibold) itself.
 function HeaderTitleText({ text }: { text: string }) {
   return (
-    <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 20 }} numberOfLines={1}>
+    <Text style={{ color: '#ffffff', fontSize: 20, ...headerTitleFont }} numberOfLines={1}>
       {text}
     </Text>
   );
@@ -141,7 +141,7 @@ export default function AppLayout() {
               headerShown: true,
               headerStyle: { backgroundColor: theme.brand },
               headerTintColor: '#ffffff',
-              headerTitleStyle: { color: '#ffffff', fontWeight: '600' },
+              headerTitleStyle: { color: '#ffffff', ...headerTitleFont },
               // Explicit, not left to the navigator's own default (white) --
               // without this, the scene container behind each tab briefly
               // paints white before that tab's own content settles, which is

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Keyboard, Modal, Platform, Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Modal, Platform, Pressable, View } from 'react-native';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 interface AnimatedBottomSheetProps {
   visible: boolean;
@@ -7,6 +8,10 @@ interface AnimatedBottomSheetProps {
   /** Overrides the backdrop-tap handler (e.g. disabled while a save is in flight). Defaults to onClose. */
   onBackdropPress?: () => void;
   maxHeightPercent?: number;
+  /** Springs the entrance slide instead of timing it -- see MovementFormModal. Takes priority over entranceDuration/entranceEasing when set. Exit is untouched by design (shared across every sheet). */
+  entranceSpring?: { damping: number; stiffness: number };
+  entranceDuration?: number;
+  entranceEasing?: (value: number) => number;
   children: React.ReactNode;
 }
 
@@ -23,7 +28,7 @@ const KEYBOARD_HIDE_EVENT = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboa
  * 1. RN's built-in "slide" animates the WHOLE modal subtree -- backdrop
  *    included -- as one rigid transform, so the dim layer visibly slides up
  *    with the sheet instead of just fading in. Here the backdrop's opacity
- *    and the sheet's translateY are two independent Animated.Values
+ *    and the sheet's translateY are two independent Reanimated shared values
  *    (animationType="none" on the Modal itself, same convention as
  *    ConfirmDialog/MonthYearPickerModal/CalendarPickerModal).
  *
@@ -44,16 +49,28 @@ const KEYBOARD_HIDE_EVENT = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboa
  *    state. Growing the box (which sits in a `justifyContent: 'flex-end'`
  *    parent) pushes its top edge up, same visual effect as before, but
  *    nothing outside the sheet's own solid white box ever moves.
+ *
+ * Built on react-native-reanimated (not core RN `Animated`) so a sheet can
+ * opt into `entranceSpring` -- a `withTiming` value can't produce spring
+ * physics, and mixing two different animation-value systems on one style
+ * (a core Animated.Value here, a Reanimated shared value there) is the kind
+ * of thing that only half-works. Every other sheet keeps the exact same
+ * timing-based feel as before (entranceDuration/entranceEasing default to
+ * the same 400ms ease-out-cubic), just re-expressed with Reanimated's
+ * (worklet-compatible) `Easing`, not core RN's.
  */
 export function AnimatedBottomSheet({
   visible,
   onClose,
   onBackdropPress,
   maxHeightPercent = 85,
+  entranceSpring,
+  entranceDuration = 400,
+  entranceEasing = Easing.out(Easing.cubic),
   children,
 }: AnimatedBottomSheetProps) {
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(OFFSCREEN_Y)).current;
+  const backdropOpacity = useSharedValue(0);
+  const translateY = useSharedValue(OFFSCREEN_Y);
   const [mounted, setMounted] = useState(visible);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -69,31 +86,25 @@ export function AnimatedBottomSheet({
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      Animated.parallel([
-        Animated.timing(backdropOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        // A fixed-duration ease-out (not a spring) so every sheet in the app
-        // opens with the exact same feel regardless of how heavy its own
-        // content is to mount -- a spring's perceived smoothness can vary
-        // with the very first frames it has to run alongside, which read as
-        // "rígido" on a form-heavy sheet even though the tuning was
-        // identical to a lighter one.
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 400,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
+      backdropOpacity.value = withTiming(1, { duration: 220 });
+      translateY.value = entranceSpring
+        ? withSpring(0, { damping: entranceSpring.damping, stiffness: entranceSpring.stiffness })
+        : withTiming(0, { duration: entranceDuration, easing: entranceEasing });
     } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: OFFSCREEN_Y, duration: 220, useNativeDriver: true }),
-      ]).start(({ finished }) => {
-        if (finished) setMounted(false);
+      backdropOpacity.value = withTiming(0, { duration: 200 });
+      translateY.value = withTiming(OFFSCREEN_Y, { duration: 220 }, (finished) => {
+        if (finished) runOnJS(setMounted)(false);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+  const sheetStyle = useAnimatedStyle(() => ({
+    maxHeight: `${maxHeightPercent}%`,
+    paddingBottom: keyboardHeight,
+    transform: [{ translateY: translateY.value }],
+  }));
 
   if (!mounted) return null;
 
@@ -102,7 +113,7 @@ export function AnimatedBottomSheet({
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'transparent' }}>
         <Animated.View
           className="bg-black/40"
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: backdropOpacity }}
+          style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, backdropStyle]}
         />
         <Pressable
           onPress={onBackdropPress ?? onClose}
@@ -110,14 +121,7 @@ export function AnimatedBottomSheet({
           accessibilityRole="button"
           accessibilityLabel="Cerrar"
         />
-        <Animated.View
-          className="bg-surface rounded-t-3xl"
-          style={{
-            maxHeight: `${maxHeightPercent}%`,
-            paddingBottom: keyboardHeight,
-            transform: [{ translateY }],
-          }}
-        >
+        <Animated.View className="bg-surface rounded-t-3xl" style={sheetStyle}>
           {children}
         </Animated.View>
       </View>

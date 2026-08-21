@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, Platform } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
@@ -15,7 +15,7 @@ import { InboxHeaderButton } from '../../components/InboxHeaderButton';
 import { PressableScale } from '../../components/PressableScale';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
 import { PullToRefresh } from '../../components/PullToRefresh';
-import { theme } from '../../lib/theme';
+import { theme, headerTitleFont } from '../../lib/theme';
 import { ScreenSkeleton } from '../../components/Skeleton';
 import { useMovementModal } from '../../features/shared/movement-modal-context';
 import type { Category } from '../../features/categories/types';
@@ -159,27 +159,79 @@ function CategoriasScreen() {
     setModalVisible(true);
   }, []);
 
-  // Categorías owns the header's right-side action (the FAB it replaces was
-  // removed — the center tab-bar "+" only creates movements, not categories)
-  // -- but this REPLACES app/(app)/_layout.tsx's default headerRight
-  // (InboxHeaderButton), so it has to render that one too, or this is the
-  // one screen in the app where the notification bell silently disappears.
+  // Platform-specific on purpose, confirmed on real devices for both: iOS's
+  // react-navigation header centers the title based on headerRight's width
+  // at the time it first measures the header, which ran before this effect
+  // swapped in the real (wide) headerRight -- on iOS's narrower screens the
+  // title's centered position was never recalculated afterward, so "Tus
+  // categorías" rendered UNDER "+ Nueva categoría" (confirmed on an iPhone
+  // 17 Pro simulator screenshot). Android phones are wide enough that the
+  // same two-slot layout never showed this -- confirmed on a real HyperOS
+  // device both before and after the iOS-only rewrite below -- so Android
+  // keeps the simpler, original two-slot approach (declarative `headerTitle`
+  // from app/(app)/_layout.tsx untouched, this effect only overrides
+  // headerRight) rather than carrying the iOS workaround's extra structure
+  // for a screen width where it was never needed.
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View className="flex-row items-center">
-          <PressableScale
-            onPress={openCreate}
-            className="mr-3 px-3 py-1.5 rounded-full border border-white/70"
-            accessibilityRole="button"
-            accessibilityLabel="Nueva categoría"
+    if (Platform.OS === 'ios') {
+      // Renders title + button + bell as ONE real flexbox row inside
+      // `headerTitle` (the slot stretched edge-to-edge via
+      // headerTitleContainerStyle, with headerLeft/headerRight suppressed)
+      // instead of two independently-measured slots -- makes the overlap
+      // above structurally impossible regardless of screen width.
+      navigation.setOptions({
+        headerLeft: () => null,
+        headerRight: () => null,
+        headerTitleContainerStyle: { left: 0, right: 0 },
+        headerTitle: () => (
+          <View
+            className="flex-row items-center justify-between"
+            style={{ width: '100%', paddingHorizontal: 16, gap: 20 }}
           >
-            <Text className="text-white font-medium text-sm">+ Nueva categoría</Text>
-          </PressableScale>
-          <InboxHeaderButton count={pendingCount} onPress={openInbox} />
-        </View>
-      ),
-    });
+            <Text
+              className="text-white text-xl flex-shrink"
+              style={headerTitleFont}
+              numberOfLines={1}
+            >
+              Tus categorías
+            </Text>
+            <View className="flex-row items-center flex-shrink-0" style={{ gap: 20 }}>
+              <PressableScale
+                onPress={openCreate}
+                className="px-3 py-1.5 rounded-full border border-white/70"
+                accessibilityRole="button"
+                accessibilityLabel="Nueva categoría"
+              >
+                <Text className="text-white font-medium text-sm" numberOfLines={1}>
+                  + Nueva categoría
+                </Text>
+              </PressableScale>
+              <InboxHeaderButton count={pendingCount} onPress={openInbox} />
+            </View>
+          </View>
+        ),
+      });
+    } else {
+      // Original Android layout: title stays whatever app/(app)/_layout.tsx
+      // declared (`headerTitle: () => <HeaderTitleText text="Tus
+      // categorías" />`) -- this only replaces headerRight, same as before
+      // the iOS-only overlap fix.
+      navigation.setOptions({
+        headerRight: () => (
+          <View className="flex-row items-center">
+            <PressableScale
+              onPress={openCreate}
+              className="mr-4 px-3 py-1.5 rounded-full border border-white/70"
+              accessibilityRole="button"
+              accessibilityLabel="Nueva categoría"
+            >
+              <Text className="text-white font-medium text-sm">+ Nueva categoría</Text>
+            </PressableScale>
+            <InboxHeaderButton count={pendingCount} onPress={openInbox} />
+          </View>
+        ),
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation, pendingCount, openInbox]);
 
