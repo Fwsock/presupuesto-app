@@ -11,6 +11,7 @@ import { getInitials } from '../../features/profile/initials';
 import { parsePhoneNumber, formatPhoneNumber } from '../../features/shared/countries';
 import { useExperimentalScanEnabled, useSetExperimentalScanEnabled } from '../../features/shared/experimentalFeatures';
 import { RecurringIncomeForm } from '../../components/RecurringIncomeForm';
+import { FeedbackForm } from '../../components/FeedbackForm';
 import { FullScreenFormModal } from '../../components/FullScreenFormModal';
 import { PhoneInput } from '../../components/PhoneInput';
 import { AuthTextInput } from '../../components/AuthTextInput';
@@ -30,6 +31,7 @@ type AccountSection =
   | 'seguridad'
   | 'ingreso'
   | 'experimental'
+  | 'feedback'
   | 'terminos'
   | 'ayuda'
   | 'acerca'
@@ -365,6 +367,11 @@ function CuentaScreen() {
         {Platform.OS === 'android' && (
           <AccountRow icon="flask-outline" label="Funciones Experimentales" onPress={() => setOpenSection('experimental')} />
         )}
+        <AccountRow
+          icon="chatbox-ellipses-outline"
+          label="Reportar un problema o sugerencia"
+          onPress={() => setOpenSection('feedback')}
+        />
         <AccountRow icon="help-circle-outline" label="Ayuda / Preguntas Frecuentes" onPress={() => setOpenSection('ayuda')} />
         <AccountRow icon="information-circle-outline" label="Acerca de" onPress={() => setOpenSection('acerca')} />
         <AccountRow icon="log-out-outline" label="Cerrar sesión" onPress={confirmSignOut} danger isLast />
@@ -485,6 +492,14 @@ function CuentaScreen() {
           </View>
         </FullScreenFormModal>
       )}
+
+      <FullScreenFormModal
+        visible={openSection === 'feedback'}
+        title="Reportar un problema o sugerencia"
+        onClose={() => setOpenSection(null)}
+      >
+        <FeedbackForm />
+      </FullScreenFormModal>
 
       <FullScreenFormModal
         visible={openSection === 'terminos'}
