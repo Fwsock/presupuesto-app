@@ -38,7 +38,7 @@ export function MovementFilterSheet({
 }: MovementFilterSheetProps) {
   return (
     <FullScreenFormModal visible={visible} title="Filtrar y ordenar" onClose={onClose}>
-      <Text className="text-secondary text-xs mb-2">Categoría</Text>
+      <Text className="font-jakarta text-secondary text-xs mb-2">Categoría</Text>
       <CategoryFilterChips
         categories={categories}
         selectedCategoryId={selectedCategoryId}
@@ -46,7 +46,7 @@ export function MovementFilterSheet({
         resetScrollOn={visible}
       />
 
-      <Text className="text-secondary text-xs mb-2 mt-5">Ordenar por</Text>
+      <Text className="font-jakarta text-secondary text-xs mb-2 mt-5">Ordenar por</Text>
       <View className="flex-row items-center" style={{ gap: 8 }}>
         {SORT_OPTIONS.map(({ field, label }) => {
           const selected = field === sortField;
@@ -59,7 +59,7 @@ export function MovementFilterSheet({
               spring
               className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
             >
-              <Text className={selected ? 'text-white' : 'text-black'}>{label}</Text>
+              <Text className={`font-jakarta ${selected ? 'text-white' : 'text-black'}`}>{label}</Text>
             </PressableScale>
           );
         })}

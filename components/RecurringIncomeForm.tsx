@@ -90,7 +90,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
         name="concepto"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
+            className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-1"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Concepto (ej. Sueldo)"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -101,10 +101,10 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
           />
         )}
       />
-      {errors.concepto && <Text className="text-danger mb-2">{errors.concepto.message}</Text>}
+      {errors.concepto && <Text className="font-jakarta text-danger mb-2">{errors.concepto.message}</Text>}
 
       <View className="mb-1">
-        <Text className="text-gray-700 mb-2">Ingreso:</Text>
+        <Text className="font-jakarta text-gray-700 mb-2">Ingreso:</Text>
         {/* flex: 1 set via inline style, not className, so the segmented
             control reliably fills the row regardless of NativeWind's JIT
             picking it up — this is exactly the row that was rendering
@@ -126,7 +126,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
                     onPress={() => onChange('fijo')}
                     className={`py-2.5 rounded-l-xl border items-center ${value === 'fijo' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                   >
-                    <Text className={value === 'fijo' ? 'text-white' : 'text-black'}>Fijo</Text>
+                    <Text className={`font-jakarta ${value === 'fijo' ? 'text-white' : 'text-black'}`}>Fijo</Text>
                   </PressableScale>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -134,7 +134,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
                     onPress={() => onChange('variable')}
                     className={`py-2.5 rounded-r-xl border items-center ${value === 'variable' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                   >
-                    <Text className={value === 'variable' ? 'text-white' : 'text-black'}>Variable</Text>
+                    <Text className={`font-jakarta ${value === 'variable' ? 'text-white' : 'text-black'}`}>Variable</Text>
                   </PressableScale>
                 </View>
               </View>
@@ -168,7 +168,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
             name="monto"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                className="border border-gray-200 rounded-xl px-3 py-2 mb-1 mt-2"
+                className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-1 mt-2"
                 style={{ color: INPUT_TEXT_COLOR }}
                 placeholder="Monto mensual"
                 placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -180,7 +180,7 @@ export function RecurringIncomeForm({ initialValue, onSaved }: RecurringIncomeFo
               />
             )}
           />
-          {errors.monto && <Text className="text-danger mb-2">{errors.monto.message}</Text>}
+          {errors.monto && <Text className="font-jakarta text-danger mb-2">{errors.monto.message}</Text>}
         </>
       )}
 

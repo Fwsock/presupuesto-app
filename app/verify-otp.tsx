@@ -80,8 +80,8 @@ export default function VerifyOtpScreen() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold mb-1 text-center">Ingresa el código de 6 dígitos</Text>
-        <Text className="text-gray-500 mb-8 text-center">
+        <Text className="text-2xl font-jakarta-bold mb-1 text-center">Ingresa el código de 6 dígitos</Text>
+        <Text className="font-jakarta text-gray-500 mb-8 text-center">
           Enviamos un código de confirmación a tu correo {email}
         </Text>
 
@@ -90,12 +90,12 @@ export default function VerifyOtpScreen() {
         {verifying && (
           <View className="flex-row items-center justify-center mt-4">
             <ActivityIndicator size="small" color={theme.brand} />
-            <Text className="text-gray-500 ml-2">Validando código...</Text>
+            <Text className="font-jakarta text-gray-500 ml-2">Validando código...</Text>
           </View>
         )}
 
-        {error && <Text className="text-danger text-center mt-4">{error}</Text>}
-        {resendMessage && !error && <Text className="text-income text-center mt-4">{resendMessage}</Text>}
+        {error && <Text className="font-jakarta text-danger text-center mt-4">{error}</Text>}
+        {resendMessage && !error && <Text className="font-jakarta text-income text-center mt-4">{resendMessage}</Text>}
 
         <View className="mt-6">
           <Button
@@ -113,7 +113,7 @@ export default function VerifyOtpScreen() {
           accessibilityRole="button"
           accessibilityLabel="Reenviar código"
         >
-          <Text className={`text-center ${resendSeconds > 0 ? 'text-gray-400' : 'text-brand'}`}>
+          <Text className={`font-jakarta text-center ${resendSeconds > 0 ? 'text-gray-400' : 'text-brand'}`}>
             {resendSeconds > 0
               ? `Reenviar código (${resendSeconds}s)`
               : resending

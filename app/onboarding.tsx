@@ -55,13 +55,13 @@ export default function OnboardingScreen() {
   if (step === 'perfil') {
     return (
       <ScrollView className="flex-1 bg-white" contentContainerClassName="p-6 pt-16">
-        <Text className="text-2xl font-bold mb-2">Cuéntanos sobre ti</Text>
-        <Text className="text-gray-500 mb-6">
+        <Text className="text-2xl font-jakarta-bold mb-2">Cuéntanos sobre ti</Text>
+        <Text className="font-jakarta text-gray-500 mb-6">
           Estos datos nos ayudan a personalizar tu cuenta. Puedes cambiarlos después desde la pestaña Cuenta.
         </Text>
 
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2 mb-3"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-3"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre completo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
           onChangeDigits={setPhoneDigits}
         />
 
-        {profileError && <Text className="text-danger mb-2 mt-1">{profileError}</Text>}
+        {profileError && <Text className="font-jakarta text-danger mb-2 mt-1">{profileError}</Text>}
 
         <Button
           title="Siguiente"
@@ -95,8 +95,8 @@ export default function OnboardingScreen() {
     <View style={{ flex: 1 }} className="bg-white">
       <BackButton onPress={() => setStep('perfil')} />
       <ScrollView contentContainerClassName="p-6 pt-24">
-        <Text className="text-2xl font-bold mb-2">¿Cuál es tu ingreso mensual?</Text>
-        <Text className="text-gray-500 mb-6">
+        <Text className="text-2xl font-jakarta-bold mb-2">¿Cuál es tu ingreso mensual?</Text>
+        <Text className="font-jakarta text-gray-500 mb-6">
           Configura tu sueldo u otro ingreso recurrente para que se registre automáticamente cada mes. Puedes
           cambiarlo después desde la pestaña Cuenta.
         </Text>

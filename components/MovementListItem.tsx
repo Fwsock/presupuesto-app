@@ -66,6 +66,10 @@ export const MovementListItem = memo(function MovementListItem({
   isUpdating = false,
 }: MovementListItemProps) {
   const [detailVisible, setDetailVisible] = useState(false);
+  // Set by the detail sheet's "Editar" button, consumed by onHidden below --
+  // see the comment on the MovementDetailSheet usage for why onEdit(movement)
+  // can't fire in the same tick as setDetailVisible(false).
+  const pendingEditRef = useRef(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
   const { width: screenWidth } = useWindowDimensions();
   const deleteRevealWidth = screenWidth * DELETE_REVEAL_RATIO;
@@ -89,7 +93,7 @@ export const MovementListItem = memo(function MovementListItem({
   const renderRightActions = () => (
     <View style={{ width: deleteRevealWidth }} className="h-full bg-danger items-center justify-center">
       <Ionicons name="trash-outline" size={22} color="#fff" />
-      <Text className="text-white text-xs font-medium mt-1">Eliminar</Text>
+      <Text className="text-white text-xs font-jakarta-medium mt-1">Eliminar</Text>
     </View>
   );
 
@@ -128,11 +132,11 @@ export const MovementListItem = memo(function MovementListItem({
           />
 
           <View className="flex-1 pr-2">
-            <Text className="font-medium" numberOfLines={1} ellipsizeMode="tail">
+            <Text className="font-jakarta-medium" numberOfLines={1} ellipsizeMode="tail">
               {movement.concepto}
               {movement.cuota_numero && movement.cuota_total ? ` (${movement.cuota_numero}/${movement.cuota_total})` : ''}
             </Text>
-            <Text className="text-secondary text-xs mt-0.5">{formatLongDate(movement.fecha)}</Text>
+            <Text className="font-jakarta text-secondary text-xs mt-0.5">{formatLongDate(movement.fecha)}</Text>
           </View>
         </PressableScale>
       </View>
@@ -152,7 +156,7 @@ export const MovementListItem = memo(function MovementListItem({
           accessibilityLabel={`Ver detalle de ${movement.concepto}`}
         >
           <Text
-            className={`font-semibold ${isGasto ? 'text-danger' : 'text-income'}`}
+            className={`font-jakarta-semibold ${isGasto ? 'text-danger' : 'text-income'}`}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.75}
@@ -174,9 +178,21 @@ export const MovementListItem = memo(function MovementListItem({
         movement={movement}
         category={category}
         onClose={() => setDetailVisible(false)}
+        // iOS presents each RN <Modal> as a real native UIViewController --
+        // presenting the edit modal while this sheet's own dismissal is
+        // still mid-animation raced two native transitions and froze the
+        // app. Only flag the intent here; the actual onEdit(movement) call
+        // (which opens MovementFormModal, a second <Modal>) is deferred to
+        // onHidden, once this sheet has truly finished closing.
         onEdit={() => {
+          pendingEditRef.current = true;
           setDetailVisible(false);
-          onEdit(movement);
+        }}
+        onHidden={() => {
+          if (pendingEditRef.current) {
+            pendingEditRef.current = false;
+            onEdit(movement);
+          }
         }}
         onDelete={() => {
           setDetailVisible(false);

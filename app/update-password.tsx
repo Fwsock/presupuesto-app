@@ -73,8 +73,8 @@ export default function UpdatePasswordScreen() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold mb-1 text-center">Nueva contraseña</Text>
-        <Text className="text-gray-500 mb-6 text-center">Elige una contraseña nueva para tu cuenta</Text>
+        <Text className="text-2xl font-jakarta-bold mb-1 text-center">Nueva contraseña</Text>
+        <Text className="font-jakarta text-gray-500 mb-6 text-center">Elige una contraseña nueva para tu cuenta</Text>
 
         <Controller
           control={control}
@@ -105,7 +105,7 @@ export default function UpdatePasswordScreen() {
           )}
         />
 
-        {formError && <Text className="text-danger mb-2">{formError}</Text>}
+        {formError && <Text className="font-jakarta text-danger mb-2">{formError}</Text>}
 
         <Button
           title="Actualizar contraseña"

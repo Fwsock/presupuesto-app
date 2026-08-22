@@ -11,8 +11,8 @@ export function AuthHeader({ subtitle }: AuthHeaderProps) {
       <View className="w-20 h-20 rounded-3xl overflow-hidden mb-3">
         <Image source={require('../assets/icon.png')} className="w-full h-full" resizeMode="cover" />
       </View>
-      <Text className="text-2xl font-bold text-ink">FinanFlow</Text>
-      <Text className="text-gray-500 mt-1 text-center">{subtitle}</Text>
+      <Text className="text-2xl font-jakarta-bold text-ink">FinanFlow</Text>
+      <Text className="font-jakarta text-gray-500 mt-1 text-center">{subtitle}</Text>
     </View>
   );
 }

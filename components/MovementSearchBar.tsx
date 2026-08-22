@@ -2,7 +2,7 @@ import { View, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
 import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from './inputTheme';
-import { theme } from '../lib/theme';
+import { theme, cardShadow } from '../lib/theme';
 
 interface MovementSearchBarProps {
   query: string;
@@ -18,11 +18,11 @@ export function MovementSearchBar({ query, onQueryChange, onPressFilter, filterA
     <View className="flex-row items-center px-4 pb-2" style={{ gap: 8 }}>
       <View
         className="flex-1 flex-row items-center bg-surface border border-gray-200 rounded-xl px-3"
-        style={{ height: 44 }}
+        style={{ height: 44, ...cardShadow }}
       >
         <Ionicons name="search" size={18} color="#6b7280" style={{ marginRight: 6 }} />
         <TextInput
-          className="flex-1"
+          className="flex-1 font-jakarta"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Buscar por nombre o descripción"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -40,7 +40,7 @@ export function MovementSearchBar({ query, onQueryChange, onPressFilter, filterA
 
       <PressableScale
         onPress={onPressFilter}
-        style={{ width: 44, height: 44 }}
+        style={{ width: 44, height: 44, ...cardShadow }}
         className="items-center justify-center rounded-xl bg-surface border border-gray-200"
         accessibilityRole="button"
         accessibilityLabel="Filtrar y ordenar"

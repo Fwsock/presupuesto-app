@@ -45,12 +45,12 @@ export function Button({
       {loading ? (
         <View className="flex-row items-center justify-center">
           <ActivityIndicator size="small" color={isPrimary ? '#fff' : '#6b7280'} />
-          <Text className={`ml-2 text-center font-semibold ${isPrimary ? 'text-white' : 'text-gray-500'}`}>
+          <Text className={`ml-2 text-center font-jakarta-semibold ${isPrimary ? 'text-white' : 'text-gray-500'}`}>
             {loadingLabel}
           </Text>
         </View>
       ) : (
-        <Text className={`text-center font-semibold ${isPrimary ? 'text-white' : 'text-gray-500'}`}>{title}</Text>
+        <Text className={`text-center font-jakarta-semibold ${isPrimary ? 'text-white' : 'text-gray-500'}`}>{title}</Text>
       )}
     </PressableScale>
   );

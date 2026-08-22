@@ -33,7 +33,7 @@ export function IconPickerModal({ visible, selectedIcon, onSelect, onClose }: Ic
         <PressableScale onPress={onClose} className="pr-3 py-1" accessibilityRole="button" accessibilityLabel="Volver">
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </PressableScale>
-        <Text className="text-lg font-semibold">Elegir ícono</Text>
+        <Text className="text-lg font-jakarta-semibold">Elegir ícono</Text>
       </View>
 
       <FlatList

@@ -84,7 +84,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
         name="nombre"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
+            className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-1"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Nombre"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -96,9 +96,9 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
           />
         )}
       />
-      {errors.nombre && <Text className="text-danger mb-2">{errors.nombre.message}</Text>}
+      {errors.nombre && <Text className="font-jakarta text-danger mb-2">{errors.nombre.message}</Text>}
 
-      <Text className="text-secondary text-xs mb-2">Tipo de categoría</Text>
+      <Text className="font-jakarta text-secondary text-xs mb-2">Tipo de categoría</Text>
       <Controller
         control={control}
         name="esFija"
@@ -111,7 +111,7 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
                 className={`py-2 rounded-l-xl border ${!value ? 'bg-brand border-brand' : 'border-gray-200'}`}
                 onPress={() => onChange(false)}
               >
-                <Text className={`text-center ${!value ? 'text-white' : 'text-black'}`}>Variable</Text>
+                <Text className={`font-jakarta text-center ${!value ? 'text-white' : 'text-black'}`}>Variable</Text>
               </PressableScale>
             </View>
             <View style={{ flex: 1 }}>
@@ -119,13 +119,13 @@ export function CategoryFormModal({ visible, initialValue, onClose }: CategoryFo
                 className={`py-2 rounded-r-xl border ${value ? 'bg-brand border-brand' : 'border-gray-200'}`}
                 onPress={() => onChange(true)}
               >
-                <Text className={`text-center ${value ? 'text-white' : 'text-black'}`}>Fija / Recurrente</Text>
+                <Text className={`font-jakarta text-center ${value ? 'text-white' : 'text-black'}`}>Fija / Recurrente</Text>
               </PressableScale>
             </View>
           </View>
         )}
       />
-      <Text className="text-secondary text-xs mb-4">
+      <Text className="font-jakarta text-secondary text-xs mb-4">
         Las categorías fijas (Insumos básicos, Vivienda, Suscripciones...) replican sus movimientos automáticamente cada mes.
       </Text>
 

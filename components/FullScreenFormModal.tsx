@@ -8,6 +8,8 @@ interface FullScreenFormModalProps {
   visible: boolean;
   title: string;
   onClose: () => void;
+  /** Forwarded to AnimatedBottomSheet -- fires once this sheet has actually finished closing. */
+  onHidden?: () => void;
   children: React.ReactNode;
 }
 
@@ -19,9 +21,9 @@ interface FullScreenFormModalProps {
  * full-screen — a short form like "Información personal" used to leave a
  * huge empty area below it when presented edge-to-edge.
  */
-export function FullScreenFormModal({ visible, title, onClose, children }: FullScreenFormModalProps) {
+export function FullScreenFormModal({ visible, title, onClose, onHidden, children }: FullScreenFormModalProps) {
   return (
-    <AnimatedBottomSheet visible={visible} onClose={onClose}>
+    <AnimatedBottomSheet visible={visible} onClose={onClose} onHidden={onHidden}>
       <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
         <PressableScale
           onPress={onClose}
@@ -31,7 +33,7 @@ export function FullScreenFormModal({ visible, title, onClose, children }: FullS
         >
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </PressableScale>
-        <Text className="text-lg" style={headerTitleFont}>{title}</Text>
+        <Text className="font-jakarta text-lg" style={headerTitleFont}>{title}</Text>
       </View>
 
       <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">

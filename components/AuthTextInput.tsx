@@ -23,7 +23,7 @@ export function AuthTextInput({ icon, secureTextEntry, ...rest }: AuthTextInputP
     <View className="flex-row items-center border border-gray-200 rounded-xl px-3 mb-3" style={{ height: 48 }}>
       <Ionicons name={icon} size={20} color="#6b7280" style={{ marginRight: 8 }} />
       <TextInput
-        className="flex-1"
+        className="flex-1 font-jakarta"
         style={{ color: INPUT_TEXT_COLOR }}
         placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
         selectionColor={INPUT_SELECTION_COLOR}

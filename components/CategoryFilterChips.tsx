@@ -77,7 +77,7 @@ export function CategoryFilterChips({ categories, selectedCategoryId, onSelect, 
             !selectedCategoryId ? 'bg-brand border-brand' : 'border-gray-200'
           }`}
         >
-          <Text className={!selectedCategoryId ? 'text-white' : 'text-black'}>Todas</Text>
+          <Text className={`font-jakarta ${!selectedCategoryId ? 'text-white' : 'text-black'}`}>Todas</Text>
         </PressableScale>
 
         {categories.map((c) => {
@@ -91,7 +91,7 @@ export function CategoryFilterChips({ categories, selectedCategoryId, onSelect, 
               spring
               className={`px-3 py-2 mr-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
             >
-              <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+              <Text className={`font-jakarta ${selected ? 'text-white' : 'text-black'}`}>{c.nombre}</Text>
             </PressableScale>
           );
         })}

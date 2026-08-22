@@ -15,7 +15,7 @@ import { InboxHeaderButton } from '../../components/InboxHeaderButton';
 import { PressableScale } from '../../components/PressableScale';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
 import { PullToRefresh } from '../../components/PullToRefresh';
-import { theme, headerTitleFont } from '../../lib/theme';
+import { theme, headerTitleFont, cardShadow } from '../../lib/theme';
 import { ScreenSkeleton } from '../../components/Skeleton';
 import { useMovementModal } from '../../features/shared/movement-modal-context';
 import type { Category } from '../../features/categories/types';
@@ -52,16 +52,16 @@ const CategoryRow = memo(function CategoryRow({ category, pending, isPaying, onE
         spring
         haptics
         className="mx-4 my-1.5 bg-surface rounded-2xl border border-border px-4 py-4"
-        style={{ shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 0 }}
+        style={cardShadow}
         accessibilityRole="button"
         accessibilityLabel={`Editar ${category.nombre}`}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1 pr-2" style={{ gap: 6 }}>
-            <Text className="font-medium text-ink">{category.nombre}</Text>
+            <Text className="font-jakarta-medium text-ink">{category.nombre}</Text>
             {category.es_fija && (
               <View className="px-2 py-0.5 rounded-full bg-blue-50">
-                <Text className="text-brand text-xs font-medium">Fija</Text>
+                <Text className="text-brand text-xs font-jakarta-medium">Fija</Text>
               </View>
             )}
           </View>
@@ -90,7 +90,7 @@ const CategoryRow = memo(function CategoryRow({ category, pending, isPaying, onE
         </View>
 
         <View className="flex-row items-center justify-between mt-2">
-          <Text className="text-secondary text-xs">
+          <Text className="font-jakarta text-secondary text-xs">
             {count > 0 ? `${count} pendiente${count > 1 ? 's' : ''}` : 'Sin pendientes'}
           </Text>
           {count > 0 ? (
@@ -105,14 +105,14 @@ const CategoryRow = memo(function CategoryRow({ category, pending, isPaying, onE
               accessibilityRole="button"
               accessibilityLabel="Pagar todo"
             >
-              <Text className="text-white text-xs font-medium" style={{ fontVariant: ['tabular-nums'] }}>
+              <Text className="text-white text-xs font-jakarta-medium" style={{ fontVariant: ['tabular-nums'] }}>
                 {isPaying ? 'Pagando...' : `Pagar todo ($${total.toLocaleString('es-CL')})`}
               </Text>
             </PressableScale>
           ) : (
             <View className="flex-row items-center px-3 py-1.5 rounded-full bg-gray-100">
               <Ionicons name="checkmark-circle" size={14} color={theme.income} style={{ marginRight: 4 }} />
-              <Text className="text-secondary text-xs font-medium">Todo pagado</Text>
+              <Text className="text-secondary text-xs font-jakarta-medium">Todo pagado</Text>
             </View>
           )}
         </View>
@@ -189,7 +189,7 @@ function CategoriasScreen() {
             style={{ width: '100%', paddingHorizontal: 16, gap: 20 }}
           >
             <Text
-              className="text-white text-xl flex-shrink"
+              className="font-jakarta text-white text-xl flex-shrink"
               style={headerTitleFont}
               numberOfLines={1}
             >
@@ -202,7 +202,7 @@ function CategoriasScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Nueva categoría"
               >
-                <Text className="text-white font-medium text-sm" numberOfLines={1}>
+                <Text className="text-white font-jakarta-medium text-sm" numberOfLines={1}>
                   + Nueva categoría
                 </Text>
               </PressableScale>
@@ -225,7 +225,7 @@ function CategoriasScreen() {
               accessibilityRole="button"
               accessibilityLabel="Nueva categoría"
             >
-              <Text className="text-white font-medium text-sm">+ Nueva categoría</Text>
+              <Text className="text-white font-jakarta-medium text-sm">+ Nueva categoría</Text>
             </PressableScale>
             <InboxHeaderButton count={pendingCount} onPress={openInbox} />
           </View>

@@ -7,6 +7,17 @@ interface AnimatedBottomSheetProps {
   onClose: () => void;
   /** Overrides the backdrop-tap handler (e.g. disabled while a save is in flight). Defaults to onClose. */
   onBackdropPress?: () => void;
+  /**
+   * Fires once the exit animation has actually finished AND the underlying
+   * `<Modal>` has unmounted -- not when `onClose` is first called. Needed
+   * for "close this sheet, then open a different one" flows: presenting a
+   * new RN `<Modal>` (a real native UIViewController on iOS) while this
+   * one's is still mid-dismissal is exactly what caused the Editar-button
+   * freeze from MovementListItem -> MovementDetailSheet -> MovementFormModal
+   * (two native modal transitions racing on iOS). Same idea as
+   * ConfirmDialog's own `onHidden`.
+   */
+  onHidden?: () => void;
   maxHeightPercent?: number;
   /** Springs the entrance slide instead of timing it -- see MovementFormModal. Takes priority over entranceDuration/entranceEasing when set. Exit is untouched by design (shared across every sheet). */
   entranceSpring?: { damping: number; stiffness: number };
@@ -63,6 +74,7 @@ export function AnimatedBottomSheet({
   visible,
   onClose,
   onBackdropPress,
+  onHidden,
   maxHeightPercent = 85,
   entranceSpring,
   entranceDuration = 400,
@@ -93,7 +105,10 @@ export function AnimatedBottomSheet({
     } else if (mounted) {
       backdropOpacity.value = withTiming(0, { duration: 200 });
       translateY.value = withTiming(OFFSCREEN_Y, { duration: 220 }, (finished) => {
-        if (finished) runOnJS(setMounted)(false);
+        if (finished) {
+          runOnJS(setMounted)(false);
+          if (onHidden) runOnJS(onHidden)();
+        }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

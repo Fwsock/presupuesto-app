@@ -21,6 +21,7 @@ import { PullToRefresh } from '../../components/PullToRefresh';
 import { useSelectedMonth } from '../../features/shared/selected-month';
 import { withMinDuration } from '../../features/shared/withMinDuration';
 import { useMovementFilter } from '../../features/shared/movement-filter-context';
+import { cardShadow } from '../../lib/theme';
 
 // More months before/after = a denser chart (per UX request), while still
 // keeping the selected month roughly centered.
@@ -198,31 +199,28 @@ function ResumenScreen() {
                       .claude/skills/ui-ux-design. Tabular nums on every peso
                       figure so the digits don't visually shift width as they
                       change month to month. */}
-                  <View
-                    className="mx-4 mt-4 bg-surface rounded-2xl border border-border p-6"
-                    style={{ shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 0 }}
-                  >
+                  <View className="mx-4 mt-4 bg-surface rounded-2xl border border-border p-6" style={cardShadow}>
                     <View className="items-center">
-                      <Text className="text-secondary text-sm">Saldo disponible</Text>
-                      <Text className="text-4xl font-bold text-ink mt-1" style={{ fontVariant: ['tabular-nums'] }}>
+                      <Text className="font-jakarta text-secondary text-sm">Saldo disponible</Text>
+                      <Text className="text-4xl font-jakarta-bold text-ink mt-1" style={{ fontVariant: ['tabular-nums'] }}>
                         ${summary.saldoDisponible.toLocaleString('es-CL')}
                       </Text>
                     </View>
 
                     <View className="flex-row justify-around mt-6 pt-6 border-t border-border">
                       <View className="items-center">
-                        <Text className="text-secondary text-xs">Ingresos</Text>
+                        <Text className="font-jakarta text-secondary text-xs">Ingresos</Text>
                         <Text
-                          className="text-income font-semibold text-base mt-0.5"
+                          className="text-income font-jakarta-semibold text-base mt-0.5"
                           style={{ fontVariant: ['tabular-nums'] }}
                         >
                           ${summary.totalIngresos.toLocaleString('es-CL')}
                         </Text>
                       </View>
                       <View className="items-center">
-                        <Text className="text-secondary text-xs">Gastos</Text>
+                        <Text className="font-jakarta text-secondary text-xs">Gastos</Text>
                         <Text
-                          className={`font-semibold text-base mt-0.5 ${summary.totalGastos > 0 ? 'text-danger' : 'text-ink'}`}
+                          className={`font-jakarta-semibold text-base mt-0.5 ${summary.totalGastos > 0 ? 'text-danger' : 'text-ink'}`}
                           style={{ fontVariant: ['tabular-nums'] }}
                         >
                           {summary.totalGastos > 0 ? '-' : ''}${summary.totalGastos.toLocaleString('es-CL')}

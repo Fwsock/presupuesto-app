@@ -27,7 +27,7 @@ export function DateField({ value, onChange }: DateFieldProps) {
         accessibilityRole="button"
         accessibilityLabel="Seleccionar fecha"
       >
-        <Text className={value ? 'text-black' : 'text-gray-400'}>{value ? formatDisplayDate(value) : 'Selecciona la fecha'}</Text>
+        <Text className={`font-jakarta ${value ? 'text-black' : 'text-gray-400'}`}>{value ? formatDisplayDate(value) : 'Selecciona la fecha'}</Text>
       </PressableScale>
 
       <CalendarPickerModal

@@ -64,14 +64,14 @@ const PendingNotificationRow = memo(function PendingNotificationRow({
     >
       <MovementIconBadge label={notification.comercio} iconName={icono} size={44} style={{ marginRight: 12 }} />
       <View className="flex-1">
-        <Text className="font-medium" numberOfLines={1}>
+        <Text className="font-jakarta-medium" numberOfLines={1}>
           {notification.comercio ?? 'Comercio no detectado'}
         </Text>
-        <Text className="text-secondary text-xs" numberOfLines={1}>
+        <Text className="font-jakarta text-secondary text-xs" numberOfLines={1}>
           {notification.rawText}
         </Text>
       </View>
-      <Text className={`font-semibold mr-3 ${isGasto ? 'text-danger' : 'text-income'}`}>
+      <Text className={`font-jakarta-semibold mr-3 ${isGasto ? 'text-danger' : 'text-income'}`}>
         {notification.monto != null ? `${isGasto ? '-' : '+'}$${notification.monto.toLocaleString('es-CL')}` : '—'}
       </Text>
       <PressableScale
@@ -162,19 +162,19 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
 
         {showAccessBanner && (
           <View className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
-            <Text className="text-blue-900 mb-2">
+            <Text className="font-jakarta text-blue-900 mb-2">
               Activa el acceso a notificaciones para capturar avisos bancarios automáticamente, sin tener que
               pegarlos a mano.
             </Text>
             <PressableScale onPress={openNotificationAccessSettings}>
-              <Text className="text-blue-700 font-semibold">Abrir ajustes</Text>
+              <Text className="text-blue-700 font-jakarta-semibold">Abrir ajustes</Text>
             </PressableScale>
           </View>
         )}
 
         {isTextRecognitionAvailable() && experimentalScanEnabled && (
           <View className="mb-5">
-            <Text className="text-secondary text-xs font-semibold uppercase mb-2">Agregar movimiento</Text>
+            <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Agregar movimiento</Text>
             <View className="flex-row" style={{ gap: 10 }}>
               <QuickActionButton
                 icon="image-outline"
@@ -195,11 +195,11 @@ export function PendingNotificationsInbox({ visible, onClose }: PendingNotificat
         )}
 
         <View className="pt-4 border-t border-border">
-          <Text className="text-secondary text-xs font-semibold uppercase mb-2">
+          <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">
             {pending && pending.length > 0 ? `Pendientes (${pending.length})` : 'Pendientes'}
           </Text>
           {!pending || pending.length === 0 ? (
-            <Text className="text-secondary text-sm py-6 text-center">No hay notificaciones pendientes.</Text>
+            <Text className="font-jakarta text-secondary text-sm py-6 text-center">No hay notificaciones pendientes.</Text>
           ) : (
             pending.map((notification) => (
               <Animated.View

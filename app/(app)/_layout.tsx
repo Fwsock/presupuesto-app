@@ -34,7 +34,7 @@ function firstName(nombre: string | null | undefined): string | null {
 // (white, semibold) itself.
 function HeaderTitleText({ text }: { text: string }) {
   return (
-    <Text style={{ color: '#ffffff', fontSize: 20, ...headerTitleFont }} numberOfLines={1}>
+    <Text className="font-jakarta" style={{ color: '#ffffff', fontSize: 20, ...headerTitleFont }} numberOfLines={1}>
       {text}
     </Text>
   );

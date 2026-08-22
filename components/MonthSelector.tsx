@@ -63,7 +63,7 @@ export function MonthSelector({ year, month, onChange }: MonthSelectorProps) {
           accessibilityRole="button"
           accessibilityLabel="Elegir mes y año"
         >
-          <Animated.Text style={labelStyle} className="text-base font-semibold text-ink mr-1">
+          <Animated.Text style={labelStyle} className="text-base font-jakarta-semibold text-ink mr-1">
             {MONTH_NAMES[month - 1]} {year}
           </Animated.Text>
           <Ionicons name="chevron-down" size={16} color="#64748B" />

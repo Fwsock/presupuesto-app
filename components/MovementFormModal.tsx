@@ -294,7 +294,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
           >
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </PressableScale>
-          <Text className="text-lg font-semibold">{mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}</Text>
+          <Text className="text-lg font-jakarta-semibold">{mode === 'edit' ? 'Editar movimiento' : 'Nuevo movimiento'}</Text>
         </View>
 
         <ScrollView className="px-4 pt-4" contentContainerClassName="pb-8" keyboardShouldPersistTaps="handled">
@@ -304,7 +304,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
 
           {/* Section 1: Concepto y Monto */}
           <View className="mb-5">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Concepto y monto</Text>
+            <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Concepto y monto</Text>
 
             <View className="flex-row items-start mb-1">
               <PressableScale
@@ -321,7 +321,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   name="concepto"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-200 rounded-xl px-3 py-2"
+                      className="font-jakarta border border-gray-200 rounded-xl px-3 py-2"
                       style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Concepto"
                       placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -332,17 +332,17 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                     />
                   )}
                 />
-                {errors.concepto && <Text className="text-danger mt-1">{errors.concepto.message}</Text>}
+                {errors.concepto && <Text className="font-jakarta text-danger mt-1">{errors.concepto.message}</Text>}
               </View>
             </View>
-            <Text className="text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
+            <Text className="font-jakarta text-gray-400 text-xs mb-3 ml-[60px]">Toca el ícono para elegir uno manualmente.</Text>
 
             <Controller
               control={control}
               name="monto"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  className="border border-gray-200 rounded-xl px-3 py-2 mb-1"
+                  className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-1"
                   style={{ color: INPUT_TEXT_COLOR }}
                   placeholder={
                     !esCuota
@@ -363,14 +363,14 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               )}
             />
             {esCuota && (!hasExistingGroup || cuotaCountChanged) && (
-              <Text className="text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
+              <Text className="font-jakarta text-gray-500 text-xs mb-1">Se divide entre las cuotas, no es el valor de cada una.</Text>
             )}
-            {errors.monto && <Text className="text-danger">{errors.monto.message}</Text>}
+            {errors.monto && <Text className="font-jakarta text-danger">{errors.monto.message}</Text>}
           </View>
 
           {/* Section 2: Tipo y Categoría */}
           <View className="mb-5 pt-5 border-t border-border">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Tipo y categoría</Text>
+            <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Tipo y categoría</Text>
 
             <Controller
               control={control}
@@ -384,7 +384,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       className={`py-2 rounded-l-xl border ${value === 'ingreso' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('ingreso')}
                     >
-                      <Text className={`text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
+                      <Text className={`font-jakarta text-center ${value === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
                     </PressableScale>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -392,7 +392,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       className={`py-2 rounded-r-xl border ${value === 'gasto' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('gasto')}
                     >
-                      <Text className={`text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
+                      <Text className={`font-jakarta text-center ${value === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
                     </PressableScale>
                   </View>
                 </View>
@@ -413,7 +413,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                           onPress={() => onChange(selected ? '' : c.id)}
                           className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
                         >
-                          <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+                          <Text className={`font-jakarta ${selected ? 'text-white' : 'text-black'}`}>{c.nombre}</Text>
                         </PressableScale>
                       );
                     })}
@@ -421,19 +421,19 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                 </ScrollView>
               )}
             />
-            {errors.categoryId && <Text className="text-danger mt-2">{errors.categoryId.message}</Text>}
+            {errors.categoryId && <Text className="font-jakarta text-danger mt-2">{errors.categoryId.message}</Text>}
           </View>
 
           {/* Section 3: Detalles */}
           <View className="mb-5 pt-5 border-t border-border">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Detalles</Text>
+            <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Detalles</Text>
 
             <Controller
               control={control}
               name="fecha"
               render={({ field: { onChange, value } }) => <DateField value={value} onChange={onChange} />}
             />
-            {errors.fecha && <Text className="text-danger mb-2">{errors.fecha.message}</Text>}
+            {errors.fecha && <Text className="font-jakarta text-danger mb-2">{errors.fecha.message}</Text>}
 
             <Controller
               control={control}
@@ -447,7 +447,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       className={`py-2 rounded-l-xl border ${value === 'pendiente' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('pendiente')}
                     >
-                      <Text className={`text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
+                      <Text className={`font-jakarta text-center ${value === 'pendiente' ? 'text-white' : 'text-black'}`}>Pendiente</Text>
                     </PressableScale>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -455,7 +455,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                       className={`py-2 rounded-r-xl border ${value === 'pagado' ? 'bg-brand border-brand' : 'border-gray-200'}`}
                       onPress={() => onChange('pagado')}
                     >
-                      <Text className={`text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
+                      <Text className={`font-jakarta text-center ${value === 'pagado' ? 'text-white' : 'text-black'}`}>Pagado</Text>
                     </PressableScale>
                   </View>
                 </View>
@@ -467,7 +467,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
               name="notas"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  className="border border-gray-200 rounded-xl px-3 py-2"
+                  className="font-jakarta border border-gray-200 rounded-xl px-3 py-2"
                   style={{ color: INPUT_TEXT_COLOR }}
                   placeholder="Notas (opcional)"
                   placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -482,20 +482,20 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
 
           {/* Section 4: Opciones avanzadas */}
           <View className="mb-5 pt-5 border-t border-border">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Opciones avanzadas</Text>
+            <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Opciones avanzadas</Text>
 
             <Controller
               control={control}
               name="esCuota"
               render={({ field: { onChange, value } }) => (
                 <View className="flex-row items-center justify-between">
-                  <Text>¿Es en cuotas?</Text>
+                  <Text className="font-jakarta">¿Es en cuotas?</Text>
                   <Switch value={value} onValueChange={onChange} disabled={hasExistingGroup} />
                 </View>
               )}
             />
             {hasExistingGroup && (
-              <Text className="text-gray-400 text-xs mt-1">
+              <Text className="font-jakarta text-gray-400 text-xs mt-1">
                 Ya es parte de una compra en cuotas ({movement!.cuota_numero}/{movement!.cuota_total}) — no se puede
                 volver a pago único desde acá.
               </Text>
@@ -508,7 +508,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                   name="totalCuotas"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-200 rounded-xl px-3 py-2 mt-3 mb-1"
+                      className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mt-3 mb-1"
                       style={{ color: INPUT_TEXT_COLOR }}
                       placeholder="Cuotas"
                       placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -520,15 +520,15 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
                     />
                   )}
                 />
-                {errors.totalCuotas && <Text className="text-danger">{errors.totalCuotas.message}</Text>}
+                {errors.totalCuotas && <Text className="font-jakarta text-danger">{errors.totalCuotas.message}</Text>}
                 {hasExistingGroup && !cuotaCountChanged && (
-                  <Text className="text-gray-400 text-xs mt-1">
+                  <Text className="font-jakarta text-gray-400 text-xs mt-1">
                     Cambia este número para dividir el saldo restante entre otra cantidad de cuotas — las cuotas
                     anteriores a la {movement!.cuota_numero} no se tocan.
                   </Text>
                 )}
                 {cuotaCountChanged && (
-                  <Text className="text-gray-500 text-xs mt-1">
+                  <Text className="font-jakarta text-gray-500 text-xs mt-1">
                     Esto solo cambia la cuota {movement!.cuota_numero} en adelante — las cuotas anteriores no se
                     tocan. El campo "Monto" de arriba pasa a ser el saldo restante a repartir entre las cuotas desde
                     esta en adelante, no el total original de la compra.

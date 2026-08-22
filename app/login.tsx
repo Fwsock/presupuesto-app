@@ -81,7 +81,7 @@ export default function LoginScreen() {
         <AuthHeader subtitle="Inicia sesión para continuar" />
 
         {showPasswordResetBanner && (
-          <Text className="text-income mb-4 text-center">
+          <Text className="font-jakarta text-income mb-4 text-center">
             Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.
           </Text>
         )}
@@ -115,13 +115,13 @@ export default function LoginScreen() {
           )}
         />
 
-        {formError && <Text className="text-danger mb-2">{formError}</Text>}
+        {formError && <Text className="font-jakarta text-danger mb-2">{formError}</Text>}
 
         <Button title="Ingresar" loadingLabel="Ingresando..." onPress={handleSubmit(onSubmit)} loading={isSubmitting} disabled={isSubmitting} />
 
         <View className="flex-row items-center my-5">
           <View className="flex-1 h-px bg-border" />
-          <Text className="text-secondary text-xs mx-3">o</Text>
+          <Text className="font-jakarta text-secondary text-xs mx-3">o</Text>
           <View className="flex-1 h-px bg-border" />
         </View>
 
@@ -138,7 +138,7 @@ export default function LoginScreen() {
           accessibilityLabel="Continuar con Google"
         >
           <GoogleLogo size={20} />
-          <Text className="text-ink font-medium ml-3">
+          <Text className="text-ink font-jakarta-medium ml-3">
             {googleLoading ? 'Conectando...' : 'Continuar con Google'}
           </Text>
         </PressableScale>

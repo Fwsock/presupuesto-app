@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from './PressableScale';
+import { cardShadow } from '../lib/theme';
 import type { CategoryTotal } from '../features/movements/summary';
 
 interface CategoryTotalsListProps {
@@ -33,9 +34,15 @@ const CategoryTotalRow = memo(function CategoryTotalRow({ total: t, isLast, onPr
       haptics
       className={`flex-row items-center justify-between px-4 py-4 ${isLast ? '' : 'border-b border-border'}`}
     >
-      <Text className="flex-1 text-ink font-medium">{t.nombre}</Text>
+      <Text className="flex-1 text-ink font-jakarta-medium">{t.nombre}</Text>
       <Text
-        className={t.total === 0 ? 'text-ink font-semibold' : t.tipo === 'ingreso' ? 'text-income font-semibold' : 'text-danger font-semibold'}
+        className={
+          t.total === 0
+            ? 'text-ink font-jakarta-semibold'
+            : t.tipo === 'ingreso'
+              ? 'text-income font-jakarta-semibold'
+              : 'text-danger font-jakarta-semibold'
+        }
         style={{ fontVariant: ['tabular-nums'] }}
       >
         {t.total > 0 && t.tipo === 'gasto' ? '-' : ''}${t.total.toLocaleString('es-CL')}
@@ -51,10 +58,7 @@ export function CategoryTotalsList({ totals, onPressCategory }: CategoryTotalsLi
     // .claude/skills/ui-ux-design) -- one elevated surface for the whole
     // list, rows separated by a hairline divider, instead of each category
     // floating as plain text directly on the screen background.
-    <View
-      className="mx-4 mt-4 bg-surface rounded-2xl border border-border"
-      style={{ shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 0 }}
-    >
+    <View className="mx-4 mt-4 bg-surface rounded-2xl border border-border" style={cardShadow}>
       {totals.map((t, index) => (
         <CategoryTotalRow key={t.categoryId} total={t} isLast={index === totals.length - 1} onPress={onPressCategory} />
       ))}

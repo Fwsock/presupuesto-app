@@ -30,7 +30,7 @@ export function InboxHeaderButton({ count, onPress }: InboxHeaderButtonProps) {
             className="absolute -top-1.5 -right-2 bg-danger rounded-full items-center justify-center px-1"
             style={{ minWidth: 16, height: 16 }}
           >
-            <Text className="text-white text-[10px] font-bold">{count > 9 ? '9+' : count}</Text>
+            <Text className="text-white text-[10px] font-jakarta-bold">{count > 9 ? '9+' : count}</Text>
           </View>
         )}
       </View>

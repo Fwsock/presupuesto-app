@@ -13,6 +13,8 @@ interface MovementDetailSheetProps {
   movement: Movement;
   category: Category | undefined;
   onClose: () => void;
+  /** Fires once this sheet has actually finished closing (exit animation done) -- see AnimatedBottomSheet's onHidden. */
+  onHidden?: () => void;
   onEdit: () => void;
   onDelete: () => void;
   /** True for recurring-income-generated movements -- hides both actions, matching the row's previous lock behavior. */
@@ -30,6 +32,7 @@ export function MovementDetailSheet({
   movement,
   category,
   onClose,
+  onHidden,
   onEdit,
   onDelete,
   isLocked,
@@ -42,12 +45,12 @@ export function MovementDetailSheet({
   const notas = movement.notas?.trim();
 
   return (
-    <FullScreenFormModal visible={visible} title="Detalle del movimiento" onClose={onClose}>
+    <FullScreenFormModal visible={visible} title="Detalle del movimiento" onClose={onClose} onHidden={onHidden}>
       <View className="items-center mb-6">
         <MovementIconBadge label={movement.concepto} iconName={movement.icono} size={64} style={{ marginBottom: 12 }} />
-        <Text className="text-lg font-semibold text-center">{title}</Text>
+        <Text className="text-lg font-jakarta-semibold text-center">{title}</Text>
         <Text
-          className={`text-3xl font-bold mt-2 ${isGasto ? 'text-danger' : 'text-income'}`}
+          className={`text-3xl font-jakarta-bold mt-2 ${isGasto ? 'text-danger' : 'text-income'}`}
           style={{ fontVariant: ['tabular-nums'] }}
         >
           {isGasto ? '-' : ''}${movement.monto.toLocaleString('es-CL')}
@@ -63,26 +66,26 @@ export function MovementDetailSheet({
           color={isPagado ? theme.income : '#f59e0b'}
           style={{ marginRight: 6 }}
         />
-        <Text className={`text-sm font-medium ${isPagado ? 'text-green-700' : 'text-orange-700'}`}>
+        <Text className={`text-sm font-jakarta-medium ${isPagado ? 'text-green-700' : 'text-orange-700'}`}>
           {isPagado ? 'Pagado' : 'Pendiente'}
         </Text>
       </View>
 
       <View className="border-t border-border pt-4" style={{ gap: 16 }}>
         <View className="flex-row justify-between">
-          <Text className="text-secondary">Categoría</Text>
-          <Text className="font-medium">{category?.nombre ?? 'Sin categoría'}</Text>
+          <Text className="font-jakarta text-secondary">Categoría</Text>
+          <Text className="font-jakarta-medium">{category?.nombre ?? 'Sin categoría'}</Text>
         </View>
         <View className="flex-row justify-between">
-          <Text className="text-secondary">Fecha</Text>
-          <Text className="font-medium">{formatFullDate(movement.fecha)}</Text>
+          <Text className="font-jakarta text-secondary">Fecha</Text>
+          <Text className="font-jakarta-medium">{formatFullDate(movement.fecha)}</Text>
         </View>
       </View>
 
       {notas ? (
         <View className="border-t border-border mt-4 pt-4">
-          <Text className="text-secondary mb-2">Notas</Text>
-          <Text className="text-gray-800 leading-5">{notas}</Text>
+          <Text className="font-jakarta text-secondary mb-2">Notas</Text>
+          <Text className="font-jakarta text-gray-800 leading-5">{notas}</Text>
         </View>
       ) : null}
 
@@ -96,7 +99,7 @@ export function MovementDetailSheet({
               accessibilityLabel="Editar movimiento"
             >
               <Ionicons name="pencil-outline" size={18} color="#374151" style={{ marginRight: 6 }} />
-              <Text className="font-semibold text-gray-700">Editar</Text>
+              <Text className="font-jakarta-semibold text-gray-700">Editar</Text>
             </PressableScale>
           </View>
           <View style={{ flex: 1 }}>
@@ -107,7 +110,7 @@ export function MovementDetailSheet({
               accessibilityLabel="Eliminar movimiento"
             >
               <Ionicons name="trash-outline" size={18} color="#ffffff" style={{ marginRight: 6 }} />
-              <Text className="font-semibold text-white">Eliminar</Text>
+              <Text className="font-jakarta-semibold text-white">Eliminar</Text>
             </PressableScale>
           </View>
         </View>

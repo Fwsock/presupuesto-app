@@ -178,7 +178,7 @@ export function PullToRefresh({
   // Drives the WHOLE strip's visibility (icon + label) directly off
   // translateY on the UI thread -- NOT off the `phase` JS state below, which
   // only ever updates via a runOnJS round-trip and used to be the sole
-  // gate for showing the label (`{phase !== 'idle' && <Text>}`). That round
+  // gate for showing the label (`{phase !== 'idle' && <Text className="font-jakarta">}`). That round
   // trip can lag a render or two behind translateY actually reaching 0, and
   // on a real device that lag was enough for "Desliza para actualizar" to
   // sit fully opaque, on top of the settled content, for a couple of
@@ -220,7 +220,7 @@ export function PullToRefresh({
             <Ionicons name="arrow-down" size={20} color={tintColor} />
           )}
         </Animated.View>
-        <Text style={{ color: tintColor, fontSize: 12, marginTop: 4 }}>{label}</Text>
+        <Text className="font-jakarta" style={{ color: tintColor, fontSize: 12, marginTop: 4 }}>{label}</Text>
       </Animated.View>
 
       <GestureDetector gesture={pan}>

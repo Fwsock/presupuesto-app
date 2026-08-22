@@ -65,7 +65,7 @@ function AccordionRow({ question, answer, isOpen, onToggle, isLast }: AccordionR
         accessibilityState={{ expanded: isOpen }}
         accessibilityLabel={question}
       >
-        <Text className="flex-1 font-semibold pr-3">{question}</Text>
+        <Text className="flex-1 font-jakarta-semibold pr-3">{question}</Text>
         <Animated.View style={chevronStyle}>
           <Ionicons name="chevron-down" size={18} color="#9ca3af" />
         </Animated.View>
@@ -76,7 +76,7 @@ function AccordionRow({ question, answer, isOpen, onToggle, isLast }: AccordionR
           entering={FadeIn.duration(TRANSITION_DURATION)}
           exiting={FadeOut.duration(TRANSITION_DURATION * 0.7)}
         >
-          <Text className="text-gray-800 pb-3">{answer}</Text>
+          <Text className="font-jakarta text-gray-800 pb-3">{answer}</Text>
         </Animated.View>
       )}
     </Animated.View>

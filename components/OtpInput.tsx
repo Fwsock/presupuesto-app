@@ -42,7 +42,7 @@ export function OtpInput({ length, value, onChange, autoFocus = false, disabled 
             }`}
             style={{ width: BOX_SIZE, height: BOX_SIZE + 6 }}
           >
-            <Text className="text-xl font-semibold">{digit}</Text>
+            <Text className="text-xl font-jakarta-semibold">{digit}</Text>
           </View>
         );
       })}

@@ -34,7 +34,7 @@ export function CategoryFilterToast({ categoryName, onReset }: CategoryFilterToa
         className="bg-gray-900 flex-row items-center px-4 py-2.5 rounded-full"
         style={{ maxWidth: '100%' }}
       >
-        <Text className="text-white text-sm font-medium flex-shrink" numberOfLines={1}>
+        <Text className="text-white text-sm font-jakarta-medium flex-shrink" numberOfLines={1}>
           Filtrando movimientos por: {categoryName}
         </Text>
         <PressableScale
@@ -44,7 +44,7 @@ export function CategoryFilterToast({ categoryName, onReset }: CategoryFilterToa
           accessibilityRole="button"
           accessibilityLabel="Restablecer filtro"
         >
-          <Text className="text-blue-300 text-sm font-semibold underline">Restablecer</Text>
+          <Text className="text-blue-300 text-sm font-jakarta-semibold underline">Restablecer</Text>
         </PressableScale>
       </Animated.View>
     </View>

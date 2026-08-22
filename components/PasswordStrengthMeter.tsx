@@ -24,7 +24,7 @@ function ChecklistItem({ met, label }: { met: boolean; label: string }) {
         color={met ? theme.income : '#9ca3af'}
         style={{ marginRight: 6 }}
       />
-      <Text className={met ? 'text-income' : 'text-gray-500'}>{label}</Text>
+      <Text className={`font-jakarta ${met ? 'text-income' : 'text-gray-500'}`}>{label}</Text>
     </View>
   );
 }
@@ -51,7 +51,7 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
         ))}
       </View>
       {password.length > 0 && (
-        <Text className="text-xs mb-2" style={{ color }}>
+        <Text className="font-jakarta text-xs mb-2" style={{ color }}>
           Fortaleza: {LEVEL_LABEL[level]}
         </Text>
       )}

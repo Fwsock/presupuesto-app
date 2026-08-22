@@ -67,7 +67,7 @@ export function MonthYearPickerModal({ visible, year, month, onSelect, onClose }
             >
               <Ionicons name="chevron-back" size={22} color="#111827" />
             </PressableScale>
-            <Text className="text-base font-semibold">{viewYear}</Text>
+            <Text className="text-base font-jakarta-semibold">{viewYear}</Text>
             <PressableScale
               onPress={() => setViewYear(viewYear + 1)}
               style={{ width: 40, height: 40 }}
@@ -93,7 +93,7 @@ export function MonthYearPickerModal({ visible, year, month, onSelect, onClose }
                     accessibilityRole="button"
                     accessibilityLabel={`${MONTH_NAMES[m - 1]} ${viewYear}`}
                   >
-                    <Text className={`font-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
+                    <Text className={`font-jakarta-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
                   </PressableScale>
                 );
               })}

@@ -114,7 +114,7 @@ export const MovementIconBadge = memo(function MovementIconBadge({
         {brand.icon ? (
           <Ionicons name={brand.icon as keyof typeof Ionicons.glyphMap} size={iconSize} color="#fff" />
         ) : (
-          <Text style={{ fontSize: Math.round(size * 0.36), fontWeight: '700', color: '#fff' }}>{brand.mark}</Text>
+          <Text className="font-jakarta" style={{ fontSize: Math.round(size * 0.36), fontWeight: '700', color: '#fff' }}>{brand.mark}</Text>
         )}
       </View>
     );

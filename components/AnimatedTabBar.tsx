@@ -99,7 +99,7 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: Botto
             accessibilityLabel={typeof options.title === 'string' ? options.title : route.name}
           >
             {options.tabBarIcon?.({ focused, color, size: 24 })}
-            <Text
+            <Text className="font-jakarta"
               style={{ fontSize: 11, color, marginTop: 2, maxWidth: '100%' }}
               numberOfLines={1}
               ellipsizeMode="tail"

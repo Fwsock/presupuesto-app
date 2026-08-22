@@ -100,9 +100,9 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
             >
               <Ionicons name={icon ?? 'trash-outline'} size={28} color={iconColor ?? theme.danger} />
             </View>
-            <Text className="text-lg font-bold text-center">{title}</Text>
+            <Text className="text-lg font-jakarta-bold text-center">{title}</Text>
           </View>
-          <Text className="text-secondary text-center mb-5">{message}</Text>
+          <Text className="font-jakarta text-secondary text-center mb-5">{message}</Text>
 
           {isTwoWayWithCancel ? (
             <View className="flex-row" style={{ gap: 10 }}>
@@ -114,7 +114,7 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                       onPress={action.onPress}
                       className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
                     >
-                      <Text className={`font-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
+                      <Text className={`font-jakarta-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
                     </PressableScale>
                   </View>
                 );
@@ -130,7 +130,7 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                     onPress={action.onPress}
                     className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
                   >
-                    <Text className={`font-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
+                    <Text className={`font-jakarta-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
                   </PressableScale>
                 );
               })}

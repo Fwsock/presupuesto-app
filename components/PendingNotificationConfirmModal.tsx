@@ -116,13 +116,13 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
 
       <View className="items-center mb-5">
         <MovementIconBadge label={concepto} iconName={icono} size={56} style={{ marginBottom: 8 }} />
-        <Text className="text-secondary text-xs">Detectado automáticamente</Text>
+        <Text className="font-jakarta text-secondary text-xs">Detectado automáticamente</Text>
       </View>
 
       <View className="mb-4">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Comercio</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Comercio</Text>
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Ej: Lider, Uber, Jumbo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -134,9 +134,9 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       </View>
 
       <View className="mb-4">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Monto</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Monto</Text>
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Monto"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -149,19 +149,19 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       </View>
 
       <View className="mb-4">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Fecha</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Fecha</Text>
         <DateField value={fecha} onChange={setFecha} />
       </View>
 
       <View className="mb-4">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Tipo</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Tipo</Text>
         <View className="flex-row" style={{ gap: 0 }}>
           <View style={{ flex: 1 }}>
             <PressableScale
               className={`py-2 rounded-l-xl border ${tipo === 'ingreso' ? 'bg-brand border-brand' : 'border-gray-200'}`}
               onPress={() => setTipo('ingreso')}
             >
-              <Text className={`text-center ${tipo === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
+              <Text className={`font-jakarta text-center ${tipo === 'ingreso' ? 'text-white' : 'text-black'}`}>Ingreso</Text>
             </PressableScale>
           </View>
           <View style={{ flex: 1 }}>
@@ -169,16 +169,16 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
               className={`py-2 rounded-r-xl border ${tipo === 'gasto' ? 'bg-brand border-brand' : 'border-gray-200'}`}
               onPress={() => setTipo('gasto')}
             >
-              <Text className={`text-center ${tipo === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
+              <Text className={`font-jakarta text-center ${tipo === 'gasto' ? 'text-white' : 'text-black'}`}>Gasto</Text>
             </PressableScale>
           </View>
         </View>
       </View>
 
       <View className="mb-4">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Notas</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Notas</Text>
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Notas (opcional)"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -191,7 +191,7 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       </View>
 
       <View className="mb-5">
-        <Text className="text-secondary text-xs font-semibold uppercase mb-2">Categoría</Text>
+        <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Categoría</Text>
         <View className="flex-row flex-wrap" style={{ gap: 8 }}>
           {categories?.map((c) => {
             const selected = categoryId === c.id;
@@ -201,7 +201,7 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
                 onPress={() => setCategoryId(selected ? '' : c.id)}
                 className={`px-3 py-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
               >
-                <Text className={selected ? 'text-white' : 'text-black'}>{c.nombre}</Text>
+                <Text className={`font-jakarta ${selected ? 'text-white' : 'text-black'}`}>{c.nombre}</Text>
               </PressableScale>
             );
           })}
@@ -211,21 +211,21 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
       <View className="mb-5 pt-4 border-t border-border">
         {notification.source === 'scan' ? (
           <>
-            <Text className="text-secondary text-xs font-semibold uppercase mb-2">Información extraída</Text>
+            <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Información extraída</Text>
             <View className="bg-gray-50 rounded-xl p-3" style={{ gap: 6 }}>
               <View className="flex-row justify-between">
-                <Text className="text-secondary text-xs">Comercio</Text>
-                <Text className="text-gray-800 text-xs font-medium">{notification.comercio ?? 'No detectado'}</Text>
+                <Text className="font-jakarta text-secondary text-xs">Comercio</Text>
+                <Text className="text-gray-800 text-xs font-jakarta-medium">{notification.comercio ?? 'No detectado'}</Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-secondary text-xs">Monto total</Text>
-                <Text className="text-gray-800 text-xs font-medium">
+                <Text className="font-jakarta text-secondary text-xs">Monto total</Text>
+                <Text className="text-gray-800 text-xs font-jakarta-medium">
                   {notification.monto != null ? `$${notification.monto.toLocaleString('es-CL')}` : 'No detectado'}
                 </Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-secondary text-xs">Fecha</Text>
-                <Text className="text-gray-800 text-xs font-medium">
+                <Text className="font-jakarta text-secondary text-xs">Fecha</Text>
+                <Text className="text-gray-800 text-xs font-jakarta-medium">
                   {notification.fecha ? formatDisplayDate(notification.fecha) : 'No detectada'}
                 </Text>
               </View>
@@ -233,9 +233,9 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
 
             {notification.items.length > 0 && (
               <View className="mt-3">
-                <Text className="text-secondary text-xs font-semibold uppercase mb-2">Items detectados</Text>
+                <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Items detectados</Text>
                 {notification.items.map((item, index) => (
-                  <Text key={index} className="text-gray-600 text-xs mb-1">
+                  <Text key={index} className="font-jakarta text-gray-600 text-xs mb-1">
                     {item.replace(/\s+/g, ' ').trim()}
                   </Text>
                 ))}
@@ -246,23 +246,23 @@ export function PendingNotificationConfirmModal({ visible, notification, onClose
                 screen -- see the module-level comment for why this isn't
                 gated behind __DEV__ in this project specifically. */}
             <PressableScale onPress={() => setShowRawText((v) => !v)} className="mt-3 py-1">
-              <Text className="text-brand text-xs font-medium">
+              <Text className="text-brand text-xs font-jakarta-medium">
                 {showRawText ? 'Ocultar texto OCR crudo' : 'Ver texto OCR crudo'}
               </Text>
             </PressableScale>
-            {showRawText && <Text className="text-secondary text-xs italic mt-2">{notification.rawText}</Text>}
+            {showRawText && <Text className="font-jakarta text-secondary text-xs italic mt-2">{notification.rawText}</Text>}
           </>
         ) : (
           <>
-            <Text className="text-secondary text-xs font-semibold uppercase mb-2">Notificación original</Text>
-            <Text className="text-secondary text-xs italic">{notification.rawText}</Text>
+            <Text className="text-secondary text-xs font-jakarta-semibold uppercase mb-2">Notificación original</Text>
+            <Text className="font-jakarta text-secondary text-xs italic">{notification.rawText}</Text>
           </>
         )}
       </View>
 
       <Button title="Guardar" onPress={handleConfirm} loading={confirmNotification.isPending} disabled={isSaving} />
       <PressableScale onPress={handleDiscard} disabled={isSaving} className="py-2 items-center">
-        <Text className="text-danger font-semibold">Descartar</Text>
+        <Text className="text-danger font-jakarta-semibold">Descartar</Text>
       </PressableScale>
     </FullScreenFormModal>
   );

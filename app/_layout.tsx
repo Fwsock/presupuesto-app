@@ -8,6 +8,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, DefaultTheme, type Theme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
+import {
+  useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { queryClient } from '../lib/queryClient';
 import { useSession } from '../features/auth/hooks';
 import { useProfile } from '../features/profile/hooks';
@@ -69,8 +76,19 @@ function RootNavigator({ onReady }: { onReady: (event: LayoutChangeEvent) => voi
   // fetching a profile for it would be a wasted request that also risks
   // flashing the onboarding/loading skeleton before signOut() kicks in.
   const { data: profile, isLoading: profileLoading } = useProfile(!!session && !isPasswordRecovery);
+  // Gates `booting` too -- without this, the very first frames (including
+  // ones the native splash hands off to) could render with the system font
+  // fallback for an instant before Plus Jakarta Sans swaps in, which is
+  // exactly the kind of flash the splash-hold logic below already exists to
+  // prevent for auth/profile state.
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
 
-  const booting = loading || (!!session && !isPasswordRecovery && profileLoading);
+  const booting = !fontsLoaded || loading || (!!session && !isPasswordRecovery && profileLoading);
 
   if (booting) {
     // Unlike an in-app screen (where ScreenSkeleton's own top-anchored rows

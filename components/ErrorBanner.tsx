@@ -16,9 +16,9 @@ export function ErrorBanner({ message, onRetry, actionLabel = 'Reintentar' }: Er
       exiting={FadeOutUp.duration(250)}
       className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mx-4 my-2 flex-row items-center justify-between"
     >
-      <Text className="text-red-700 flex-1 mr-3">{message}</Text>
+      <Text className="font-jakarta text-red-700 flex-1 mr-3">{message}</Text>
       <PressableScale onPress={onRetry} hitSlop={8}>
-        <Text className="text-red-700 font-semibold">{actionLabel}</Text>
+        <Text className="text-red-700 font-jakarta-semibold">{actionLabel}</Text>
       </PressableScale>
     </Animated.View>
   );

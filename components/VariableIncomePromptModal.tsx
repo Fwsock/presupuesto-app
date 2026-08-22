@@ -84,15 +84,15 @@ export function VariableIncomePromptModal({
         style={{ paddingBottom: keyboardHeight }}
       >
         <View className="bg-surface rounded-3xl p-6 w-full">
-          <Text className="text-lg font-bold mb-1">
+          <Text className="text-lg font-jakarta-bold mb-1">
             {concepto} — {MONTH_NAMES[month - 1]} {year}
           </Text>
-          <Text className="text-gray-500 mb-4">¿Cuánto recibiste este mes por este ingreso?</Text>
+          <Text className="font-jakarta text-gray-500 mb-4">¿Cuánto recibiste este mes por este ingreso?</Text>
 
           {error && <ErrorBanner message={error} onRetry={onDismissError} actionLabel="Descartar" />}
 
           <TextInput
-            className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
+            className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-4"
             style={{ color: INPUT_TEXT_COLOR }}
             placeholder="Monto"
             placeholderTextColor={INPUT_PLACEHOLDER_COLOR}

@@ -80,16 +80,16 @@ export function FeedbackForm() {
 
   return (
     <View>
-      <Text className="text-secondary mb-5">
+      <Text className="font-jakarta text-secondary mb-5">
         Cuéntanos qué encontraste. Mientras más detalle, más fácil es solucionarlo.
       </Text>
 
       {formError && <ErrorBanner message={formError} onRetry={() => setFormError(null)} actionLabel="Descartar" />}
-      {submitted && <Text className="text-income mb-3">¡Gracias por ayudarnos a mejorar!</Text>}
+      {submitted && <Text className="font-jakarta text-income mb-3">¡Gracias por ayudarnos a mejorar!</Text>}
 
-      <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Título</Text>
+      <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Título</Text>
       <TextInput
-        className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
+        className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-4"
         style={{ color: INPUT_TEXT_COLOR }}
         placeholder="Resume el problema o la idea en pocas palabras"
         placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -100,14 +100,14 @@ export function FeedbackForm() {
         maxLength={100}
       />
 
-      <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Categoría</Text>
+      <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Categoría</Text>
       <View className="flex-row mb-4">
         <View style={{ flex: 1 }}>
           <PressableScale
             className={`py-2 rounded-l-xl border ${category === 'bug' ? 'bg-brand border-brand' : 'border-gray-200'}`}
             onPress={() => setCategory('bug')}
           >
-            <Text className={`text-center ${category === 'bug' ? 'text-white' : 'text-black'}`}>
+            <Text className={`font-jakarta text-center ${category === 'bug' ? 'text-white' : 'text-black'}`}>
               {CATEGORY_LABELS.bug}
             </Text>
           </PressableScale>
@@ -117,16 +117,16 @@ export function FeedbackForm() {
             className={`py-2 rounded-r-xl border ${category === 'suggestion' ? 'bg-brand border-brand' : 'border-gray-200'}`}
             onPress={() => setCategory('suggestion')}
           >
-            <Text className={`text-center ${category === 'suggestion' ? 'text-white' : 'text-black'}`}>
+            <Text className={`font-jakarta text-center ${category === 'suggestion' ? 'text-white' : 'text-black'}`}>
               {CATEGORY_LABELS.suggestion}
             </Text>
           </PressableScale>
         </View>
       </View>
 
-      <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Descripción</Text>
+      <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Descripción</Text>
       <TextInput
-        className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
+        className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-4"
         style={{ color: INPUT_TEXT_COLOR, minHeight: 100, textAlignVertical: 'top' }}
         placeholder="¿Qué pasó? ¿Qué esperabas que pasara?"
         placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -138,12 +138,12 @@ export function FeedbackForm() {
         maxLength={2000}
       />
 
-      <Text className="text-gray-400 text-xs font-semibold uppercase mb-2">Evidencia (opcional)</Text>
+      <Text className="text-gray-400 text-xs font-jakarta-semibold uppercase mb-2">Evidencia (opcional)</Text>
       {imageUri ? (
         <View className="mb-4">
           <Image source={{ uri: imageUri }} className="w-full h-40 rounded-xl mb-2" resizeMode="cover" />
           <PressableScale onPress={() => setImageUri(null)} accessibilityRole="button" accessibilityLabel="Quitar imagen">
-            <Text className="text-danger text-sm">Quitar imagen</Text>
+            <Text className="font-jakarta text-danger text-sm">Quitar imagen</Text>
           </PressableScale>
         </View>
       ) : (

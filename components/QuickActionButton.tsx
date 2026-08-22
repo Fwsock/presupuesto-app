@@ -37,7 +37,7 @@ export function QuickActionButton({
           <Ionicons name={icon} size={22} color={theme.brand} />
         )}
       </View>
-      <Text className="text-sm font-medium text-center">{label}</Text>
+      <Text className="text-sm font-jakarta-medium text-center">{label}</Text>
     </PressableScale>
   );
 }

@@ -323,7 +323,7 @@ function MovimientosScreen() {
               }
               ListEmptyComponent={
                 <View className="items-center justify-center py-16">
-                  <Text className="text-gray-400 text-center px-8">
+                  <Text className="font-jakarta text-gray-400 text-center px-8">
                     {movements && movements.length > 0
                       ? 'Ningún movimiento coincide con la búsqueda o el filtro.'
                       : 'No hay movimientos registrados para este mes.'}

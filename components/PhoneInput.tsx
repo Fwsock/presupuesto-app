@@ -29,13 +29,13 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
         accessibilityRole="button"
         accessibilityLabel="Elegir país"
       >
-        <Text style={{ fontSize: 18 }}>{selected.flag}</Text>
-        <Text className="ml-1">+{selected.dialCode}</Text>
+        <Text className="font-jakarta" style={{ fontSize: 18 }}>{selected.flag}</Text>
+        <Text className="font-jakarta ml-1">+{selected.dialCode}</Text>
         <Ionicons name="chevron-down" size={14} color="#6b7280" style={{ marginLeft: 4 }} />
       </PressableScale>
 
       <TextInput
-        className="flex-1 border border-gray-200 rounded-xl px-3"
+        className="flex-1 font-jakarta border border-gray-200 rounded-xl px-3"
         style={{ height: FIELD_HEIGHT, color: INPUT_TEXT_COLOR }}
         placeholder="Número"
         placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -48,7 +48,7 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
 
       <AnimatedBottomSheet visible={pickerOpen} onClose={() => setPickerOpen(false)} maxHeightPercent={70}>
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
-          <Text className="text-lg font-semibold">Elegir país</Text>
+          <Text className="text-lg font-jakarta-semibold">Elegir país</Text>
           <PressableScale
             onPress={() => setPickerOpen(false)}
             hitSlop={10}
@@ -68,9 +68,9 @@ export function PhoneInput({ countryCode, digits, onChangeCountryCode, onChangeD
               }}
               className="flex-row items-center px-4 py-3"
             >
-              <Text style={{ fontSize: 20 }}>{country.flag}</Text>
-              <Text className="ml-3 flex-1 text-base">{country.name}</Text>
-              <Text className="text-gray-500">+{country.dialCode}</Text>
+              <Text className="font-jakarta" style={{ fontSize: 20 }}>{country.flag}</Text>
+              <Text className="font-jakarta ml-3 flex-1 text-base">{country.name}</Text>
+              <Text className="font-jakarta text-gray-500">+{country.dialCode}</Text>
             </PressableScale>
           ))}
         </ScrollView>

@@ -24,7 +24,7 @@ import { InstallQRCode } from '../../components/InstallQRCode';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
 import { Accordion } from '../../components/Accordion';
 import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
-import { theme } from '../../lib/theme';
+import { theme, cardShadow } from '../../lib/theme';
 
 type AccountSection =
   | 'personal'
@@ -123,7 +123,7 @@ function AccountRow({
       accessibilityLabel={label}
     >
       <Ionicons name={icon} size={20} color={color} style={{ marginRight: 12 }} />
-      <Text className="flex-1 text-base" style={danger ? { color } : undefined}>
+      <Text className="font-jakarta flex-1 text-base" style={danger ? { color } : undefined}>
         {label}
       </Text>
       {!danger && <Ionicons name="chevron-forward" size={18} color="#9ca3af" />}
@@ -149,7 +149,7 @@ function AboutLinkRow({ label, onPress, isLast = false }: { label: string; onPre
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text className="text-base">{label}</Text>
+      <Text className="font-jakarta text-base">{label}</Text>
       <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
     </PressableScale>
   );
@@ -349,17 +349,17 @@ function CuentaScreen() {
           list below reads as an actual "card". */}
       <View className="items-center pt-6 pb-8">
         <View className="w-20 h-20 rounded-full bg-brand items-center justify-center mb-3">
-          <Text className="text-white text-2xl font-semibold">
+          <Text className="text-white text-2xl font-jakarta-semibold">
             {getInitials(profile?.nombre, session?.user.email ?? null)}
           </Text>
         </View>
-        <Text className="text-lg font-semibold text-ink">{displayName}</Text>
-        {session?.user.email && <Text className="text-secondary mt-0.5">{session.user.email}</Text>}
+        <Text className="text-lg font-jakarta-semibold text-ink">{displayName}</Text>
+        {session?.user.email && <Text className="font-jakarta text-secondary mt-0.5">{session.user.email}</Text>}
       </View>
 
       <View
         className="mx-4 mt-4 bg-surface rounded-2xl border border-border overflow-hidden"
-        style={{ shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 0 }}
+        style={cardShadow}
       >
         <AccountRow icon="card-outline" label="Información personal" onPress={() => setOpenSection('personal')} />
         <AccountRow icon="lock-closed-outline" label="Seguridad" onPress={() => setOpenSection('seguridad')} />
@@ -382,11 +382,11 @@ function CuentaScreen() {
         title="Información personal"
         onClose={() => setOpenSection(null)}
       >
-        <Text className="text-secondary mb-3">
+        <Text className="font-jakarta text-secondary mb-3">
           Ingresa tu apodo y número de contacto para actualizar tu perfil.
         </Text>
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2 mb-2"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-2"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nombre"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -404,15 +404,15 @@ function CuentaScreen() {
         {profileError && (
           <ErrorBanner message={profileError} onRetry={() => setProfileError(null)} actionLabel="Descartar" />
         )}
-        {profileSaved && <Text className="text-income mb-2">Guardado.</Text>}
+        {profileSaved && <Text className="font-jakarta text-income mb-2">Guardado.</Text>}
         <Button title="Guardar" onPress={saveProfile} loading={upsertProfile.isPending} disabled={upsertProfile.isPending} />
       </FullScreenFormModal>
 
       <FullScreenFormModal visible={openSection === 'seguridad'} title="Seguridad" onClose={() => setOpenSection(null)}>
-        <Text className="text-base font-semibold mb-2">Correo electrónico</Text>
-        <Text className="text-secondary mb-2">Actual: {session?.user.email}</Text>
+        <Text className="text-base font-jakarta-semibold mb-2">Correo electrónico</Text>
+        <Text className="font-jakarta text-secondary mb-2">Actual: {session?.user.email}</Text>
         <TextInput
-          className="border border-gray-200 rounded-xl px-3 py-2 mb-4"
+          className="font-jakarta border border-gray-200 rounded-xl px-3 py-2 mb-4"
           style={{ color: INPUT_TEXT_COLOR }}
           placeholder="Nuevo correo"
           placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
@@ -424,7 +424,7 @@ function CuentaScreen() {
           onChangeText={setNewEmail}
         />
 
-        <Text className="text-base font-semibold mb-2">Contraseña</Text>
+        <Text className="text-base font-jakarta-semibold mb-2">Contraseña</Text>
         <AuthTextInput
           icon="lock-closed-outline"
           placeholder="Nueva contraseña"
@@ -444,7 +444,7 @@ function CuentaScreen() {
         {securityError && (
           <ErrorBanner message={securityError} onRetry={() => setSecurityError(null)} actionLabel="Descartar" />
         )}
-        {securityMessage && <Text className="text-income mb-3">{securityMessage}</Text>}
+        {securityMessage && <Text className="font-jakarta text-income mb-3">{securityMessage}</Text>}
 
         <Button
           title="Guardar cambios"
@@ -476,15 +476,15 @@ function CuentaScreen() {
           title="Funciones Experimentales"
           onClose={() => setOpenSection(null)}
         >
-          <Text className="text-secondary mb-5">
+          <Text className="font-jakarta text-secondary mb-5">
             Activa o desactiva funciones en fase beta. Controla el escaneo de boletas y comprobantes por imagen
             (cámara y galería).
           </Text>
 
           <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-4">
             <View className="flex-1 pr-3">
-              <Text className="font-semibold mb-1">Escaneo de boletas por imagen</Text>
-              <Text className="text-secondary text-xs">
+              <Text className="font-jakarta-semibold mb-1">Escaneo de boletas por imagen</Text>
+              <Text className="font-jakarta text-secondary text-xs">
                 Escanear con cámara y subir capturas desde la galería en la bandeja de pendientes.
               </Text>
             </View>
@@ -507,22 +507,22 @@ function CuentaScreen() {
         onClose={() => setOpenSection(null)}
       >
         {/* Placeholder copy — reemplazar con el texto legal real de la app. */}
-        <Text className="text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
-        <Text className="mb-3">
+        <Text className="font-jakarta text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
+        <Text className="font-jakarta mb-3">
           Bienvenido a FinanFlow. Al usar esta aplicación, aceptas los presentes Términos y Condiciones. Este es un
           texto de ejemplo pensado para ser reemplazado con el contenido legal definitivo de la aplicación.
         </Text>
-        <Text className="font-semibold mb-1">1. Uso de la aplicación</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">1. Uso de la aplicación</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           FinanFlow está pensada para el registro y seguimiento personal de tus ingresos y gastos. Eres responsable
           de la exactitud de la información que ingresas.
         </Text>
-        <Text className="font-semibold mb-1">2. Tus datos</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">2. Tus datos</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           Tus movimientos, categorías y datos de perfil son privados y están aislados de los de otros usuarios.
         </Text>
-        <Text className="font-semibold mb-1">3. Cambios en estos términos</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">3. Cambios en estos términos</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           Estos términos pueden actualizarse en el futuro. Te recomendamos revisarlos periódicamente.
         </Text>
       </FullScreenFormModal>
@@ -542,15 +542,15 @@ function CuentaScreen() {
             className="w-20 h-20 rounded-2xl mb-3"
             accessibilityLabel="Ícono de FinanFlow"
           />
-          <Text className="text-lg font-semibold">FinanFlow para Android</Text>
+          <Text className="text-lg font-jakarta-semibold">FinanFlow para Android</Text>
         </View>
 
         <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-5">
           <View className="flex-1 pr-3">
-            <Text className="text-secondary">Versión {APP_VERSION}</Text>
-            <Text className="text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
+            <Text className="font-jakarta text-secondary">Versión {APP_VERSION}</Text>
+            <Text className="font-jakarta text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
             {Platform.OS === 'android' && (
-              <Text className="text-secondary text-xs mt-2">Escanea para instalar el APK</Text>
+              <Text className="font-jakarta text-secondary text-xs mt-2">Escanea para instalar el APK</Text>
             )}
           </View>
           {Platform.OS === 'android' && <InstallQRCode />}
@@ -567,31 +567,31 @@ function CuentaScreen() {
         onClose={() => setOpenSection(null)}
       >
         {/* Placeholder copy — reemplazar con el texto legal real de la app. */}
-        <Text className="text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
-        <Text className="mb-3">
+        <Text className="font-jakarta text-secondary text-xs mb-3">Última actualización: agosto de 2026</Text>
+        <Text className="font-jakarta mb-3">
           En FinanFlow tu privacidad es prioritaria. Este es un texto de ejemplo pensado para ser reemplazado con la
           política de privacidad definitiva de la aplicación.
         </Text>
-        <Text className="font-semibold mb-1">1. Qué datos guardamos</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">1. Qué datos guardamos</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           Tu correo, tus movimientos, categorías y la configuración de tu cuenta — nada más, y solo para que la app
           funcione para ti.
         </Text>
-        <Text className="font-semibold mb-1">2. Con quién los compartimos</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">2. Con quién los compartimos</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           Con nadie. Tus datos nunca se venden ni se comparten con terceros con fines publicitarios.
         </Text>
-        <Text className="font-semibold mb-1">3. Tu control sobre tus datos</Text>
-        <Text className="text-gray-700 mb-3">
+        <Text className="font-jakarta-semibold mb-1">3. Tu control sobre tus datos</Text>
+        <Text className="font-jakarta text-gray-700 mb-3">
           Puedes editar o eliminar tu información personal y tus movimientos en cualquier momento desde la app.
         </Text>
       </FullScreenFormModal>
 
       <FullScreenFormModal visible={openSection === 'soporte'} title="Soporte" onClose={() => setOpenSection(null)}>
-        <Text className="mb-4">¿Tienes un problema o una sugerencia? Escríbenos, con gusto te ayudamos.</Text>
+        <Text className="font-jakarta mb-4">¿Tienes un problema o una sugerencia? Escríbenos, con gusto te ayudamos.</Text>
         <View className="bg-gray-50 rounded-xl p-3 flex-row items-center">
           <Ionicons name="mail-outline" size={20} color="#374151" style={{ marginRight: 10 }} />
-          <Text className="text-base">soporte@finanflow.app</Text>
+          <Text className="font-jakarta text-base">soporte@finanflow.app</Text>
         </View>
       </FullScreenFormModal>
 

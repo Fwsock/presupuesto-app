@@ -119,7 +119,7 @@ export default function RegisterScreen() {
           )}
         />
 
-        {formError && <Text className="text-danger mb-2">{formError}</Text>}
+        {formError && <Text className="font-jakarta text-danger mb-2">{formError}</Text>}
 
         <Button
           title="Crear cuenta"
@@ -130,7 +130,7 @@ export default function RegisterScreen() {
         />
 
         <Link href="/login" className="mt-3">
-          <Text className="text-brand text-center">¿Ya tienes cuenta? Inicia sesión</Text>
+          <Text className="font-jakarta text-brand text-center">¿Ya tienes cuenta? Inicia sesión</Text>
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

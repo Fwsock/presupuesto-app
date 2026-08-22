@@ -69,7 +69,7 @@ function ChartBar({ point, isSelected, barHeight, amountLabel, onPress }: ChartB
             <Animated.Text
               entering={FadeIn.duration(150)}
               exiting={FadeOut.duration(120)}
-              className={`text-xs font-bold ${point.saldoDisponible < 0 ? 'text-danger' : 'text-ink'}`}
+              className={`text-xs font-jakarta-bold ${point.saldoDisponible < 0 ? 'text-danger' : 'text-ink'}`}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.6}
@@ -90,7 +90,7 @@ function ChartBar({ point, isSelected, barHeight, amountLabel, onPress }: ChartB
           style={[heightStyle, { width: '68%' }]}
         />
 
-        <Text className={`text-xs mt-2 ${isSelected ? 'font-bold text-ink' : 'text-secondary'}`}>
+        <Text className={`text-xs mt-2 ${isSelected ? 'font-jakarta-bold text-ink' : 'text-secondary'}`}>
           {MONTH_SHORT_NAMES[point.month - 1]}
         </Text>
       </PressableScale>

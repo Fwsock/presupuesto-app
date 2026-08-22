@@ -55,8 +55,8 @@ export default function ForgotPasswordScreen() {
       >
         {sentTo ? (
           <>
-            <Text className="text-2xl font-bold mb-1 text-center">Correo enviado</Text>
-            <Text className="text-gray-500 mb-8 text-center">
+            <Text className="text-2xl font-jakarta-bold mb-1 text-center">Correo enviado</Text>
+            <Text className="font-jakarta text-gray-500 mb-8 text-center">
               Revisa tu bandeja de entrada en {sentTo} y escribe el código de 6 dígitos que te enviamos.
             </Text>
             <Button
@@ -66,8 +66,8 @@ export default function ForgotPasswordScreen() {
           </>
         ) : (
           <>
-            <Text className="text-2xl font-bold mb-1 text-center">Recuperar contraseña</Text>
-            <Text className="text-gray-500 mb-6 text-center">
+            <Text className="text-2xl font-jakarta-bold mb-1 text-center">Recuperar contraseña</Text>
+            <Text className="font-jakarta text-gray-500 mb-6 text-center">
               Ingresa tu correo para recibir un código de recuperación
             </Text>
 
@@ -86,7 +86,7 @@ export default function ForgotPasswordScreen() {
               )}
             />
 
-            {formError && <Text className="text-danger mb-2">{formError}</Text>}
+            {formError && <Text className="font-jakarta text-danger mb-2">{formError}</Text>}
 
             <Button
               title="Enviar instrucciones"

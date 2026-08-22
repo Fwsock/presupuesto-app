@@ -96,7 +96,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
             >
               <Ionicons name="chevron-back" size={22} color="#111827" />
             </PressableScale>
-            <Text className="text-base font-semibold">
+            <Text className="text-base font-jakarta-semibold">
               {MONTH_NAMES[viewMonth - 1]} {viewYear}
             </Text>
             <PressableScale
@@ -112,7 +112,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
 
           <View className="flex-row justify-between mb-2">
             {WEEKDAY_LABELS.map((label, i) => (
-              <Text key={i} className="text-xs text-gray-400 font-medium" style={{ width: CELL_SIZE, textAlign: 'center' }}>
+              <Text key={i} className="text-xs text-gray-400 font-jakarta-medium" style={{ width: CELL_SIZE, textAlign: 'center' }}>
                 {label}
               </Text>
             ))}
@@ -142,7 +142,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
                   >
                     <Text
                       className={`text-sm ${
-                        isSelected ? 'text-white font-semibold' : cell.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'
+                        isSelected ? 'text-white font-jakarta-semibold' : cell.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'
                       }`}
                     >
                       {cell.day}
@@ -161,7 +161,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
                 accessibilityRole="button"
                 accessibilityLabel="Cancelar"
               >
-                <Text className="font-semibold text-gray-700">Cancelar</Text>
+                <Text className="font-jakarta-semibold text-gray-700">Cancelar</Text>
               </PressableScale>
             </View>
             <View style={{ flex: 1 }}>
@@ -172,7 +172,7 @@ export function CalendarPickerModal({ visible, value, onSave, onCancel }: Calend
                 accessibilityRole="button"
                 accessibilityLabel="Guardar"
               >
-                <Text className="font-semibold text-white">Guardar</Text>
+                <Text className="font-jakarta-semibold text-white">Guardar</Text>
               </PressableScale>
             </View>
           </View>
