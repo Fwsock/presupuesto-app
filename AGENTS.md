@@ -120,6 +120,46 @@ en emuladores x86/x86_64 ni celulares ARM de 32-bit — para eso, compilar
 Script de conveniencia: `npm run build:android:local` (requiere
 `JAVA_HOME`/`ANDROID_HOME` ya exportados en el shell, igual que siempre).
 
+## Actualizaciones OTA (EAS Update)
+
+Desde la integración de `expo-updates`, el proyecto puede enviar cambios de
+JS/TS/assets a un APK **ya instalado** en el celular del usuario, sin generar
+ni reinstalar un nuevo build nativo. Configuración vigente:
+
+- `app.json`: `runtimeVersion.policy: "appVersion"` (el runtime que exige
+  cada update se calcula del campo `version` de `app.json` — subir ese
+  número es lo único que invalida la compatibilidad de un update viejo con
+  un build nuevo) y `updates.checkAutomatically: "ON_LOAD"` (revisa solo al
+  abrir la app, no en segundo plano de forma continua).
+- `eas.json`: cada build profile declara su propio canal (`preview` →
+  canal `preview`, `production` → canal `production`) — un update solo
+  llega a los APKs compilados con ESE mismo profile.
+- `app/_layout.tsx`: un hook con `Updates.useUpdates()` aplica
+  (`Updates.reloadAsync()`) el update ya descargado apenas termina de
+  bootear la app — no interrumpe una sesión activa, solo se nota la próxima
+  vez que se abre.
+
+**Comando estándar para publicar una actualización OTA instantánea:**
+
+```bash
+eas update --branch preview --message "descripción breve del cambio"
+```
+
+(cambiar `preview` por `production` si el build de destino es ese profile —
+tiene que coincidir con el canal del APK que el usuario tiene instalado).
+No requiere `JAVA_HOME`/`ANDROID_HOME` ni levanta ningún `GradleDaemon`, así
+que el protocolo de conservación de recursos de arriba no aplica a este
+comando.
+
+**Cuándo un `eas update` NO alcanza y sigue haciendo falta un build nativo
+nuevo** (`eas build --platform android --local`, protocolo de siempre):
+- Cualquier dependencia con código nativo (nueva o actualizada).
+- Cambios en `app.json` (plugins, permisos, ícono, splash, `runtimeVersion`,
+  `updates.url`, etc.) o en `plugins/*.js`.
+- Subir el campo `version` de `app.json` a propósito (con la policy
+  `appVersion`, eso cambia el runtime y "cierra" la compatibilidad de todos
+  los updates anteriores para ese build).
+
 ## Iterar cambios de JS/TS sin reconstruir el APK nativo completo
 
 **Estado actual de este proyecto: no aplica todavía.** `npx expo start` solo

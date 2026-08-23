@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, DefaultTheme, type Theme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
+import * as Updates from 'expo-updates';
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -180,6 +181,21 @@ export default function RootLayout() {
     const timeout = setTimeout(onReady, 6000);
     return () => clearTimeout(timeout);
   }, [onReady]);
+
+  // OTA updates: app.json's updates.checkAutomatically "ON_LOAD" already
+  // makes the native layer check for and download a new update on every
+  // cold start, with no JS involved -- this effect only applies one once
+  // it's finished downloading. Firing right here, right after boot (before
+  // the user has done anything with the screen that just appeared), is what
+  // keeps this "subtle": there's no mid-session reload yanking the screen
+  // out from under an active user, and __DEV__ skips it entirely since
+  // Updates.reloadAsync() throws outside of a real EAS Update-enabled build.
+  const { isUpdatePending } = Updates.useUpdates();
+  useEffect(() => {
+    if (!__DEV__ && isUpdatePending) {
+      Updates.reloadAsync().catch(() => {});
+    }
+  }, [isUpdatePending]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.brand }}>

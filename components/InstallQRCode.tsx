@@ -5,7 +5,7 @@ import QRCode from 'react-native-qrcode-svg';
 // Fwsock/presupuesto-app GitHub Release "v1.0.0" (public repo, so this
 // resolves for anyone, not just collaborators). Update this to a new
 // tag/release URL whenever a newer APK is published there.
-const INSTALL_APK_URL = 'https://github.com/Fwsock/presupuesto-app/releases/download/v1.0.0/finanflow-preview.apk';
+export const INSTALL_APK_URL = 'https://github.com/Fwsock/presupuesto-app/releases/download/v1.0.0/finanflow-preview.apk';
 
 export function InstallQRCode({ size = 64 }: { size?: number }) {
   return (
