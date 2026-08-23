@@ -1,5 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { Image, Linking, Platform, Share, Text, TextInput, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession, signOut, updateEmail, updatePassword } from '../../features/auth/hooks';
@@ -20,7 +22,7 @@ import { Button } from '../../components/Button';
 import { ErrorBanner } from '../../components/ErrorBanner';
 import { PressableScale } from '../../components/PressableScale';
 import { AnimatedSwitch } from '../../components/AnimatedSwitch';
-import { InstallQRCode, INSTALL_APK_URL } from '../../components/InstallQRCode';
+import { InstallQRCode, INSTALL_APK_URL, RELEASES_PAGE_URL } from '../../components/InstallQRCode';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
 import { Accordion } from '../../components/Accordion';
 import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
@@ -156,24 +158,22 @@ function AboutLinkRow({ label, onPress, isLast = false }: { label: string; onPre
 }
 
 /**
- * Version/QR block for the "Acerca de" screen -- tap the QR to open the same
- * release URL it encodes in the browser, share it via the OS share sheet, or
- * copy the link. The copy button imports expo-clipboard lazily (inside the
- * handler, not at module scope) and falls back to the share sheet on
- * failure: this module ships in an OTA update, and its native code isn't
- * compiled into every APK that update reaches yet -- a top-level import
- * would throw at bundle-load time (New Architecture: newArchEnabled=true)
- * on any build that predates it, crashing this whole screen. Deferring the
- * import to the moment the button is actually pressed keeps the crash (if
- * any) contained to that one tap, with a working fallback. Safe to switch
- * to a plain top-level import once a native rebuild has shipped
- * expo-clipboard everywhere.
+ * Version block for the "Acerca de" screen. Same on both platforms: the QR
+ * (tap to browse the GitHub Releases page) and Compartir/Copiar link don't
+ * depend on anything Android-specific -- react-native-qrcode-svg, Share and
+ * Clipboard all work identically on iOS. It still only leads to an
+ * Android-installable .apk, but that's fine to view/share/copy from an
+ * iPhone too (e.g. sending the install link to an Android-owning friend).
+ * expo-clipboard is a plain top-level import: this component only ships as
+ * part of a native rebuild (see AGENTS.md's EAS Update section on when an
+ * `eas update` alone isn't enough), so the APK this lands in always has the
+ * module compiled in -- no more deferred import workaround.
  */
 function AboutQrCard() {
-  const [copied, setCopied] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
 
-  const handleOpenRelease = () => {
-    Linking.openURL(INSTALL_APK_URL).catch(() => {});
+  const handleOpenReleases = () => {
+    Linking.openURL(RELEASES_PAGE_URL).catch(() => {});
   };
 
   const handleShare = () => {
@@ -185,14 +185,9 @@ function AboutQrCard() {
   };
 
   const handleCopyLink = async () => {
-    try {
-      const Clipboard = await import('expo-clipboard');
-      await Clipboard.setStringAsync(INSTALL_APK_URL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      handleShare();
-    }
+    await Clipboard.setStringAsync(INSTALL_APK_URL);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 1800);
   };
 
   return (
@@ -201,57 +196,76 @@ function AboutQrCard() {
         <View className="flex-1 pr-3">
           <Text className="font-jakarta text-secondary">Versión {APP_VERSION}</Text>
           <Text className="font-jakarta text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
-          <Text className="font-jakarta text-secondary text-xs mt-2">Escanea o toca el QR para instalar el APK</Text>
+          <Text className="font-jakarta text-secondary text-xs mt-2">Escanea o toca el QR para ver los releases en GitHub</Text>
         </View>
         <PressableScale
-          onPress={handleOpenRelease}
+          onPress={handleOpenReleases}
           scaleTo={0.94}
           activeOpacity={0.75}
           spring
           haptics
           accessibilityRole="button"
-          accessibilityLabel="Abrir el release de FinanFlow en el navegador"
+          accessibilityLabel="Ver los releases de FinanFlow en GitHub"
         >
           <InstallQRCode />
         </PressableScale>
       </View>
 
-      <View className="flex-row mt-4" style={{ gap: 10 }}>
-        <PressableScale
-          onPress={handleShare}
-          scaleTo={0.965}
-          activeOpacity={0.75}
-          spring
-          haptics
-          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl bg-brand"
-          accessibilityRole="button"
-          accessibilityLabel="Compartir FinanFlow"
-        >
-          <Ionicons name="share-social-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-          <Text className="font-jakarta-semibold text-white text-sm">Compartir app</Text>
-        </PressableScale>
+      <View className="w-full flex-row gap-3 justify-between mt-4">
+        {/* flex-1 goes on this wrapping View, not on PressableScale's own
+            className -- PressableScale's className lands on its inner
+            Pressable, one level below the Animated.View that's the actual
+            flex child here, so flex-1 on the PressableScale itself never
+            reaches this row's layout (same fix as MovementListItem's row). */}
+        <View style={{ flex: 1 }}>
+          <PressableScale
+            onPress={handleShare}
+            scaleTo={0.965}
+            activeOpacity={0.75}
+            spring
+            haptics
+            className="flex-row items-center justify-center py-2.5 rounded-xl bg-brand"
+            accessibilityRole="button"
+            accessibilityLabel="Compartir FinanFlow"
+          >
+            <Ionicons name="share-social-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+            <Text className="font-jakarta-semibold text-white text-sm" numberOfLines={1}>
+              Compartir app
+            </Text>
+          </PressableScale>
+        </View>
 
-        <PressableScale
-          onPress={handleCopyLink}
-          scaleTo={0.965}
-          activeOpacity={0.75}
-          spring
-          haptics
-          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl border border-border"
-          accessibilityRole="button"
-          accessibilityLabel="Copiar enlace de descarga"
-        >
-          <Ionicons
-            name={copied ? 'checkmark' : 'copy-outline'}
-            size={16}
-            color={copied ? theme.income : '#374151'}
-            style={{ marginRight: 6 }}
-          />
-          <Text className={`font-jakarta-semibold text-sm ${copied ? 'text-income' : 'text-gray-700'}`}>
-            {copied ? 'Copiado' : 'Copiar link'}
-          </Text>
-        </PressableScale>
+        <View style={{ flex: 1 }}>
+          <PressableScale
+            onPress={handleCopyLink}
+            scaleTo={0.965}
+            activeOpacity={0.75}
+            spring
+            haptics
+            className="flex-row items-center justify-center py-2.5 rounded-xl border border-border"
+            accessibilityRole="button"
+            accessibilityLabel="Copiar enlace de descarga"
+          >
+            <Ionicons name="copy-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
+            <Text className="font-jakarta-semibold text-sm text-gray-700" numberOfLines={1}>
+              Copiar link
+            </Text>
+          </PressableScale>
+        </View>
       </View>
+
+      {toastVisible && (
+        // Self-contained transient toast, not synchronized against any list
+        // re-render (unlike CategoryFilterToast, which skips `exiting` for
+        // exactly that reason) -- a fade both ways is safe here.
+        <Animated.View
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(150)}
+          className="self-center bg-gray-900 px-3 py-1.5 rounded-full mt-3"
+        >
+          <Text className="text-white text-xs font-jakarta-medium">Copiado al portapapeles</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -643,17 +657,10 @@ function CuentaScreen() {
             className="w-20 h-20 rounded-2xl mb-3"
             accessibilityLabel="Ícono de FinanFlow"
           />
-          <Text className="text-lg font-jakarta-semibold">FinanFlow para Android</Text>
+          <Text className="text-lg font-jakarta-semibold">FinanFlow</Text>
         </View>
 
-        {Platform.OS === 'android' ? (
-          <AboutQrCard />
-        ) : (
-          <View className="bg-gray-50 rounded-xl px-4 py-3 mb-5">
-            <Text className="font-jakarta text-secondary">Versión {APP_VERSION}</Text>
-            <Text className="font-jakarta text-secondary text-xs mt-1">Copyright © 2026 FinanFlow</Text>
-          </View>
-        )}
+        <AboutQrCard />
 
         <AboutLinkRow label="Términos y Condiciones" onPress={() => setOpenSection('terminos')} />
         <AboutLinkRow label="Política de Privacidad" onPress={() => setOpenSection('privacidad')} />

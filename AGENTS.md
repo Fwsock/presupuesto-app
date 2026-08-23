@@ -63,6 +63,20 @@ Para cualquier nueva tarea, mejora o corrección de errores en la aplicación, s
    - SI Y SOLO SI no existe ninguna otra rama local activa aparte de `master`, proceder a eliminar la etiqueta/tag de respaldo (`backup-pre-...`).
    - Si aún existen otras ramas de trabajo vivas, conservar la etiqueta de respaldo intacta.
 
+### EVALUACIÓN DE DESPLIEGUE
+
+Para cada cambio o fix realizado, Claude debe evaluar automáticamente si el
+cambio califica para un despliegue OTA instantáneo en Android (`eas update`)
+y Fast Refresh en el simulador de iOS, o si requiere una compilación nativa
+completa (por ejemplo, si se agregaron módulos nativos nuevos). Claude debe
+explicar explícitamente en el output la razón de la elección.
+
+En la práctica (ver también "Actualizaciones OTA (EAS Update)" más abajo):
+califica para OTA/Fast Refresh un cambio puramente de JS/TS/assets que no
+toca `app.json`, `plugins/*.js`, ni agrega/actualiza una dependencia con
+código nativo; requiere build nativo completo cualquier cambio que sí toque
+esas tres cosas, o que suba el `version` de `app.json` a propósito.
+
 ## Protocolo de conservación de recursos (CPU/RAM)
 
 Este proyecto es un workflow managed de Expo sin `android/` comprometido al repo — cada `eas build --platform android --local` regenera un directorio temporal de prebuild (`/var/folders/.../eas-build-local-nodejs/...`) que EAS borra solo al terminar, pero el **daemon de Gradle que ese build levanta sigue vivo en segundo plano** aunque el directorio ya no exista. Por eso `cd android && ./gradlew --stop` no aplica aquí (no hay ese directorio) — el daemon se identifica y se mata directamente por proceso:
