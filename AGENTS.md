@@ -34,6 +34,35 @@ Para cada tarea o cambio de código que completes (no solo al final de un plan c
 
 Al terminar un plan completo de varias tareas, entrega además un resumen consolidado de todos los cambios de principio a fin, con checklist completa de qué probar por cada punto del plan.
 
+## PROTOCOLO DE TRABAJO Y CONTROL DE VERSIONES (WORKFLOW)
+
+### PROTOCOLO OBLIGATORIO DE DESARROLLO Y SEGURIDAD
+
+Para cualquier nueva tarea, mejora o corrección de errores en la aplicación, se debe seguir estrictamente este flujo de 5 fases:
+
+1. FASE DE INICIO Y AUDITORÍA:
+   - Verificar `git status` y asegurar que la rama activa sea `master` y no existan cambios locales pendientes ni archivos sensibles expuestos.
+   - Si existen ramas locales huérfanas de sesiones anteriores ya integradas, eliminarlas.
+
+2. FASE DE RESPALDO Y AISLAMIENTO:
+   - Crear una etiqueta (tag) o punto de restauración de respaldo local llamado `backup-pre-[nombre_tarea]-[FECHA]` apuntando al estado actual de `master`.
+   - Crear y cambiar a una rama de trabajo temática global (ej. `feature/[nombre_tarea]`).
+   - *Regla de Alcance:* Todos los cambios, experimentos y correcciones derivadas o errores secundarios descubiertos durante la sesión deben trabajarse dentro de esta misma rama temática.
+
+3. FASE DE DESARROLLO Y PRUEBAS:
+   - Realizar las modificaciones necesarias.
+   - Antes de dar por finalizado un cambio, ejecutar obligatoriamente `tsc` y `jest` para asegurar 0 errores de compilación y 0 pruebas rotas.
+
+4. FASE DE CIERRE Y FUSIÓN A MASTER:
+   - Al confirmar que los cambios están listos y probados por el usuario, crear un commit único estructurado en la rama de trabajo.
+   - Cambiarse a `master`, hacer `git merge` de la rama de trabajo y realizar `git push origin master`.
+   - Eliminar la rama local de la tarea (`feature/...`).
+
+5. FASE DE LIMPIEZA DE RESPALDOS:
+   - Revisar las ramas locales existentes (`git branch`).
+   - SI Y SOLO SI no existe ninguna otra rama local activa aparte de `master`, proceder a eliminar la etiqueta/tag de respaldo (`backup-pre-...`).
+   - Si aún existen otras ramas de trabajo vivas, conservar la etiqueta de respaldo intacta.
+
 ## Protocolo de conservación de recursos (CPU/RAM)
 
 Este proyecto es un workflow managed de Expo sin `android/` comprometido al repo — cada `eas build --platform android --local` regenera un directorio temporal de prebuild (`/var/folders/.../eas-build-local-nodejs/...`) que EAS borra solo al terminar, pero el **daemon de Gradle que ese build levanta sigue vivo en segundo plano** aunque el directorio ya no exista. Por eso `cd android && ./gradlew --stop` no aplica aquí (no hay ese directorio) — el daemon se identifica y se mata directamente por proceso:
