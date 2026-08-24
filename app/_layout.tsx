@@ -70,7 +70,13 @@ SystemUI.setBackgroundColorAsync(theme.background).catch(() => {});
 // `guard` — unlike a <Redirect> fired from a pathname check, there's no
 // imperative REPLACE action that can land before the target group's
 // navigator has mounted.
-function RootNavigator({ onReady }: { onReady: (event: LayoutChangeEvent) => void }) {
+function RootNavigator({
+  onReady,
+  updatesSettled,
+}: {
+  onReady: (event: LayoutChangeEvent) => void;
+  updatesSettled: boolean;
+}) {
   const { session, loading, isPasswordRecovery } = useSession();
   // Skips the profile fetch during a password-recovery session: that
   // session exists only to let update-password.tsx call updateUser(), and
@@ -89,7 +95,11 @@ function RootNavigator({ onReady }: { onReady: (event: LayoutChangeEvent) => voi
     PlusJakartaSans_700Bold,
   });
 
-  const booting = !fontsLoaded || loading || (!!session && !isPasswordRecovery && profileLoading);
+  // !updatesSettled keeps the splash up for as long as app.json's
+  // updates.checkAutomatically ("ON_LOAD") is still checking/downloading in
+  // the background -- see RootLayout for why this eliminates the OTA
+  // flicker instead of just moving it.
+  const booting = !fontsLoaded || loading || (!!session && !isPasswordRecovery && profileLoading) || !updatesSettled;
 
   if (booting) {
     // Unlike an in-app screen (where ScreenSkeleton's own top-anchored rows
@@ -182,15 +192,35 @@ export default function RootLayout() {
     return () => clearTimeout(timeout);
   }, [onReady]);
 
-  // OTA updates: app.json's updates.checkAutomatically "ON_LOAD" already
-  // makes the native layer check for and download a new update on every
-  // cold start, with no JS involved -- this effect only applies one once
-  // it's finished downloading. Firing right here, right after boot (before
-  // the user has done anything with the screen that just appeared), is what
-  // keeps this "subtle": there's no mid-session reload yanking the screen
-  // out from under an active user, and __DEV__ skips it entirely since
-  // Updates.reloadAsync() throws outside of a real EAS Update-enabled build.
-  const { isUpdatePending } = Updates.useUpdates();
+  // OTA updates: app.json's updates.checkAutomatically "ON_LOAD" makes the
+  // native layer check for and download a new update on every cold start,
+  // with no JS involved -- useUpdates() just observes that same cycle.
+  // Previously, `isUpdatePending` only triggered reloadAsync() as its own
+  // isolated effect, with nothing else in this file waiting on it -- the
+  // splash would already have lifted onto the OLD embedded/cached bundle
+  // (booting only checked fonts/session/profile) by the time the download
+  // finished, so reloadAsync() yanked the screen from old UI to new UI
+  // mid-session. That's the "flash of the old version for a few
+  // milliseconds" this whole effect exists to eliminate.
+  //
+  // The fix has two parts:
+  // 1. reloadAsync() still fires the moment a downloaded update is pending
+  //    -- but now it fires BEFORE the splash has ever been hidden (see
+  //    `updatesSettled` below gating RootNavigator's `booting`), so this
+  //    whole JS context tears down and restarts on the new bundle without
+  //    the old one ever having painted a single frame past the splash.
+  //    (reloadAsync() re-executes the already-downloaded update in place;
+  //    it does not re-trigger a fresh native "on load" check, so this
+  //    can't loop.)
+  // 2. `updatesSettled` (derived from `isChecking`) keeps the splash up
+  //    for as long as that native check/download cycle is still running,
+  //    so even the "no update available" case waits for a real answer
+  //    before ever showing content -- __DEV__ skips both: Updates isn't
+  //    functional outside a real EAS Update build, and `isChecking` would
+  //    just stay false forever there anyway.
+  const { isChecking, isUpdatePending } = Updates.useUpdates();
+  const updatesSettled = __DEV__ || !isChecking;
+
   useEffect(() => {
     if (!__DEV__ && isUpdatePending) {
       Updates.reloadAsync().catch(() => {});
@@ -201,7 +231,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.brand }}>
       <ThemeProvider value={AppNavigationTheme}>
         <QueryClientProvider client={queryClient}>
-          <RootNavigator onReady={onReady} />
+          <RootNavigator onReady={onReady} updatesSettled={updatesSettled} />
         </QueryClientProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
