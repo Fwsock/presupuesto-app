@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Image, Linking, Platform, Share, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Platform, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +24,7 @@ import { PressableScale } from '../../components/PressableScale';
 import { AnimatedSwitch } from '../../components/AnimatedSwitch';
 import { InstallQRCode, INSTALL_APK_URL, RELEASES_PAGE_URL } from '../../components/InstallQRCode';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
-import { Accordion } from '../../components/Accordion';
+import { Accordion, type AccordionItemData } from '../../components/Accordion';
 import { INPUT_PLACEHOLDER_COLOR, INPUT_SELECTION_COLOR, INPUT_CURSOR_COLOR, INPUT_TEXT_COLOR } from '../../components/inputTheme';
 import { theme, cardShadow } from '../../lib/theme';
 
@@ -47,57 +47,147 @@ type AccountSection =
 // sections, see the Términos y Condiciones section below).
 const APP_VERSION = '1.0.0';
 
-const FAQ_ITEMS: { question: string; answer: string }[] = [
+type FaqCategoryKey = 'graficos' | 'movimientos' | 'notificaciones' | 'cuenta';
+
+interface FaqItemData extends AccordionItemData {
+  category: FaqCategoryKey;
+}
+
+const FAQ_CATEGORY_FILTERS: { key: FaqCategoryKey | 'todas'; label: string }[] = [
+  { key: 'todas', label: 'Todas' },
+  { key: 'graficos', label: 'Gráficos y Resumen' },
+  { key: 'movimientos', label: 'Movimientos' },
+  { key: 'notificaciones', label: 'Notificaciones' },
+  { key: 'cuenta', label: 'Cuenta' },
+];
+
+const FAQ_ITEMS: FaqItemData[] = [
   {
+    category: 'graficos',
+    question: '¿Qué hace el filtro "Todos / Ingresos / Gastos" en el gráfico?',
+    answer:
+      'En el gráfico de Resumen, el selector de arriba a la izquierda cambia el enfoque de la visualización, sin modificar tus datos. "Todos" muestra las barras de ingresos (verde) y gastos (roja) una junto a la otra. "Ingresos" oculta la barra de gastos y agranda la escala solo con tus ingresos, para comparar esos montos entre meses con más detalle. "Gastos" hace lo mismo pero enfocado únicamente en tus gastos.',
+  },
+  {
+    category: 'graficos',
+    question: '¿Cómo se calcula el promedio (la línea punteada) del gráfico?',
+    answer:
+      'La línea punteada representa el promedio mensual de gastos (o de ingresos, si filtras por "Ingresos"), calculado solo con meses reales: se excluyen los meses futuros —que siempre parten en $0 porque todavía no ocurren— y los meses pasados sin ningún movimiento registrado. Así el promedio refleja tu comportamiento habitual, sin que meses vacíos lo bajen artificialmente.',
+  },
+  {
+    category: 'graficos',
+    question: '¿Qué significa el porcentaje junto al gráfico (ej. "▲ 12% vs Jul")?',
+    answer:
+      'Esa etiqueta compara el mes que estás viendo con el mes anterior. Si el mes anterior no tiene datos suficientes para ser una base confiable, compara contra el promedio en su lugar ("vs Promedio"). El color depende de si es buena o mala noticia: en gastos, subir se muestra en rojo y bajar en verde; en ingresos es al revés, ya que subir es lo positivo.',
+  },
+  {
+    category: 'movimientos',
     question: '¿Cómo registro un movimiento nuevo?',
     answer:
       'Toca el botón "+" central de la barra inferior desde cualquier pantalla, o el "+" dentro de Movimientos. Completa el concepto, monto, tipo (ingreso o gasto) y categoría.',
   },
   {
+    category: 'movimientos',
     question: '¿Qué diferencia hay entre ingreso fijo y variable?',
     answer:
       'Un ingreso "Fijo" se pregunta una sola vez y se repite automáticamente cada mes con el mismo monto. Un ingreso "Variable" te pregunta el monto cada vez que entras a un mes nuevo, ya que puede cambiar.',
   },
   {
+    category: 'movimientos',
     question: '¿Puedo eliminar una categoría que ya tiene movimientos?',
     answer:
       'No directamente: primero debes reasignar o eliminar sus movimientos. Si intentas eliminar una categoría con movimientos asociados, la app te avisa en vez de borrarla.',
   },
   {
+    category: 'cuenta',
     question: '¿Cómo cambio mi correo o contraseña?',
     answer: 'Ve a Cuenta → Seguridad. Ahí puedes actualizar tu correo (se confirma por email) y tu contraseña.',
   },
   {
+    category: 'cuenta',
     question: '¿Mis datos están seguros?',
     answer:
       'Tus datos se almacenan de forma aislada por usuario: nadie más puede ver tus movimientos, categorías ni tu información personal.',
   },
   {
+    category: 'notificaciones',
     question: '¿Cómo funcionan las notificaciones pendientes?',
     answer:
       'Cada boleta escaneada o notificación bancaria capturada automáticamente llega primero a la bandeja de pendientes (el ícono de sobre arriba a la derecha), no directamente a tus movimientos. Ahí revisas los datos detectados y confirmas o descartas cada una antes de que se registre.',
   },
   {
+    category: 'notificaciones',
     question: '¿Qué tipo de boletas o comprobantes puedo escanear o subir desde la galería?',
     answer:
       'Boletas de supermercado y retail, comprobantes o capturas de transferencias, y vales de pago. La app lee el texto automáticamente para sugerir comercio, monto y fecha (ignorando puntos o datos de fidelización), y siempre puedes corregir cualquier campo antes de confirmar.',
   },
   {
+    category: 'movimientos',
     question: '¿Qué diferencia hay entre una categoría fija y una categoría normal?',
     answer:
       'Una categoría "Fija" genera automáticamente su movimiento cada mes (como un arriendo o una suscripción), sin que tengas que crearlo a mano. Una categoría normal no genera nada por sí sola: solo agrupa los movimientos que le asignes manualmente.',
   },
   {
+    category: 'movimientos',
     question: '¿Cómo puedo crear y personalizar mis categorías?',
     answer:
       'Ve a la pestaña Categorías y toca "+ Nueva categoría". Elige un nombre, un ícono de la lista disponible, y si quieres márcala como "Fija" para que se repita cada mes automáticamente. Puedes editar o eliminar cualquier categoría propia después desde esa misma pantalla.',
   },
   {
+    category: 'notificaciones',
     question: '¿Cómo funciona la lectura automática de notificaciones bancarias?',
     answer:
       'Si activas el acceso a notificaciones (Cuenta → el aviso en la bandeja de pendientes, o ajustes de Android), la app detecta avisos de tu banco apenas llegan, extrae el monto y el comercio, y los deja listos en la bandeja de pendientes para que los confirmes. Es exclusivo de Android y nunca crea un movimiento sin tu confirmación.',
   },
 ];
+
+/**
+ * Category chips + accordion for the "Ayuda / Preguntas Frecuentes" screen.
+ * `category` is plain local state, not lifted -- FullScreenFormModal's
+ * sheet fully unmounts once its close animation finishes (see
+ * AnimatedBottomSheet), so this naturally resets to "Todas" every time the
+ * FAQ section is reopened, no manual reset effect needed. `key={category}`
+ * on Accordion forces a fresh remount (openIndex back to null) on every
+ * filter change, instead of leaving a stale index open that may now point
+ * at a different question in the filtered list.
+ */
+function FaqSection() {
+  const [category, setCategory] = useState<FaqCategoryKey | 'todas'>('todas');
+  const filteredItems = category === 'todas' ? FAQ_ITEMS : FAQ_ITEMS.filter((item) => item.category === category);
+
+  return (
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="flex-none grow-0 -mx-4 mb-1"
+        contentContainerClassName="px-4 pb-3"
+      >
+        {FAQ_CATEGORY_FILTERS.map((filter) => {
+          const selected = filter.key === category;
+          return (
+            <PressableScale
+              key={filter.key}
+              onPress={() => setCategory(filter.key)}
+              scaleTo={0.965}
+              activeOpacity={0.7}
+              spring
+              className={`px-3 py-2 mr-2 rounded-full border ${selected ? 'bg-brand border-brand' : 'border-gray-200'}`}
+              accessibilityRole="button"
+              accessibilityLabel={`Filtrar preguntas: ${filter.label}`}
+            >
+              <Text className={`font-jakarta-medium text-sm ${selected ? 'text-white' : 'text-gray-700'}`}>
+                {filter.label}
+              </Text>
+            </PressableScale>
+          );
+        })}
+      </ScrollView>
+
+      <Accordion key={category} items={filteredItems} />
+    </View>
+  );
+}
 
 function AccountRow({
   icon,
@@ -647,7 +737,7 @@ function CuentaScreen() {
         title="Ayuda / Preguntas Frecuentes"
         onClose={() => setOpenSection(null)}
       >
-        <Accordion items={FAQ_ITEMS} />
+        <FaqSection />
       </FullScreenFormModal>
 
       <FullScreenFormModal visible={openSection === 'acerca'} title="Acerca de" onClose={() => setOpenSection(null)}>
