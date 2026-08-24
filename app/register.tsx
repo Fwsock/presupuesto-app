@@ -9,6 +9,7 @@ import { AuthHeader } from '../components/AuthHeader';
 import { AuthTextInput } from '../components/AuthTextInput';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { Button } from '../components/Button';
+import { BackButton } from '../components/BackButton';
 
 const registerSchema = z
   .object({
@@ -68,6 +69,7 @@ export default function RegisterScreen() {
       className="bg-white"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <BackButton onPress={() => router.back()} />
       <ScrollView
         className="px-6"
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
