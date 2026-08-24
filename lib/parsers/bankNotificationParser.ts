@@ -38,9 +38,15 @@ const GASTO_KEYWORDS = [
   'retiro',
 ];
 
-// Bank marketing copy ("¿Necesitas efectivo?", "Pide tu crédito preaprobado")
-// often reads a lot like a real transaction notification -- these keywords
-// catch it before it ever reaches the pending inbox, see isRealTransactionNotification.
+// Bank/fintech marketing copy ("¿Necesitas efectivo?", "Pide tu crédito
+// preaprobado", referral spam like Tenpo's "invita a tus amigos y gana
+// $3.000 Tenpesos") often reads a lot like a real transaction notification
+// -- these keywords catch it before it ever reaches the pending inbox, see
+// isRealTransactionNotification. Reproduced from a real false positive: a
+// Tenpo referral notification ("...invita a tus amigos a Tenpo y gana
+// $3.000 Tenpesos por cada uno que haga su primera compra...") contains
+// "compra" (a real GASTO_KEYWORD) and a dollar amount, so without an
+// explicit blacklist entry it was extracted as a genuine $3.000 gasto.
 const PROMOTIONAL_KEYWORDS = [
   'necesitas efectivo',
   'pide tu credito',
@@ -51,6 +57,7 @@ const PROMOTIONAL_KEYWORDS = [
   'descuento',
   'promocion',
   'cupon',
+  'codigo',
   'sorteo',
   'aumenta tu linea',
   'super tasa',
@@ -59,12 +66,21 @@ const PROMOTIONAL_KEYWORDS = [
   'cotiza',
   'activa tu tarjeta',
   'conoce mas',
-  'entérate',
   'enterate',
   'te invitamos',
   'aprovecha',
   'nueva tarjeta',
   'sube tu cupo',
+  // Referral/reward spam (Tenpo, BancoEstado, Santander and similar apps
+  // routinely push these as push notifications, not just in-app banners).
+  'invita',
+  'refiere',
+  'referido',
+  'gana',
+  'ganaste',
+  'tenpesos',
+  'cashback',
+  'premio',
 ];
 
 function normalize(text: string): string {
@@ -73,6 +89,17 @@ function normalize(text: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
 }
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Built once from PROMOTIONAL_KEYWORDS (already the single source of truth
+// for the blacklist) instead of hand-writing a giant alternation -- same
+// matching semantics as the old `.some(keyword => text.includes(...))` loop
+// (plain substring, case/accent-insensitive via `normalize` on both sides),
+// just expressed as one compiled regular expression.
+const PROMOTIONAL_PATTERN = new RegExp(PROMOTIONAL_KEYWORDS.map((k) => escapeRegExp(normalize(k))).join('|'), 'i');
 
 /** parseFloat can return NaN for malformed input -- callers must never trust this without checking Number.isFinite. */
 function parseAmount(raw: string): number {
@@ -119,8 +146,7 @@ export function parseBankNotification(text: string): ParsedBankNotification {
 }
 
 export function isPromotionalNotification(text: string): boolean {
-  const normalized = normalize(text);
-  return PROMOTIONAL_KEYWORDS.some((keyword) => normalized.includes(normalize(keyword)));
+  return PROMOTIONAL_PATTERN.test(normalize(text));
 }
 
 /**
