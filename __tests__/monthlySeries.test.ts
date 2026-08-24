@@ -1,4 +1,4 @@
-import { buildMonthlySaldoSeries, monthOffset } from '../features/movements/monthlySeries';
+import { buildMonthlySaldoSeries, calculateAverageGasto, monthOffset, type MonthlySaldoPoint } from '../features/movements/monthlySeries';
 import type { Category } from '../features/categories/types';
 import type { Movement } from '../features/movements/types';
 
@@ -67,15 +67,17 @@ describe('buildMonthlySaldoSeries', () => {
     ]);
 
     expect(series).toEqual([
-      { year: 2026, month: 6, saldoDisponible: 400000, hasMovements: true },
-      { year: 2026, month: 7, saldoDisponible: 50000, hasMovements: true },
+      { year: 2026, month: 6, saldoDisponible: 400000, totalIngresos: 500000, totalGastos: 100000, hasMovements: true },
+      { year: 2026, month: 7, saldoDisponible: 50000, totalIngresos: 300000, totalGastos: 250000, hasMovements: true },
     ]);
   });
 
   it('marks a month with no movements as having no data and zero saldo', () => {
     const series = buildMonthlySaldoSeries([], categories, [{ year: 2026, month: 8 }]);
 
-    expect(series).toEqual([{ year: 2026, month: 8, saldoDisponible: 0, hasMovements: false }]);
+    expect(series).toEqual([
+      { year: 2026, month: 8, saldoDisponible: 0, totalIngresos: 0, totalGastos: 0, hasMovements: false },
+    ]);
   });
 
   it('ignores pendiente movements for the saldo but still counts the month as having data', () => {
@@ -83,7 +85,9 @@ describe('buildMonthlySaldoSeries', () => {
 
     const series = buildMonthlySaldoSeries(movements, categories, [{ year: 2026, month: 9 }]);
 
-    expect(series).toEqual([{ year: 2026, month: 9, saldoDisponible: 0, hasMovements: true }]);
+    expect(series).toEqual([
+      { year: 2026, month: 9, saldoDisponible: 0, totalIngresos: 0, totalGastos: 0, hasMovements: true },
+    ]);
   });
 
   it('can produce a negative saldoDisponible', () => {
@@ -95,5 +99,58 @@ describe('buildMonthlySaldoSeries', () => {
     const series = buildMonthlySaldoSeries(movements, categories, [{ year: 2026, month: 5 }]);
 
     expect(series[0].saldoDisponible).toBe(-50000);
+  });
+});
+
+function point(overrides: Partial<MonthlySaldoPoint>): MonthlySaldoPoint {
+  return { year: 2026, month: 1, saldoDisponible: 0, totalIngresos: 0, totalGastos: 0, hasMovements: false, ...overrides };
+}
+
+describe('calculateAverageGasto', () => {
+  const TODAY = new Date('2026-08-23');
+
+  it('excludes future months (always $0) from the divisor instead of dragging the average down', () => {
+    const points = [
+      point({ month: 7, totalGastos: 200000, hasMovements: true }), // past
+      point({ month: 8, totalGastos: 300000, hasMovements: true }), // present
+      point({ month: 9, totalGastos: 0, hasMovements: false }), // future, no data yet
+    ];
+
+    // Old (buggy) behavior would have divided by 3 -> 166,666.
+    expect(calculateAverageGasto(points, TODAY)).toBe(250000);
+  });
+
+  it('excludes a past/present month with genuinely nothing logged, not just future ones', () => {
+    const points = [
+      point({ month: 6, totalGastos: 0, hasMovements: false }), // past, nothing logged
+      point({ month: 7, totalGastos: 400000, hasMovements: true }),
+      point({ month: 8, totalGastos: 200000, hasMovements: true }),
+    ];
+
+    expect(calculateAverageGasto(points, TODAY)).toBe(300000);
+  });
+
+  it('treats the current month as eligible (present, not future)', () => {
+    const points = [point({ year: 2026, month: 8, totalGastos: 100000, hasMovements: true })];
+
+    expect(calculateAverageGasto(points, TODAY)).toBe(100000);
+  });
+
+  it('excludes a future month that rolls into next year', () => {
+    const points = [
+      point({ year: 2026, month: 8, totalGastos: 200000, hasMovements: true }),
+      point({ year: 2027, month: 1, totalGastos: 999999, hasMovements: true }),
+    ];
+
+    expect(calculateAverageGasto(points, TODAY)).toBe(200000);
+  });
+
+  it('returns 0 when there is no qualifying month', () => {
+    const points = [
+      point({ month: 9, totalGastos: 0, hasMovements: false }),
+      point({ month: 10, totalGastos: 0, hasMovements: false }),
+    ];
+
+    expect(calculateAverageGasto(points, TODAY)).toBe(0);
   });
 });
