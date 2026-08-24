@@ -19,27 +19,39 @@ export function monthOffset(year: number, month: number, offset: number): { year
 }
 
 /**
- * Average monthly gasto across an "active period baseline": only points
- * that are already over (year/month <= today) AND have a real recorded
- * gasto (> 0) count toward the divisor. A future month in the chart's
- * window always starts at $0 (nothing can have been spent yet, it hasn't
- * happened), and a past month with genuinely nothing logged isn't a
- * meaningful data point either -- counting either drags the average down
- * artificially, understating what a "normal" month actually costs (seen in
+ * Average of `metric` across an "active period baseline": only points that
+ * are already over (year/month <= today) AND have a real recorded value
+ * for that metric (> 0) count toward the divisor. A future month in the
+ * chart's window always starts at $0 (nothing can have happened yet), and
+ * a past month with genuinely nothing logged isn't a meaningful data point
+ * either -- counting either drags the average down artificially,
+ * understating what a "normal" month actually looks like (seen in
  * practice: a mostly-empty 7-month window made every real month of
  * spending look like a multi-hundred-percent spike above "average").
  * `today` is injectable for deterministic tests -- defaults to the real
  * clock for actual chart usage.
  */
-export function calculateAverageGasto(points: MonthlySaldoPoint[], today: Date = new Date()): number {
+function calculateActivePeriodAverage(
+  points: MonthlySaldoPoint[],
+  metric: (point: MonthlySaldoPoint) => number,
+  today: Date
+): number {
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth() + 1;
   const activePoints = points.filter((p) => {
     const isPastOrPresent = p.year < todayYear || (p.year === todayYear && p.month <= todayMonth);
-    return isPastOrPresent && p.totalGastos > 0;
+    return isPastOrPresent && metric(p) > 0;
   });
   if (activePoints.length === 0) return 0;
-  return activePoints.reduce((sum, p) => sum + p.totalGastos, 0) / activePoints.length;
+  return activePoints.reduce((sum, p) => sum + metric(p), 0) / activePoints.length;
+}
+
+export function calculateAverageGasto(points: MonthlySaldoPoint[], today: Date = new Date()): number {
+  return calculateActivePeriodAverage(points, (p) => p.totalGastos, today);
+}
+
+export function calculateAverageIngreso(points: MonthlySaldoPoint[], today: Date = new Date()): number {
+  return calculateActivePeriodAverage(points, (p) => p.totalIngresos, today);
 }
 
 export function buildMonthlySaldoSeries(

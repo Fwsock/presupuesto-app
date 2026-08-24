@@ -1,4 +1,10 @@
-import { buildMonthlySaldoSeries, calculateAverageGasto, monthOffset, type MonthlySaldoPoint } from '../features/movements/monthlySeries';
+import {
+  buildMonthlySaldoSeries,
+  calculateAverageGasto,
+  calculateAverageIngreso,
+  monthOffset,
+  type MonthlySaldoPoint,
+} from '../features/movements/monthlySeries';
 import type { Category } from '../features/categories/types';
 import type { Movement } from '../features/movements/types';
 
@@ -152,5 +158,35 @@ describe('calculateAverageGasto', () => {
     ];
 
     expect(calculateAverageGasto(points, TODAY)).toBe(0);
+  });
+});
+
+describe('calculateAverageIngreso', () => {
+  const TODAY = new Date('2026-08-23');
+
+  it('mirrors calculateAverageGasto\'s active-period-baseline rule but for ingresos', () => {
+    const points = [
+      point({ month: 7, totalIngresos: 900000, hasMovements: true }), // past
+      point({ month: 8, totalIngresos: 1100000, hasMovements: true }), // present
+      point({ month: 9, totalIngresos: 0, hasMovements: false }), // future, no data yet
+    ];
+
+    expect(calculateAverageIngreso(points, TODAY)).toBe(1000000);
+  });
+
+  it('excludes a past/present month with no ingreso logged', () => {
+    const points = [
+      point({ month: 6, totalIngresos: 0, hasMovements: false }),
+      point({ month: 7, totalIngresos: 500000, hasMovements: true }),
+      point({ month: 8, totalIngresos: 700000, hasMovements: true }),
+    ];
+
+    expect(calculateAverageIngreso(points, TODAY)).toBe(600000);
+  });
+
+  it('returns 0 when there is no qualifying month', () => {
+    const points = [point({ month: 9, totalIngresos: 0, hasMovements: false })];
+
+    expect(calculateAverageIngreso(points, TODAY)).toBe(0);
   });
 });
