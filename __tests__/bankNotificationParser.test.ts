@@ -124,6 +124,34 @@ describe('isPromotionalNotification', () => {
   it('does not flag a real compra notification', () => {
     expect(isPromotionalNotification('Banco de Chile: Compra por $12.990 en STARBUCKS CHILE')).toBe(false);
   });
+
+  // Real false positive this filter is meant to catch: a Tenpo referral
+  // push notification that contains both "compra" (a GASTO_KEYWORD) and a
+  // dollar amount, so it used to get parsed as a genuine $3.000 gasto (see
+  // the exact confirm-movement screen it produced before this fix).
+  it('flags a Tenpo referral/reward notification even though it contains "compra" and an amount', () => {
+    expect(
+      isPromotionalNotification(
+        'Esta amistad sí conviene: Bastian, invita a tus amigos a Tenpo y gana $3.000 Tenpesos por cada uno que haga su primera compra. Ir a invitar'
+      )
+    ).toBe(true);
+  });
+
+  it('flags a BancoEstado referral promotion', () => {
+    expect(
+      isPromotionalNotification('BancoEstado: Invita a tus amigos y gana $5.000 por cada referido que se cambie de banco')
+    ).toBe(true);
+  });
+
+  it('flags a Santander cashback/coupon-code promotion', () => {
+    expect(
+      isPromotionalNotification('Santander: Usa el código VERANO50 y obtén cashback en tu próxima compra')
+    ).toBe(true);
+  });
+
+  it('flags a generic "premio" sweepstakes promotion', () => {
+    expect(isPromotionalNotification('¡Participa y gana un premio de $100.000 en efectivo!')).toBe(true);
+  });
 });
 
 describe('isRealTransactionNotification', () => {
@@ -139,5 +167,25 @@ describe('isRealTransactionNotification', () => {
 
   it('rejects a message with no extractable amount', () => {
     expect(isRealTransactionNotification('Recordatorio: revisa tu estado de cuenta')).toBe(false);
+  });
+
+  it('rejects the Tenpo referral notification despite its "compra" keyword and dollar amount', () => {
+    expect(
+      isRealTransactionNotification(
+        'Esta amistad sí conviene: Bastian, invita a tus amigos a Tenpo y gana $3.000 Tenpesos por cada uno que haga su primera compra. Ir a invitar'
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a BancoEstado referral promotion despite its dollar amount', () => {
+    expect(
+      isRealTransactionNotification('BancoEstado: Invita a tus amigos y gana $5.000 por cada referido que se cambie de banco')
+    ).toBe(false);
+  });
+
+  it('rejects a Santander cashback/coupon-code promotion despite its dollar amount', () => {
+    expect(
+      isRealTransactionNotification('Santander: Usa el código VERANO50 y obtén cashback en tu próxima compra')
+    ).toBe(false);
   });
 });
