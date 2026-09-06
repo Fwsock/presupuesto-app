@@ -5,6 +5,7 @@ import {
   createMovement,
   deleteInstallmentsFrom,
   deleteMovement,
+  deleteMovementById,
   deleteMovementGroup,
   fetchMovementsForMonth,
   fetchMovementsForMonthRange,
@@ -245,7 +246,10 @@ export function useConvertMovementToInstallments() {
   const invalidate = useInvalidateMovements();
   return useMutation({
     mutationFn: async (input: { movementId: string; groupId: string } & RegenerateInstallmentsInput) => {
-      await deleteMovement(input.movementId);
+      // Not deleteMovement: this is replacing the row with its first cuota,
+      // not the user asking to remove a recurring instance -- no skip
+      // should be recorded here. See deleteMovementById's own docstring.
+      await deleteMovementById(input.movementId);
       const rows = generateInstallmentsFrom(input, input.groupId);
       return createInstallments(rows);
     },
@@ -269,9 +273,12 @@ export function useDeleteMovement() {
   const invalidate = useInvalidateMovements();
   const { removeMovement } = useUpdateMovementsCache();
   return useMutation({
-    mutationFn: (id: string) => deleteMovement(id),
-    onSuccess: (_data, id) => {
-      removeMovement(id);
+    // Takes the full Movement (not just its id) -- deleteMovement needs
+    // fecha/recurring_income_id/fixed_series_id to record a skip when this
+    // was an auto-generated recurring instance, so it never regenerates.
+    mutationFn: (movement: Movement) => deleteMovement(movement),
+    onSuccess: (_data, movement) => {
+      removeMovement(movement.id);
       invalidate();
     },
   });

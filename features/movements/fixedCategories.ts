@@ -1,6 +1,7 @@
 import { logSupabaseError, supabase } from '../../lib/supabase';
 import { fetchCategories } from '../categories/api';
 import { computeFixedCategoryReplications } from './fixedCategoryReplication';
+import { fetchSkippedFixedSeriesIds } from './recurringSkips';
 import type { Movement } from './types';
 
 function firstDayOfMonth(year: number, month: number): string {
@@ -61,7 +62,18 @@ export async function ensureFixedCategoryMovementsForMonth(year: number, month: 
     logSupabaseError('ensureFixedCategoryMovementsForMonth (current)', currentError);
     throw currentError;
   }
-  const alreadyPresent = new Set((currentMonthMovements ?? []).map((m) => m.fixed_series_id as string));
+  // A series+month the user explicitly deleted before is treated exactly
+  // like one that already has a row this month -- "already accounted for,"
+  // just not by an existing movement. Merging both into one set means
+  // computeFixedCategoryReplications doesn't need its own skip-awareness at
+  // all. See recurringSkips.ts for why a hard delete needs this: without
+  // it, the next refresh/app restart has no memory that this month was
+  // already handled and silently recreates it.
+  const skippedSeriesIds = await fetchSkippedFixedSeriesIds(monthStart);
+  const alreadyPresent = new Set([
+    ...(currentMonthMovements ?? []).map((m) => m.fixed_series_id as string),
+    ...skippedSeriesIds,
+  ]);
 
   const toInsert = computeFixedCategoryReplications(
     priorMovements as Movement[],

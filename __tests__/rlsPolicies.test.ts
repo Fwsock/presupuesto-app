@@ -18,6 +18,7 @@ const USER_DATA_TABLES: { table: string; ownerColumn: string }[] = [
   { table: 'profiles', ownerColumn: 'id' },
   { table: 'recurring_income', ownerColumn: 'user_id' },
   { table: 'feedback', ownerColumn: 'user_id' },
+  { table: 'recurring_skips', ownerColumn: 'user_id' },
 ];
 
 describe('Row Level Security policies (static check across all migrations)', () => {

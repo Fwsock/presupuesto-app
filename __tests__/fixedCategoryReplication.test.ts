@@ -1,4 +1,4 @@
-import { computeFixedCategoryReplications } from '../features/movements/fixedCategoryReplication';
+import { computeFixedCategoryReplications, shouldStartFixedSeries } from '../features/movements/fixedCategoryReplication';
 import type { Movement } from '../features/movements/types';
 
 function movement(overrides: Partial<Movement>): Movement {
@@ -110,5 +110,72 @@ describe('computeFixedCategoryReplications', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({ cuota_numero: null, cuota_total: null });
+  });
+
+  // Matrix rule "INGRESO BASE PERFIL" / the "Transferencia de Alvaro" bug:
+  // income recurrence is exclusively ensureRecurringIncomeForMonth's job
+  // (features/income/api.ts), regardless of the movement's own category.
+  // This is the defense-in-depth half of the fix -- shouldStartFixedSeries
+  // below is the other half, stopping a fixed_series_id from ever being
+  // assigned to an ingreso at creation time in the first place.
+  it('never replicates an ingreso movement, even if it already carries a fixed_series_id', () => {
+    const priorMovements = [
+      movement({
+        id: 'm-transferencia',
+        fecha: '2026-08-04',
+        concepto: 'Transferencia de Alvaro',
+        tipo: 'ingreso',
+        category_id: 'ingresos',
+        fixed_series_id: 'serie-transferencia',
+      }),
+    ];
+
+    const result = computeFixedCategoryReplications(priorMovements, new Set(), 2026, 9, 'u1');
+
+    expect(result).toHaveLength(0);
+  });
+
+  it('still replicates a gasto series normally alongside an excluded ingreso series', () => {
+    const priorMovements = [
+      movement({ id: 'm-luz', fecha: '2026-08-05', concepto: 'Luz', tipo: 'gasto', fixed_series_id: 'serie-luz' }),
+      movement({
+        id: 'm-transferencia',
+        fecha: '2026-08-04',
+        concepto: 'Transferencia de Alvaro',
+        tipo: 'ingreso',
+        fixed_series_id: 'serie-transferencia',
+      }),
+    ];
+
+    const result = computeFixedCategoryReplications(priorMovements, new Set(), 2026, 9, 'u1');
+
+    expect(result.map((r) => r.concepto)).toEqual(['Luz']);
+  });
+});
+
+describe('shouldStartFixedSeries', () => {
+  // Matrix rule "MOVIMIENTO NORMAL + CAT. FIJA": a gasto under a fija
+  // category should replicate indefinitely, so it must start a series.
+  it('is true for a gasto under a fija category', () => {
+    expect(shouldStartFixedSeries(true, 'gasto')).toBe(true);
+  });
+
+  // Matrix rule "MOVIMIENTO NORMAL + CAT. VARIABLE": nothing under a
+  // non-fija category should ever start replicating.
+  it('is false for a gasto under a non-fija category', () => {
+    expect(shouldStartFixedSeries(false, 'gasto')).toBe(false);
+  });
+
+  // The "Transferencia de Alvaro" bug's actual root cause: a one-off
+  // ingreso filed under a category that happens to be marked fija must NOT
+  // start a fixed series -- income recurrence is exclusively the profile's
+  // single recurring-income mechanism ("INGRESO BASE PERFIL"), regardless
+  // of category.
+  it('is false for an ingreso even under a fija category', () => {
+    expect(shouldStartFixedSeries(true, 'ingreso')).toBe(false);
+  });
+
+  it('is false for an ingreso under a non-fija category', () => {
+    expect(shouldStartFixedSeries(false, 'ingreso')).toBe(false);
   });
 });

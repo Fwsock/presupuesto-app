@@ -22,6 +22,26 @@ function cuotasCompleted(m: Movement): boolean {
 }
 
 /**
+ * Whether a freshly-created movement should start a new fixed-category
+ * series (get its own fixed_series_id). True only for `gasto` movements
+ * under a fija category -- `ingreso` is excluded even there, because income
+ * recurrence is exclusively the profile's single recurring-income
+ * mechanism (features/income/api.ts's ensureRecurringIncomeForMonth,
+ * "INGRESO BASE PERFIL": the only income that auto-replicates, regardless
+ * of its own category). Without this exclusion, a one-off ingreso filed
+ * under a fija category -- e.g. a friend's one-time "Transferencia de
+ * Alvaro" logged under an "Ingresos" category someone later marked fija --
+ * would spuriously start replicating forever, indistinguishable from a
+ * real recurring bill. Used by MovementFormModal at creation time; see
+ * this file's own filter below for the matching defense-in-depth check on
+ * the replication side, which also protects any row that slipped through
+ * before this function existed.
+ */
+export function shouldStartFixedSeries(categoryEsFija: boolean, tipo: Movement['tipo']): boolean {
+  return categoryEsFija && tipo === 'gasto';
+}
+
+/**
  * Pure decision logic behind ensureFixedCategoryMovementsForMonth
  * (features/movements/fixedCategories.ts), split out so the "jump straight
  * to a month far in the future" case can be unit-tested without a Supabase
@@ -60,6 +80,12 @@ export function computeFixedCategoryReplications(
   }
 
   return [...latestPerSeries.values()]
+    // Defense-in-depth for the "Transferencia de Alvaro" bug: income
+    // recurrence is exclusively ensureRecurringIncomeForMonth's job (see
+    // shouldStartFixedSeries above) -- this filter also protects any row
+    // that got a fixed_series_id before that rule existed, or from data
+    // edited directly outside the app.
+    .filter((m) => m.tipo !== 'ingreso')
     .filter((m) => !currentMonthSeriesIds.has(m.fixed_series_id as string))
     .filter((m) => !cuotasCompleted(m))
     .map((m) => ({

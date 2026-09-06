@@ -1,6 +1,7 @@
 import { logSupabaseError, supabase } from '../../lib/supabase';
 import { fetchCategories, createCategory } from '../categories/api';
 import { suggestMovementIcon } from '../movements/iconSuggestion';
+import { buildRecurringSkipKey, isRecurringSkipped } from '../movements/recurringSkips';
 import type { Movement } from '../movements/types';
 import type { RecurringIncome, UpsertRecurringIncomeInput } from './types';
 
@@ -115,6 +116,13 @@ export async function ensureRecurringIncomeForMonth(
     throw error;
   }
   if (existingMovement) {
+    return { needsVariablePrompt: false, recurringIncome, previousAmount: null };
+  }
+
+  // The user explicitly deleted THIS month's instance before -- respect
+  // that instead of silently recreating it (fijo) or re-prompting for it
+  // (variable) on the next refresh/app restart. See recurringSkips.ts.
+  if (await isRecurringSkipped(buildRecurringSkipKey('income', recurringIncome.id), fecha)) {
     return { needsVariablePrompt: false, recurringIncome, previousAmount: null };
   }
 

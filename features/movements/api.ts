@@ -1,5 +1,6 @@
 import { logSupabaseError, supabase } from '../../lib/supabase';
 import { sanitizeText, sanitizeNullableText } from '../shared/sanitize';
+import { buildRecurringSkipKey, recordRecurringSkip } from './recurringSkips';
 import type { InstallmentRow } from './installments';
 import type { Movement, NewMovementInput, UpdateMovementInput } from './types';
 
@@ -117,11 +118,50 @@ export async function updateMovement(input: UpdateMovementInput): Promise<Moveme
   return data;
 }
 
-export async function deleteMovement(id: string): Promise<void> {
+/**
+ * Raw delete by id, with no recurring-skip bookkeeping -- used internally
+ * by flows that remove a row as an implementation detail of replacing it
+ * with something else (e.g. useConvertMovementToInstallments swaps a
+ * standalone movement for its first cuota), not as the user asking to
+ * permanently remove a recurring instance. Prefer deleteMovement below for
+ * anything reachable from a user-facing "eliminar" action.
+ */
+export async function deleteMovementById(id: string): Promise<void> {
   const { error } = await supabase.from('movements').delete().eq('id', id);
   if (error) {
-    logSupabaseError('deleteMovement', error);
+    logSupabaseError('deleteMovementById', error);
     throw error;
+  }
+}
+
+/**
+ * Deletes one movement, and -- if it was an auto-generated recurring
+ * instance (recurring income or a fixed-category series) -- records a skip
+ * for that exact (series, month) first, so ensureRecurringIncomeForMonth /
+ * ensureFixedCategoryMovementsForMonth never regenerate it on a later
+ * refresh or app restart (the "regeneración fantasma" bug). Only the id,
+ * fecha, recurring_income_id and fixed_series_id are needed -- callers
+ * already have the full Movement in hand (from the list they're deleting
+ * from), so this takes a narrow Pick instead of forcing a re-fetch.
+ */
+export async function deleteMovement(
+  movement: Pick<Movement, 'id' | 'fecha' | 'recurring_income_id' | 'fixed_series_id'>
+): Promise<void> {
+  await deleteMovementById(movement.id);
+
+  // Best-effort, and only AFTER the delete succeeds: the user's actual
+  // request (removing the movement) must never be blocked by a failure to
+  // record bookkeeping about it -- worst case on failure here is the old
+  // phantom-regeneration bug reappearing for this one instance, not lost
+  // data or an error the user didn't ask for.
+  const seriesKey = movement.recurring_income_id
+    ? buildRecurringSkipKey('income', movement.recurring_income_id)
+    : movement.fixed_series_id
+      ? buildRecurringSkipKey('fixed', movement.fixed_series_id)
+      : null;
+  if (seriesKey) {
+    const monthStart = `${movement.fecha.slice(0, 7)}-01`;
+    await recordRecurringSkip(seriesKey, monthStart);
   }
 }
 

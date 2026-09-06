@@ -133,7 +133,7 @@ function MovimientosScreen() {
         iconColor: '#f59e0b',
         actions: [
           { label: 'Cancelar', variant: 'cancel' },
-          { label: 'Eliminar', variant: 'destructive', onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }) },
+          { label: 'Eliminar', variant: 'destructive', onPress: () => deleteMovement.mutate(movement, { onError: onDeleteError }) },
         ],
       });
     } else if (movement.installment_group_id) {
@@ -144,7 +144,7 @@ function MovimientosScreen() {
           {
             label: 'Eliminar solo esta cuota',
             variant: 'destructive',
-            onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }),
+            onPress: () => deleteMovement.mutate(movement, { onError: onDeleteError }),
           },
           {
             label: 'Eliminar toda la compra',
@@ -160,7 +160,7 @@ function MovimientosScreen() {
         message: `¿Estás seguro que deseas eliminar "${conceptoTrimmed}"?`,
         actions: [
           { label: 'Cancelar', variant: 'cancel' },
-          { label: 'Eliminar', variant: 'destructive', onPress: () => deleteMovement.mutate(id, { onError: onDeleteError }) },
+          { label: 'Eliminar', variant: 'destructive', onPress: () => deleteMovement.mutate(movement, { onError: onDeleteError }) },
         ],
       });
     }

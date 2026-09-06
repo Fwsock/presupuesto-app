@@ -14,6 +14,7 @@ import {
   useConvertMovementToInstallments,
 } from '../features/movements/hooks';
 import { generateInstallments } from '../features/movements/installments';
+import { shouldStartFixedSeries } from '../features/movements/fixedCategoryReplication';
 import { isValidISODate } from '../features/movements/date';
 import { suggestMovementIcon, DEFAULT_MOVEMENT_ICON } from '../features/movements/iconSuggestion';
 import type { Movement, MovementStatus, MovementType } from '../features/movements/types';
@@ -251,11 +252,15 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       });
     } else {
       // A fresh series id, only assigned when the chosen category is "fija"
-      // -- this is what lets ensureFixedCategoryMovementsForMonth find and
-      // replicate this specific line item into future months. Cuotas skip
-      // this entirely: they already repeat via installment_group_id.
+      // AND the movement is a gasto -- this is what lets
+      // ensureFixedCategoryMovementsForMonth find and replicate this
+      // specific line item into future months. Ingreso is excluded even
+      // under a fija category: see shouldStartFixedSeries's own docstring
+      // for why (income recurrence is exclusively the profile's recurring-
+      // income mechanism). Cuotas skip this entirely: they already repeat
+      // via installment_group_id.
       const selectedCategory = categories?.find((c) => c.id === values.categoryId);
-      const fixedSeriesId = selectedCategory?.es_fija ? uuidv4() : null;
+      const fixedSeriesId = shouldStartFixedSeries(selectedCategory?.es_fija ?? false, values.tipo) ? uuidv4() : null;
 
       createMovement.mutate(
         {

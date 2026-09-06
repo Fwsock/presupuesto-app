@@ -122,6 +122,35 @@ describe('generateInstallments', () => {
     expect(rows.reduce((sum, r) => sum + r.monto, 0)).toBe(21000);
   });
 
+  // Matrix rule "MOVIMIENTO EN CUOTAS + CAT. VARIABLE": replicates month to
+  // month but SOLO hasta cumplir el total de cuotas. Unlike fija-category
+  // replication (which decides month by month whether to keep going, see
+  // computeFixedCategoryReplications), a plain-category installment
+  // purchase generates every row up front -- there is no ongoing "keep
+  // replicating" decision left to make, so the total can never be
+  // exceeded by construction. Uses tipo 'ingreso' on purpose to confirm
+  // this isn't gasto-specific (e.g. a loan being paid back to you in
+  // installments).
+  it('generates exactly totalCuotas rows and never more, for any movement tipo', () => {
+    const rows = generateInstallments(
+      {
+        categoryId: 'cat-1',
+        tipo: 'ingreso',
+        concepto: 'Préstamo devuelto por Juan',
+        montoTotal: 90000,
+        notas: null,
+        totalCuotas: 3,
+        fechaInicio: '2026-05-10',
+        icono: 'cash-outline',
+      },
+      'group-7'
+    );
+
+    expect(rows).toHaveLength(3);
+    expect(rows.every((r) => r.tipo === 'ingreso')).toBe(true);
+    expect(rows[rows.length - 1]).toMatchObject({ cuota_numero: 3, cuota_total: 3 });
+  });
+
   it('puts the rounding remainder on the last cuota so the total matches exactly', () => {
     // 100000 / 3 = 33333.33... -> 33333, 33333, 33334
     const rows = generateInstallments(
