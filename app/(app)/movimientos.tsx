@@ -5,7 +5,7 @@ import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { useMovements, useUpdateMovement, useDeleteMovement, useDeleteMovementGroup } from '../../features/movements/hooks';
 import { useCategories } from '../../features/categories/hooks';
 import { groupMovementsByDate } from '../../features/movements/dateGrouping';
-import { formatISODate } from '../../features/movements/date';
+import { formatISODate, shouldPromptPaymentDateUpdate } from '../../features/movements/date';
 import { MonthSelector } from '../../components/MonthSelector';
 import { MovementListItem } from '../../components/MovementListItem';
 import { MovementDateSectionHeader } from '../../components/MovementDateSectionHeader';
@@ -22,6 +22,7 @@ import { useMovementModal } from '../../features/shared/movement-modal-context';
 import { useMovementFilter } from '../../features/shared/movement-filter-context';
 import { MONTH_NAMES } from '../../features/shared/monthNames';
 import { sortMovements, filterMovementsByQuery, type MovementSortField, type SortDirection } from '../../features/movements/sort';
+import { theme } from '../../lib/theme';
 import type { Movement } from '../../features/movements/types';
 import type { MovementDateGroup } from '../../features/movements/dateGrouping';
 
@@ -91,24 +92,55 @@ function MovimientosScreen() {
   const toggleEstado = useCallback(
     (movement: Movement) => {
       setActionError(null);
-      updateMovement.mutate(
-        {
-          id: movement.id,
-          categoryId: movement.category_id,
-          tipo: movement.tipo,
-          concepto: movement.concepto,
-          monto: movement.monto,
-          notas: movement.notas,
-          fecha: movement.fecha,
-          icono: movement.icono,
-          estado: movement.estado === 'pagado' ? 'pendiente' : 'pagado',
-        },
-        {
-          onError: (err) => setActionError((err as Error).message),
-        }
-      );
+      const onError = (err: unknown) => setActionError((err as Error).message);
+
+      const applyToggle = (fecha: string) => {
+        updateMovement.mutate(
+          {
+            id: movement.id,
+            categoryId: movement.category_id,
+            tipo: movement.tipo,
+            concepto: movement.concepto,
+            monto: movement.monto,
+            notas: movement.notas,
+            fecha,
+            icono: movement.icono,
+            estado: movement.estado === 'pagado' ? 'pendiente' : 'pagado',
+          },
+          { onError }
+        );
+      };
+
+      // Option A: only pendiente -> pagado on a day other than today prompts
+      // -- see shouldPromptPaymentDateUpdate's own docstring for why
+      // reverting to pendiente is excluded. Answering either way still
+      // applies the estado change; the only difference is which fecha lands
+      // on the movement.
+      if (shouldPromptPaymentDateUpdate(movement.estado, movement.fecha, todayISO)) {
+        confirm({
+          title: 'Actualizar fecha de pago',
+          message:
+            'Se detectó que este movimiento se marcó como pagado un día distinto al registrado. ¿Deseas actualizar la fecha de pago al día de hoy?',
+          // Neutral calendar icon, not the dialog's own default (a red
+          // trash can meant for delete confirmations) -- this isn't a
+          // destructive action. Stacked full-width: "Mantener fecha
+          // original" is longer than the short Cancelar/Eliminar-style
+          // labels the side-by-side layout was tuned for, and wrapped to
+          // two lines there instead of reading as one clean, centered line.
+          icon: 'calendar-outline',
+          iconColor: theme.brand,
+          stacked: true,
+          actions: [
+            { label: 'Sí, actualizar', variant: 'default', onPress: () => applyToggle(todayISO) },
+            { label: 'Mantener fecha original', variant: 'cancel', onPress: () => applyToggle(movement.fecha) },
+          ],
+        });
+        return;
+      }
+
+      applyToggle(movement.fecha);
     },
-    [updateMovement.mutate]
+    [updateMovement.mutate, confirm, todayISO]
   );
 
   const handleDelete = useCallback((id: string) => {

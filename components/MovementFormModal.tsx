@@ -15,7 +15,7 @@ import {
 } from '../features/movements/hooks';
 import { generateInstallments } from '../features/movements/installments';
 import { shouldStartFixedSeries } from '../features/movements/fixedCategoryReplication';
-import { isValidISODate } from '../features/movements/date';
+import { formatISODate, isValidISODate } from '../features/movements/date';
 import { suggestMovementIcon, DEFAULT_MOVEMENT_ICON } from '../features/movements/iconSuggestion';
 import type { Movement, MovementStatus, MovementType } from '../features/movements/types';
 import { ErrorBanner } from './ErrorBanner';
@@ -104,7 +104,13 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       categoryId: '',
       tipo: 'gasto',
       notas: '',
-      fecha: new Date().toISOString().slice(0, 10),
+      // formatISODate (local getters), not .toISOString().slice(0, 10) (UTC):
+      // in a timezone behind UTC, any local time past ~20:00-21:00 is
+      // already tomorrow in UTC, so the ISO-string version silently
+      // defaulted new movements to the wrong day for the rest of the
+      // evening. Same fix as PendingNotificationConfirmModal/CalendarPickerModal,
+      // which already use this pattern.
+      fecha: formatISODate(new Date()),
       estado: 'pendiente',
       esCuota: false,
       totalCuotas: '',
@@ -127,7 +133,7 @@ export function MovementFormModal({ visible, mode, movement, onClose }: Movement
       categoryId: movement?.category_id ?? '',
       tipo: (movement?.tipo ?? 'gasto') as MovementType,
       notas: movement?.notas ?? '',
-      fecha: movement?.fecha ?? new Date().toISOString().slice(0, 10),
+      fecha: movement?.fecha ?? formatISODate(new Date()),
       estado: (movement?.estado ?? 'pendiente') as MovementStatus,
       esCuota: !!movement?.installment_group_id,
       totalCuotas: movement?.cuota_total ? String(movement.cuota_total) : '',

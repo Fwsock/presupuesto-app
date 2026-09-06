@@ -16,8 +16,16 @@ export interface ConfirmDialogOptions {
   message: string;
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
-  /** Rendered in order. Two actions where one is 'cancel' lay out side by side (cancel left, other right); anything else stacks full-width. */
+  /** Rendered in order. Two actions where one is 'cancel' lay out side by side (cancel left, other right) UNLESS `stacked` is set; anything else (or `stacked: true`) stacks full-width. */
   actions: ConfirmDialogAction[];
+  /**
+   * Forces the full-width vertical layout even for a two-action/cancel pair
+   * that would otherwise go side by side. Use this when a label is too long
+   * to read comfortably in a half-width button (e.g. "Mantener fecha
+   * original") -- the side-by-side layout is tuned for short labels like
+   * "Cancelar"/"Eliminar", not longer, more descriptive ones.
+   */
+  stacked?: boolean;
 }
 
 interface ConfirmDialogProps extends ConfirmDialogOptions {
@@ -46,7 +54,17 @@ const VARIANT_TEXT_CLASSES: Record<NonNullable<ConfirmDialogAction['variant']>, 
  * (no rounded corners, no colored buttons, no icon, no animation control),
  * which is what this component exists to fix.
  */
-export function ConfirmDialog({ visible, title, message, icon, iconColor, actions, onRequestClose, onHidden }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  visible,
+  title,
+  message,
+  icon,
+  iconColor,
+  actions,
+  stacked,
+  onRequestClose,
+  onHidden,
+}: ConfirmDialogProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
   // Modal's `visible` prop can only mount/unmount instantly, but the exit
@@ -78,7 +96,7 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
   if (!mounted) return null;
 
   const isTwoWayWithCancel =
-    actions.length === 2 && actions.some((a) => a.variant === 'cancel');
+    !stacked && actions.length === 2 && actions.some((a) => a.variant === 'cancel');
 
   return (
     <Modal visible transparent animationType="none" onRequestClose={onRequestClose}>
@@ -112,9 +130,11 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                   <View key={action.label} style={{ flex: 1 }}>
                     <PressableScale
                       onPress={action.onPress}
-                      className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
+                      className={`py-3 px-2 rounded-2xl items-center justify-center ${VARIANT_CLASSES[variant]}`}
                     >
-                      <Text className={`font-jakarta-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
+                      <Text className={`font-jakarta-semibold text-center ${VARIANT_TEXT_CLASSES[variant]}`}>
+                        {action.label}
+                      </Text>
                     </PressableScale>
                   </View>
                 );
@@ -128,9 +148,11 @@ export function ConfirmDialog({ visible, title, message, icon, iconColor, action
                   <PressableScale
                     key={action.label}
                     onPress={action.onPress}
-                    className={`py-3 rounded-2xl items-center ${VARIANT_CLASSES[variant]}`}
+                    className={`py-3 px-4 rounded-2xl items-center justify-center ${VARIANT_CLASSES[variant]}`}
                   >
-                    <Text className={`font-jakarta-semibold ${VARIANT_TEXT_CLASSES[variant]}`}>{action.label}</Text>
+                    <Text className={`font-jakarta-semibold text-center ${VARIANT_TEXT_CLASSES[variant]}`}>
+                      {action.label}
+                    </Text>
                   </PressableScale>
                 );
               })}
@@ -173,6 +195,7 @@ export function useConfirmDialog() {
       message={options?.message ?? ''}
       icon={options?.icon}
       iconColor={options?.iconColor}
+      stacked={options?.stacked}
       actions={(options?.actions ?? []).map((action) => ({
         ...action,
         onPress: () => {

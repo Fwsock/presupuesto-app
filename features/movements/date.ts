@@ -1,4 +1,5 @@
 import { MONTH_NAMES } from '../shared/monthNames';
+import type { MovementStatus } from './types';
 
 /**
  * True when `value` is a real calendar date in YYYY-MM-DD form.
@@ -58,6 +59,22 @@ export function formatFullDate(value: string): string {
   if (!isValidISODate(value)) return value;
   const [year, month, day] = value.split('-').map(Number);
   return `${day} de ${MONTH_NAMES[month - 1]} de ${year}`;
+}
+
+/**
+ * True when marking a movement as pagado should prompt the user to confirm
+ * whether to bump its fecha to today (Option A's "Actualizar fecha de
+ * pago" modal) instead of applying the estado change silently. Only
+ * pendiente -> pagado triggers this -- reverting to pendiente never implies
+ * "I paid this today", so it never needs the prompt, and a movement whose
+ * fecha already matches today has nothing to reconcile.
+ */
+export function shouldPromptPaymentDateUpdate(
+  currentEstado: MovementStatus,
+  fecha: string,
+  todayISO: string
+): boolean {
+  return currentEstado !== 'pagado' && fecha !== todayISO;
 }
 
 // 'YYYY-MM-DD' + today's 'YYYY-MM-DD' -> 'HOY · 04 de Agosto' or '03 de Agosto',

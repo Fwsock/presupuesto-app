@@ -1,4 +1,9 @@
-import { isValidISODate, formatLongDate, formatSectionHeaderDate } from '../features/movements/date';
+import {
+  isValidISODate,
+  formatLongDate,
+  formatSectionHeaderDate,
+  shouldPromptPaymentDateUpdate,
+} from '../features/movements/date';
 
 describe('isValidISODate', () => {
   it('accepts real calendar dates in YYYY-MM-DD form', () => {
@@ -47,5 +52,21 @@ describe('formatSectionHeaderDate', () => {
 
   it('pads single-digit days with a leading zero', () => {
     expect(formatSectionHeaderDate('2026-08-01', '2026-08-04')).toBe('01 de Agosto');
+  });
+});
+
+// "Smart pago" modal (Option A): only pendiente -> pagado on a day other
+// than today should interrupt the user to ask which date to keep.
+describe('shouldPromptPaymentDateUpdate', () => {
+  it('prompts when marking pendiente as pagado on a different day than today', () => {
+    expect(shouldPromptPaymentDateUpdate('pendiente', '2026-08-03', '2026-08-04')).toBe(true);
+  });
+
+  it('does not prompt when marking pendiente as pagado on the same day as today', () => {
+    expect(shouldPromptPaymentDateUpdate('pendiente', '2026-08-04', '2026-08-04')).toBe(false);
+  });
+
+  it('never prompts when reverting an already-pagado movement back to pendiente, even on a different day', () => {
+    expect(shouldPromptPaymentDateUpdate('pagado', '2026-08-03', '2026-08-04')).toBe(false);
   });
 });
