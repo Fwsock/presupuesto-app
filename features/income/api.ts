@@ -71,7 +71,7 @@ async function resolveIngresosCategoryId(): Promise<string> {
   const existing = categories.find((c) => c.nombre.trim().toLowerCase() === 'ingresos');
   if (existing) return existing.id;
 
-  const created = await createCategory({ nombre: 'Ingresos', esFija: false });
+  const created = await createCategory({ nombre: 'Ingresos', esFija: false, icono: 'trending-up-outline', color: '#10B981' });
   return created.id;
 }
 

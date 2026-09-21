@@ -68,6 +68,15 @@
         "jest",
         "@types/jest"
       ]
+    },
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "@react-native-ml-kit/text-recognition",
+          "bank-notification-listener"
+        ],
+        "listUnknownPackages": false
+      }
     }
   }
 }

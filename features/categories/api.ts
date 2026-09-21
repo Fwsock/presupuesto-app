@@ -35,7 +35,7 @@ export async function createCategory(input: NewCategoryInput): Promise<Category>
 
   const { data, error } = await supabase
     .from('categories')
-    .insert({ nombre, es_fija: input.esFija, user_id: userId })
+    .insert({ nombre, es_fija: input.esFija, icono: input.icono, color: input.color, user_id: userId })
     .select()
     .single();
   if (error) {
@@ -51,7 +51,7 @@ export async function updateCategory(input: UpdateCategoryInput): Promise<Catego
 
   const { data, error } = await supabase
     .from('categories')
-    .update({ nombre, es_fija: input.esFija })
+    .update({ nombre, es_fija: input.esFija, icono: input.icono, color: input.color })
     .eq('id', input.id)
     .select()
     .single();
@@ -70,6 +70,18 @@ export async function categoryHasMovements(categoryId: string): Promise<boolean>
     throw error;
   }
   return (data?.length ?? 0) > 0;
+}
+
+/** Moves every movement (any month) off `fromCategoryId` onto `toCategoryId` -- used by the delete flow's reassignment sheet so a category with history can be removed without losing its movements. */
+export async function reassignCategoryMovements(fromCategoryId: string, toCategoryId: string): Promise<void> {
+  const { error } = await supabase
+    .from('movements')
+    .update({ category_id: toCategoryId })
+    .eq('category_id', fromCategoryId);
+  if (error) {
+    logSupabaseError('reassignCategoryMovements', error);
+    throw error;
+  }
 }
 
 export async function deleteCategory(id: string): Promise<void> {

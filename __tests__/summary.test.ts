@@ -3,9 +3,9 @@ import type { Category } from '../features/categories/types';
 import type { Movement } from '../features/movements/types';
 
 const categories: Category[] = [
-  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', es_fija: false, created_at: '' },
-  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', es_fija: false, created_at: '' },
-  { id: 'ahorro', user_id: 'u1', nombre: 'Ahorro', es_fija: false, created_at: '' },
+  { id: 'ing', user_id: 'u1', nombre: 'Ingresos', es_fija: false, icono: 'pricetag-outline', color: '#2563EB', created_at: '' },
+  { id: 'fijos', user_id: 'u1', nombre: 'Gastos Fijos', es_fija: false, icono: 'pricetag-outline', color: '#2563EB', created_at: '' },
+  { id: 'ahorro', user_id: 'u1', nombre: 'Ahorro', es_fija: false, icono: 'pricetag-outline', color: '#2563EB', created_at: '' },
 ];
 
 function movement(overrides: Partial<Movement>): Movement {

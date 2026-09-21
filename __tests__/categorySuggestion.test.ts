@@ -2,7 +2,15 @@ import { suggestCategoryForComercio } from '../features/movements/categorySugges
 import type { Category } from '../features/categories/types';
 
 function makeCategory(id: string, nombre: string): Category {
-  return { id, user_id: 'u1', nombre, es_fija: false, created_at: '2026-01-01T00:00:00.000Z' };
+  return {
+    id,
+    user_id: 'u1',
+    nombre,
+    es_fija: false,
+    icono: 'pricetag-outline',
+    color: '#2563EB',
+    created_at: '2026-01-01T00:00:00.000Z',
+  };
 }
 
 describe('suggestCategoryForComercio', () => {
