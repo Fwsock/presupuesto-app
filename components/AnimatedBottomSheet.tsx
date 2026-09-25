@@ -125,7 +125,23 @@ export function AnimatedBottomSheet({
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'transparent' }}>
+      <View
+        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'transparent' }}
+        // `mounted` stays true for the ~220ms exit animation below (that's
+        // the whole point -- it lets the fade+slide-out actually play before
+        // the native Modal disappears), but `visible` is THIS component's own
+        // prop reflecting the caller's real open/closed intent, and it flips
+        // false the INSTANT the caller decides to close. Gating pointerEvents
+        // on `visible` (not `mounted`) lets touches fall straight through to
+        // whatever's underneath -- on iOS this is a real UIViewController
+        // still technically on screen while fading out, but with
+        // isUserInteractionEnabled effectively off, iOS hit-testing skips it
+        // and reaches the presenting screen right away. Without this, the
+        // screen behind read as "frozen" for the ~220ms right after closing
+        // any sheet -- an invisible-but-still-interactive full-screen
+        // Pressable (the backdrop below) was silently eating every tap.
+        pointerEvents={visible ? 'auto' : 'none'}
+      >
         <Animated.View
           className="bg-black/40"
           style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, backdropStyle]}

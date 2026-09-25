@@ -1,5 +1,5 @@
-import { memo, useEffect, useState } from 'react';
-import { Image, Linking, Platform, ScrollView, Share, Text, TextInput, View } from 'react-native';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Image, LayoutAnimation, Linking, Platform, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -155,6 +155,23 @@ function FaqSection() {
   const [category, setCategory] = useState<FaqCategoryKey | 'todas'>('todas');
   const filteredItems = category === 'todas' ? FAQ_ITEMS : FAQ_ITEMS.filter((item) => item.category === category);
 
+  // `key={category}` below fully unmounts/remounts the whole question list
+  // (needed to reset Accordion's own openIndex back to null -- a stale open
+  // index could otherwise point at the wrong question in the new filtered
+  // set). That remount swaps every visible row in a single commit with zero
+  // transition on its own. LayoutAnimation.configureNext wraps that native
+  // add/remove diff in one smooth transition -- the right tool here
+  // specifically because it's a real remount, not a continuing component
+  // Reanimated's entering/exiting could otherwise animate more precisely.
+  // (Each question's own expand/collapse below is intentionally untouched:
+  // Accordion already animates that via Reanimated's LinearTransition +
+  // FadeIn/FadeOut, a deliberate upgrade from an earlier LayoutAnimation-
+  // style height approach that visibly janked at ~30fps -- see Accordion.tsx.)
+  const handleCategoryChange = (key: FaqCategoryKey | 'todas') => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCategory(key);
+  };
+
   return (
     <View>
       <ScrollView
@@ -168,7 +185,7 @@ function FaqSection() {
           return (
             <PressableScale
               key={filter.key}
-              onPress={() => setCategory(filter.key)}
+              onPress={() => handleCategoryChange(filter.key)}
               scaleTo={0.965}
               activeOpacity={0.7}
               spring
@@ -372,6 +389,23 @@ function CuentaScreen() {
   const setExperimentalScanEnabled = useSetExperimentalScanEnabled();
 
   const [openSection, setOpenSection] = useState<AccountSection>(null);
+
+  // Set by AboutLinkRow's onPress, consumed by the 'acerca' sheet's
+  // onHidden below. Directly calling setOpenSection('terminos') (etc.)
+  // while 'acerca' is still visible used to flip TWO sections in the same
+  // commit -- 'acerca' closing and 'terminos' opening -- which presents a
+  // brand-new real native Modal (a UIViewController on iOS) in the same
+  // tick the previous one starts its own dismissal. Two overlapping native
+  // Modal transitions is the exact, already-documented cause of the
+  // account screen going unresponsive afterward (same class of bug fixed
+  // for MovementListItem -> MovementDetailSheet -> MovementFormModal).
+  // Deferring the actual section switch to onHidden guarantees 'acerca'
+  // has fully unmounted before the next sheet even starts presenting.
+  const pendingSectionRef = useRef<AccountSection>(null);
+  const navigateFromAcerca = (target: AccountSection) => {
+    pendingSectionRef.current = target;
+    setOpenSection(null);
+  };
 
   const [nombre, setNombre] = useState('');
   const [phoneCountryCode, setPhoneCountryCode] = useState('CL');
@@ -740,7 +774,18 @@ function CuentaScreen() {
         <FaqSection />
       </FullScreenFormModal>
 
-      <FullScreenFormModal visible={openSection === 'acerca'} title="Acerca de" onClose={() => setOpenSection(null)}>
+      <FullScreenFormModal
+        visible={openSection === 'acerca'}
+        title="Acerca de"
+        onClose={() => setOpenSection(null)}
+        onHidden={() => {
+          if (pendingSectionRef.current) {
+            const next = pendingSectionRef.current;
+            pendingSectionRef.current = null;
+            setOpenSection(next);
+          }
+        }}
+      >
         <View className="items-center mb-5">
           <Image
             source={require('../../assets/icon.png')}
@@ -752,9 +797,9 @@ function CuentaScreen() {
 
         <AboutQrCard />
 
-        <AboutLinkRow label="Términos y Condiciones" onPress={() => setOpenSection('terminos')} />
-        <AboutLinkRow label="Política de Privacidad" onPress={() => setOpenSection('privacidad')} />
-        <AboutLinkRow label="Soporte" onPress={() => setOpenSection('soporte')} isLast />
+        <AboutLinkRow label="Términos y Condiciones" onPress={() => navigateFromAcerca('terminos')} />
+        <AboutLinkRow label="Política de Privacidad" onPress={() => navigateFromAcerca('privacidad')} />
+        <AboutLinkRow label="Soporte" onPress={() => navigateFromAcerca('soporte')} isLast />
       </FullScreenFormModal>
 
       <FullScreenFormModal
