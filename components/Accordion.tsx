@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,15 @@ import { Ionicons } from '@expo/vector-icons';
 // an animation rather than a snap. easeOutQuad: quick start, gentle finish.
 const TRANSITION_DURATION = 180;
 const TRANSITION_EASING = Easing.out(Easing.quad);
+
+// Row add/remove when the list is FILTERED (see Accordion). Exit is
+// deliberately quicker than the entrance and the entrance waits a beat: an
+// exiting Reanimated view keeps occupying its slot while it fades, and the
+// incoming rows appear at their final positions immediately -- staggering
+// them keeps the outgoing and incoming rows from visibly overlapping.
+const FILTER_EXIT_DURATION = 120;
+const FILTER_ENTER_DURATION = 200;
+const FILTER_ENTER_DELAY = 80;
 
 export interface AccordionItemData {
   question: string;
@@ -17,6 +26,8 @@ interface AccordionRowProps extends AccordionItemData {
   isOpen: boolean;
   onToggle: () => void;
   isLast: boolean;
+  /** False for the rows present on first mount (no per-row fade-in while the surrounding sheet is itself sliding up); true for rows added afterwards by a filter change. */
+  animateEntering: boolean;
 }
 
 /**
@@ -39,8 +50,17 @@ interface AccordionRowProps extends AccordionItemData {
  * a manually-interpolated one -- smoother, and there's no height to
  * pre-measure at all anymore. `entering`/`exiting` fade the text itself
  * over the same duration.
+ *
+ * The row itself ALSO carries entering/exiting so that filtering the list
+ * (FaqSection's category chips) animates rows in and out through the same
+ * Reanimated pipeline, instead of a full remount. Do NOT mix in React
+ * Native's core `LayoutAnimation.configureNext` here: on the New
+ * Architecture (mandatory with Reanimated 4) it and Reanimated's layout
+ * animations compete for the same mounting hook, and on Android the core
+ * one never runs reliably -- `UIManager.setLayoutAnimationEnabledExperimental`
+ * is a no-op under Fabric, so there's no flag that fixes it either.
  */
-function AccordionRow({ question, answer, isOpen, onToggle, isLast }: AccordionRowProps) {
+function AccordionRow({ question, answer, isOpen, onToggle, isLast, animateEntering }: AccordionRowProps) {
   const rotation = useSharedValue(0);
 
   useEffect(() => {
@@ -51,6 +71,8 @@ function AccordionRow({ question, answer, isOpen, onToggle, isLast }: AccordionR
 
   return (
     <Animated.View
+      entering={animateEntering ? FadeIn.duration(FILTER_ENTER_DURATION).delay(FILTER_ENTER_DELAY) : undefined}
+      exiting={FadeOut.duration(FILTER_EXIT_DURATION)}
       layout={LinearTransition.duration(TRANSITION_DURATION).easing(TRANSITION_EASING)}
       className={isLast ? '' : 'border-b border-border'}
     >
@@ -87,9 +109,28 @@ function AccordionRow({ question, answer, isOpen, onToggle, isLast }: AccordionR
  * FAQ-style accordion: one question open at a time (opening a new row
  * closes whichever was open), matching the conventional FAQ pattern and
  * keeping a long list scannable.
+ *
+ * The open row is tracked by its QUESTION text, not its index in `items`.
+ * Callers filter the list (FaqSection's category chips) without remounting
+ * this component, so an index would silently point at a different question
+ * after every filter change; the question text is stable. If the open
+ * question is filtered out, the open state is cleared so it doesn't
+ * reappear already expanded when its category comes back.
  */
 export function Accordion({ items }: { items: AccordionItemData[] }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openQuestion, setOpenQuestion] = useState<string | null>(null);
+
+  // Flips after the first commit, so rows created by the initial mount skip
+  // their entering fade (the sheet is already animating in) while rows
+  // created later by a filter change get one.
+  const hasMounted = useRef(false);
+  useEffect(() => {
+    hasMounted.current = true;
+  }, []);
+
+  useEffect(() => {
+    setOpenQuestion((current) => (current !== null && items.some((i) => i.question === current) ? current : null));
+  }, [items]);
 
   return (
     <View>
@@ -98,9 +139,10 @@ export function Accordion({ items }: { items: AccordionItemData[] }) {
           key={item.question}
           question={item.question}
           answer={item.answer}
-          isOpen={openIndex === index}
-          onToggle={() => setOpenIndex((current) => (current === index ? null : index))}
+          isOpen={openQuestion === item.question}
+          onToggle={() => setOpenQuestion((current) => (current === item.question ? null : item.question))}
           isLast={index === items.length - 1}
+          animateEntering={hasMounted.current}
         />
       ))}
     </View>

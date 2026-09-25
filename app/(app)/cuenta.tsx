@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef, useState } from 'react';
-import { Image, LayoutAnimation, Linking, Platform, ScrollView, Share, Text, TextInput, View } from 'react-native';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { Image, Linking, Platform, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -146,31 +146,25 @@ const FAQ_ITEMS: FaqItemData[] = [
  * `category` is plain local state, not lifted -- FullScreenFormModal's
  * sheet fully unmounts once its close animation finishes (see
  * AnimatedBottomSheet), so this naturally resets to "Todas" every time the
- * FAQ section is reopened, no manual reset effect needed. `key={category}`
- * on Accordion forces a fresh remount (openIndex back to null) on every
- * filter change, instead of leaving a stale index open that may now point
- * at a different question in the filtered list.
+ * FAQ section is reopened, no manual reset effect needed.
+ *
+ * Switching chips does NOT remount the Accordion: each question row carries
+ * its own Reanimated entering/exiting/layout animation (see Accordion.tsx),
+ * so rows filtered out fade away, new ones fade in, and the ones that stay
+ * slide to their new position -- all on the UI thread, identical on iOS and
+ * Android. This used to `key={category}` the Accordion (a full remount with
+ * no transition) plus React Native's core `LayoutAnimation.configureNext`,
+ * which does not run reliably on Android under the New Architecture and
+ * competes with Reanimated's own layout animations there.
  */
 function FaqSection() {
   const [category, setCategory] = useState<FaqCategoryKey | 'todas'>('todas');
-  const filteredItems = category === 'todas' ? FAQ_ITEMS : FAQ_ITEMS.filter((item) => item.category === category);
-
-  // `key={category}` below fully unmounts/remounts the whole question list
-  // (needed to reset Accordion's own openIndex back to null -- a stale open
-  // index could otherwise point at the wrong question in the new filtered
-  // set). That remount swaps every visible row in a single commit with zero
-  // transition on its own. LayoutAnimation.configureNext wraps that native
-  // add/remove diff in one smooth transition -- the right tool here
-  // specifically because it's a real remount, not a continuing component
-  // Reanimated's entering/exiting could otherwise animate more precisely.
-  // (Each question's own expand/collapse below is intentionally untouched:
-  // Accordion already animates that via Reanimated's LinearTransition +
-  // FadeIn/FadeOut, a deliberate upgrade from an earlier LayoutAnimation-
-  // style height approach that visibly janked at ~30fps -- see Accordion.tsx.)
-  const handleCategoryChange = (key: FaqCategoryKey | 'todas') => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCategory(key);
-  };
+  // Memoized so Accordion's "clear the open question if it got filtered
+  // out" effect only reruns when the filter actually changes.
+  const filteredItems = useMemo(
+    () => (category === 'todas' ? FAQ_ITEMS : FAQ_ITEMS.filter((item) => item.category === category)),
+    [category]
+  );
 
   return (
     <View>
@@ -185,7 +179,7 @@ function FaqSection() {
           return (
             <PressableScale
               key={filter.key}
-              onPress={() => handleCategoryChange(filter.key)}
+              onPress={() => setCategory(filter.key)}
               scaleTo={0.965}
               activeOpacity={0.7}
               spring
@@ -201,7 +195,7 @@ function FaqSection() {
         })}
       </ScrollView>
 
-      <Accordion key={category} items={filteredItems} />
+      <Accordion items={filteredItems} />
     </View>
   );
 }
@@ -770,6 +764,10 @@ function CuentaScreen() {
         visible={openSection === 'ayuda'}
         title="Ayuda / Preguntas Frecuentes"
         onClose={() => setOpenSection(null)}
+        // The filter chips swap in a different NUMBER of questions, so this
+        // sheet's content height changes -- animate the surface itself too,
+        // not just the rows inside it.
+        animateLayout
       >
         <FaqSection />
       </FullScreenFormModal>

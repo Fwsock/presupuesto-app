@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, Modal, Platform, Pressable, View } from 'react-native';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, LinearTransition, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+
+// Duration for the opt-in `animateLayout` height transition below.
+const LAYOUT_TRANSITION_DURATION = 220;
 
 interface AnimatedBottomSheetProps {
   visible: boolean;
@@ -23,6 +26,17 @@ interface AnimatedBottomSheetProps {
   entranceSpring?: { damping: number; stiffness: number };
   entranceDuration?: number;
   entranceEasing?: (value: number) => number;
+  /**
+   * Animates the sheet's own HEIGHT when its content changes size (e.g. a
+   * FAQ filter swapping in fewer/more rows). The sheet is sized by its
+   * content, capped at `maxHeightPercent`, so without this its surface
+   * simply snaps to the new height on the next layout pass while the rows
+   * inside fade/slide. Opt-in on purpose, NOT the default for every sheet:
+   * this sheet's `paddingBottom` also tracks the keyboard height, and a
+   * 220ms layout transition on top of that would make form sheets lag
+   * behind the keyboard's own animation.
+   */
+  animateLayout?: boolean;
   children: React.ReactNode;
 }
 
@@ -79,6 +93,7 @@ export function AnimatedBottomSheet({
   entranceSpring,
   entranceDuration = 400,
   entranceEasing = Easing.out(Easing.cubic),
+  animateLayout = false,
   children,
 }: AnimatedBottomSheetProps) {
   const backdropOpacity = useSharedValue(0);
@@ -152,7 +167,20 @@ export function AnimatedBottomSheet({
           accessibilityRole="button"
           accessibilityLabel="Cerrar"
         />
-        <Animated.View className="bg-surface rounded-t-3xl" style={sheetStyle}>
+        <Animated.View
+          className={animateLayout ? 'bg-surface rounded-t-3xl overflow-hidden' : 'bg-surface rounded-t-3xl'}
+          style={sheetStyle}
+          // Reanimated's layout transition animates this view's frame
+          // (top edge + height -- it's anchored to the bottom by the
+          // justify-end parent, so the top edge is what moves), which is
+          // independent of the translateY entrance transform above. It only
+          // fires on layout changes AFTER mount, so the slide-in itself is
+          // untouched. overflow:hidden is what makes growth read as a
+          // reveal: the rows inside are already laid out at their final
+          // size, and without clipping they'd paint over the dimmed
+          // backdrop above the still-short surface for those ~220ms.
+          layout={animateLayout ? LinearTransition.duration(LAYOUT_TRANSITION_DURATION) : undefined}
+        >
           {children}
         </Animated.View>
       </View>
