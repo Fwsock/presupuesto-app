@@ -57,3 +57,8 @@ docs/superpowers/
 
 # Supabase CLI's own local cache dir (created by `npx supabase ...`)
 supabase/.temp/
+
+# Personal budget data (real income/expenses/debts + personal email) used only
+# by scripts/seed-presupuesto.js and scripts/verify-presupuesto.js. It was once
+# committed to this PUBLIC repo; it now stays local. Do not re-add it.
+datos_presupuesto.json
